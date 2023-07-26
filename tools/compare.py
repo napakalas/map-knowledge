@@ -45,7 +45,6 @@ def compare_model(model, endpoint1, endpoint2, output):
     g1_diff = [set([n[0]]+list(n[1])) if isinstance(n[0], str) else set(n[0] + list[n[1]]) for n in g1_diff]
     g2_diff = G_conns[1].nodes() - G_conns[0].nodes()
     g2_diff = [set([n[0]]+list(n[1])) if isinstance(n[0], str) else set(n[0] + list[n[1]]) for n in g2_diff]
-    print(g1_diff, g2_diff)
     for n1 in g1_diff:
         for n2 in g2_diff:
             if len(n1-n2)==0 and len(n2-n1)==0:
