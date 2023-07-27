@@ -39,6 +39,7 @@ class ComparedModel:
             raise Exception(f'No neurons for {model}')
         else:
             neurons = [n['id'] for n in neurons['paths']]
+            # neurons = ['ilxtr:neuron-type-keast-11']
 
         self.ent_knowledges = {n_id:self.ep.entity_knowledge(n_id) for n_id in tqdm(neurons)}
         self.G_conns = {n_id:self.__const_connectivity_graph(conn) for n_id, conn in self.ent_knowledges.items()}
@@ -129,8 +130,7 @@ class ComparedModel:
         self.ep.close()
 
 def print_tabular(results, endpoint1, endpoint2):
-    print(f"results['model'], {endpoint1}, {endpoint1}")
-    print(f'neuron, {endpoint1} edge, {endpoint2} edge')
+    print(f"{results['model']}, {endpoint1} edge, {endpoint1} edge")
     for path in results['paths']:
         for edge in path['edges']:
             for ep, e in edge.items():
@@ -151,8 +151,9 @@ def compare_model(model, endpoint1, endpoint2, style):
         sanitised_paths = []
         for path in results['paths']:
             if not path['is_isomorphic']:
-                sanitised_paths = path
-                del sanitised_paths['nodes']
+                sanitised_path = path
+                del sanitised_path['nodes']
+                sanitised_paths += [sanitised_path]
         results['paths'] = sanitised_paths
     
     if style == 'tabular':
