@@ -130,7 +130,7 @@ class ComparedModel:
         self.ep.close()
 
 def print_tabular(results, endpoint1, endpoint2):
-    print(f"{results['model']}, {endpoint1} edge, {endpoint1} edge")
+    print(f"{results['model']}, {endpoint1} edge, {endpoint2} edge")
     for path in results['paths']:
         for edge in path['edges']:
             for ep, e in edge.items():
