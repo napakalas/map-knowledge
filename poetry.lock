@@ -169,13 +169,13 @@ test = ["codecov (>=2.1)", "pytest (>=7.2)", "pytest-cov (>=4.0)"]
 
 [[package]]
 name = "npoexplorer"
-version = "0.0.1"
+version = "0.0.2"
 description = ""
 category = "main"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "npoexplorer-0.0.1-py3-none-any.whl", hash = "sha256:d9222dc6ae83b904b9ce62a2be664ef4a4b2a2486ffacdc3adac72d2d026093a"},
+    {file = "npoexplorer-0.0.2-py3-none-any.whl", hash = "sha256:d362850b79c21f6fd45d3660808423585bcda25e60fa90fc300b148ce21856d6"},
 ]
 
 [package.dependencies]
@@ -184,7 +184,7 @@ rdflib = ">=6.3.2,<7.0.0"
 
 [package.source]
 type = "url"
-url = "https://github.com/napakalas/npo_explorer/releases/download/v0.0.1-alpha/npoexplorer-0.0.1-py3-none-any.whl"
+url = "https://github.com/napakalas/npo_explorer/releases/download/v0.0.2-alpha/npoexplorer-0.0.2-py3-none-any.whl"
 
 [[package]]
 name = "pyparsing"
@@ -330,4 +330,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "8e7852001dc30906a95c262e993abf1e9f8d0d2382f08c26ae08c2127021f350"
+content-hash = "f72537a6ca71383c3317a4c9b0afd45d63d20cf8cbe693194650ec7a3d5da30e"
