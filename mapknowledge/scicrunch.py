@@ -27,6 +27,7 @@ import urllib.parse
 
 from .apinatomy import Apinatomy, CONNECTIVITY_ONTOLOGIES, APINATOMY_MODEL_PREFIX
 from .apinatomy import PATH_METADATA_QUERY
+from .namespaces import NAMESPACES
 from .utils import log
 from .utils import request_json
 
@@ -60,29 +61,6 @@ SCICRUNCH_SPARC_APINATOMY = f'{SCICRUNCH_SPARC_API}/dynamic/demos/apinat'
 SCICRUNCH_MODELS_WITH_VERSION = f'{SCICRUNCH_SPARC_APINATOMY}/graphList.json'
 SCICRUNCH_CONNECTIVITY_NEURONS = f'{SCICRUNCH_SPARC_APINATOMY}/{{CONNECTIVITY_QUERY}}/{{NEURON_ID}}.json'
 SCICRUNCH_MODEL_REFERENCES = f'{SCICRUNCH_SPARC_APINATOMY}/modelPopulationsReferences/{{MODEL_ID}}.json'
-
-#===============================================================================
-
-class NAMESPACES:
-    namespaces = {
-        'apinatomy': 'https://apinatomy.org/uris/readable/',
-        'ilx': 'http://uri.interlex.org/',
-        'ilxtr': 'http://uri.interlex.org/tgbugs/uris/readable/',
-    }
-
-    @staticmethod
-    def uri(curie: str) -> str:
-        parts = curie.split(':', 1)
-        if len(parts) == 2 and parts[0] in NAMESPACES.namespaces:
-            return NAMESPACES.namespaces[parts[0]] + parts[1]
-        return curie
-
-    @staticmethod
-    def curie(uri: str) -> str:
-        for prefix, ns_uri in NAMESPACES.namespaces.items():
-            if uri.startswith(ns_uri):
-                return f'{prefix}:{uri[len(ns_uri):]}'
-        return uri
 
 #===============================================================================
 
