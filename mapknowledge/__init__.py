@@ -31,6 +31,7 @@ from pathlib import Path
 #===============================================================================
 
 from .apinatomy import CONNECTIVITY_ONTOLOGIES, APINATOMY_MODEL_PREFIX
+from .nposparql import NpoSparql, NPO_NLP_NEURONS
 from .scicrunch import SCICRUNCH_API_ENDPOINT, SCICRUNCH_PRODUCTION, SCICRUNCH_STAGING
 from .scicrunch import SciCrunch
 from .utils import log
@@ -153,6 +154,7 @@ class KnowledgeStore(KnowledgeBase):
                        scicrunch_key=None,
                        create=True,
                        read_only=False,
+                       npo=False,
                        log_sckan_build=False):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge = {}     # Cache lookups
@@ -187,6 +189,7 @@ class KnowledgeStore(KnowledgeBase):
             self.db.execute(f'delete from connectivity_models')
             self.db.execute('commit')
         self.__cleaned_connectivity = clean_connectivity
+        self.__npo_db = NpoSparql() if npo else None
 
     @property
     def scicrunch(self):
@@ -248,13 +251,20 @@ class KnowledgeStore(KnowledgeBase):
             row = self.db.execute('select knowledge from knowledge where entity=?', (entity,)).fetchone()
             if row is not None:
                 knowledge = json.loads(row[0])
-        if (self.__scicrunch is not None
-         and (len(knowledge) == 0 or entity == knowledge.get('label', entity))):
-            # Consult SciCrunch if we don't know about the entity
-            knowledge = self.__scicrunch.get_knowledge(entity)
-            if 'connectivity' in knowledge:
-                # Get phenotype, taxon, and other metadate
-                knowledge.update(self.__scicrunch.connectivity_metadata(entity))
+
+        if len(knowledge) == 0 or entity == knowledge.get('label', entity):
+
+            if self.__npo_db is not None: ### and entity.startswith(NPO_NLP_NEURONS):
+                knowledge = self.__npo_db.get_knowledge(entity)
+
+            elif self.__scicrunch is not None:
+                # Consult SciCrunch if we don't know about the entity
+                knowledge = self.__scicrunch.get_knowledge(entity)
+                if 'connectivity' in knowledge:
+                    # Get phenotype, taxon, and other metadata
+                    knowledge.update(self.__scicrunch.connectivity_metadata(entity))
+
+            if self.db is not None and 'connectivity' in knowledge:
                 # Make sure we have labels for each entity used for connectivity
                 connectivity_terms = set()
                 for (node0, node1) in knowledge['connectivity']:
