@@ -12,7 +12,13 @@ if __name__ == '__main__':
 
     store = KnowledgeStore(npo=True)
     #print_knowledge(store, 'ilxtr:neuron-type-keast-8')
-    print_knowledge(store, 'ilxtr:sparc-nlp/mmset1/3a')
-    print_knowledge(store, 'ilxtr:sparc-nlp/mmset1/4')
-    print_knowledge(store, 'ilxtr:sparc-nlp/mmset2cn/6')
+    # print_knowledge(store, 'ilxtr:sparc-nlp/mmset1/3a')
+    # print_knowledge(store, 'ilxtr:sparc-nlp/mmset1/4')
+    # print_knowledge(store, 'ilxtr:sparc-nlp/mmset2cn/6')
+
+    # print_knowledge(store, 'ilxtr:neuron-type-keast-10')
+    print_knowledge(store, 'ilxtr:NeuronAacar')
+
+    pprint(store.connectivity_models())
+
     store.close()

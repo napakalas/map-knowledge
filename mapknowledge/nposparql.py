@@ -23,6 +23,10 @@ from pprint import pprint
 from SPARQLWrapper import SPARQLWrapper2
 from SPARQLWrapper.SmartWrapper import Value
 
+import requests
+import re
+import ast
+
 #===============================================================================
 
 from .namespaces import NAMESPACES
@@ -34,6 +38,29 @@ NPO_NLP_NEURONS = 'ilxtr:sparc-nlp/'
 #===============================================================================
 
 NPO_SPARQL_ENDPOINT = 'https://blazegraph.scicrunch.io/blazegraph/sparql'
+
+#===============================================================================
+
+NPO_OWNER = "SciCrunch"
+NPO_REPO = "NIF-Ontology"
+NPO_BRANCH = "neurons"
+NPO_DIR = "ttl/generated/neurons"
+NPO_SOURCE = f"https://raw.githubusercontent.com/{NPO_OWNER}/{NPO_REPO}/{NPO_BRANCH}/"
+NPO_PARTIAL_ORDER = "apinat-partial-orders.ttl"
+NPO_PARTIAL_ORDER_URL = f'{NPO_SOURCE}{NPO_DIR}/{NPO_PARTIAL_ORDER}'
+
+EXCLUDED_LAYERS = (
+    None,
+    'UBERON:0000010',      # peripheral nervous system
+    'UBERON:0000178',      # blood
+    'UBERON:0000468',      # multicellular organism
+    'UBERON:0001017',      # central nervous system
+    'UBERON:0001359',      # cerebrospinal fluid
+    'UBERON:0002318',      # spinal cord white matter
+    'UBERON:0003714',      # neural tissue
+    'UBERON:0005844',      # spinal cord segment
+    'UBERON:0016549',      # cns white matter
+)
 
 #===============================================================================
 
@@ -196,6 +223,43 @@ METADATA = """
         FILTER(?Neuron_IRI = {entity})
     }}
 """
+
+CONNECTIVITY_MODELS = """
+    SELECT DISTINCT ?Model_ID WHERE{
+        ?Model_ID rdfs:subClassOf ilxtr:NeuronEBM .
+        ?Neuron_ID rdfs:subClassOf ?Model_ID
+        FILTER (
+            ?Model_ID != ilxtr:NeuronApinatSimple &&
+                STRSTARTS(STR(?Neuron_ID), STR(ilxtr:))
+        )
+        FILTER NOT EXISTS {
+            ?Model_ID rdfs:subClassOf ilxtr:NeuronApinatSimple .
+        }
+    }
+"""
+
+MODEL_KNOWLEDGE = """
+    SELECT DISTINCT ?Neuron_ID ?Reference WHERE{{
+        {{
+            SELECT ?Neuron_ID ?Reference {{
+                VALUES(?entity){{({entity})}}
+                ?Neuron_ID rdfs:subClassOf ?entity .
+                OPTIONAL {{?Neuron_ID ilxtr:reference ?Reference.}}
+            }}
+        }}
+        UNION
+        {{
+            SELECT ?Neuron_ID ?Reference {{
+                VALUES(?entity){{({entity})}}
+                ?Super_Neuron rdfs:subClassOf ?entity .
+                ?Neuron_ID rdfs:subClassOf ?Super_Neuron .
+                ?Neuron_ID rdfs:subClassOf ilxtr:NeuronEBM .
+                OPTIONAL {{?Neuron_ID ilxtr:reference ?Reference.}}
+            }}
+        }}
+    }}
+"""
+
 #===============================================================================
 
 def sparql_uri(curie: str) -> str:
@@ -206,6 +270,7 @@ def sparql_uri(curie: str) -> str:
 class NpoSparql:
     def __init__(self):
         self.__sparql = SPARQLWrapper2(NPO_SPARQL_ENDPOINT)
+        self.__load_apinatomy_connectivities() # load from file due to incompleteness in NPO
 
     def query(self, sparql) -> list[dict]:
         self.__sparql.setQuery(sparql)
@@ -244,13 +309,29 @@ class NpoSparql:
         return self.__result_as_dict(
             self.query(METADATA.format(entity=sparql_uri(neuron))))
 
+    def __connectivity_models(self):
+        return self.__results_as_list(self.query(CONNECTIVITY_MODELS))
+
+    def __model_knowledge(self, model):
+        return self.__results_as_list(
+            self.query(MODEL_KNOWLEDGE.format(entity=sparql_uri(model))))
+
     def get_knowledge(self, entity) -> dict:
         metadata = self.__metadata(entity)
-        if len(metadata) == 0:
-            return {}
         knowledge = {
             'id': entity
         }
+        if len(metadata) == 0: # might be it is about model knowledge
+            model_knowledge = self.__model_knowledge(entity)
+            if len(model_knowledge) == 0:
+                return {}
+            else:
+                knowledge['label'] = entity
+                knowledge['paths'] = []
+                knowledge['references'] = []
+                for neuron in model_knowledge:
+                    knowledge['paths'] += [{'id': neuron['Neuron_ID'], 'models': neuron['Neuron_ID']}]
+                return knowledge
         if 'Neuron_Label' in metadata:
             knowledge['label'] = metadata['Neuron_Label']
         else:
@@ -265,11 +346,115 @@ class NpoSparql:
         if 'Sex' in metadata:
             knowledge['biologicalSex'] = metadata['Sex']
         connectivity = []
-        for connection in self.__connectivity(entity):
-            if ((node_1 := connection.get('V1')) is not None
-            and (node_2 := connection.get('V2')) is not None):
-                connectivity.append(((node_1, ()), (node_2, ())))
-        knowledge['connectivity'] = connectivity
+        if entity.startswith(NPO_NLP_NEURONS):
+            for connection in self.__connectivity(entity):
+                if ((node_1 := connection.get('V1')) is not None
+                and (node_2 := connection.get('V2')) is not None):
+                    connectivity.append(((node_1, ()), (node_2, ())))
+            knowledge['connectivity'] = connectivity
+        elif entity in self.__apinat_connectivities: # current NPO is not completely cover Apinatomy
+            knowledge['connectivity'] = self.__apinat_connectivities.get(entity, [])
         return knowledge
+
+    def __load_apinatomy_connectivities(self):
+        # loading partial connectivities from NPO repository
+        # due to unvailability in stardog
+        response = requests.get(NPO_PARTIAL_ORDER_URL, timeout=10)
+        if response.status_code == 200:
+            partial_order_text = response.text
+        else:
+            return
+
+        # functions to parse connectivities
+        def parse_connectivities(connectivities, sub_structure, root="blank"):
+            for sub_sub in sub_structure:
+                adj = (
+                    (
+                        list(reversed(sub_sub[0]))[0],
+                        tuple(list(reversed(sub_sub[0]))[1:]),
+                    )
+                    if isinstance(sub_sub[0], list)
+                    else (sub_sub[0], ())
+                )
+                if root != ("blank", ()):
+                    if root != adj:
+                        connectivities += [(root, adj)]
+                if len(sub_sub) > 1:
+                    parse_connectivities(connectivities, sub_sub[1:], adj)
+
+        # function to filter layer terms, returning filtered_edge
+        def filter_layer(connectivity):
+            edge = []
+            for node in connectivity:
+                new_node = []
+                for terms in node:
+                    if isinstance(terms, tuple):
+                        terms = [t for t in terms if t not in EXCLUDED_LAYERS]
+                        new_node += [tuple(terms)]
+                    else:
+                        terms = terms if terms not in EXCLUDED_LAYERS else []
+                        new_node += [terms]
+                if len(new_node[0]) == 0 and len(new_node[1]) == 0:
+                    return []
+                elif len(new_node[0]) == 0:
+                    new_node = [new_node[1][0], tuple(list(new_node[1])[1:])]
+                edge += [tuple(new_node)]
+            return tuple(edge)
+
+        self.__apinat_connectivities = {}
+        for partial_order in partial_order_text.split("\n\n"):
+            if "neuronPartialOrder" in partial_order:
+                neuron, nested_structure = partial_order.split(
+                    "ilxtr:neuronPartialOrder"
+                )
+                nested_structure = nested_structure.replace(".", "")
+                # replace consecutive space with a single space
+                nested_structure = re.sub(
+                    r"\s+", " ", nested_structure).strip()
+                # adding coma
+                pattern = r"\[([^]]+)\]"
+
+                def add_comma(match):
+                    elements = match.group(1).strip().split()
+                    return "[" + ", ".join(elements) + "]"
+
+                nested_structure = re.sub(pattern, add_comma, nested_structure)
+                # Quoting ILX and UBERON
+                pattern = r"(ILX:\d+|UBERON:\d+)"
+                nested_structure = re.sub(pattern, r'"\1"', nested_structure)
+                # Specifying tuple
+                nested_structure = nested_structure.replace(" )", ", )").replace(
+                    " ( ", ", ( "
+                )
+                # convert to tuple
+                conn_structure = ast.literal_eval(nested_structure)
+                # parse connectivities
+                connectivities = []
+                if conn_structure != "blank":
+                    if len(conn_structure) > 1:
+                        root = (
+                            (
+                                list(reversed(conn_structure[0]))[0],
+                                tuple(list(reversed(conn_structure[0]))[1:]),
+                            )
+                            if isinstance(conn_structure[0], list)
+                            else (conn_structure[0], ())
+                        )
+                        parse_connectivities(
+                            connectivities, conn_structure[1:], root)
+                # filter connectivities based on EXCLUDE_LAYERS
+                filtered_connectivities = []
+                for c in connectivities:
+                    edge = filter_layer(c)
+                    if len(edge) > 0:
+                        if edge[0] != edge[1]:
+                            filtered_connectivities += [edge]
+                self.__apinat_connectivities[neuron.strip()] = filtered_connectivities
+
+    def connectivity_models(self):
+        models = {}
+        for rst in self.__connectivity_models():
+            models[rst['Model_ID']] = {"label": "", "version": ""}
+        return models
 
 #===============================================================================
