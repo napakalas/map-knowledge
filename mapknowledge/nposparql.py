@@ -186,7 +186,18 @@ METADATA2 = """
     LIMIT 10000
 """
 
+"""
+- Modify this query so it can handle neurons without soma and axon terminal in NPO
+e.g. ilxtr:neuron-type-sstom-9.
+- Filtering using ilxtr:NeuronApinatSimple || ilxtr:NeuronSparcNlp should be appropriate,
+however, current NPO misses ilxtr:neuron-type-bolew-unbranched-25 rdfs:subClassOf ilxtr:NeuronSparcNlp,
+therefore, teporarily using:
+FILTER ((?type = ilxtr:NeuronEBM && REGEX(LCASE(STR(?Neuron_IRI)), 'type')) || (?type = ilxtr:NeuronSparcNlp))
+- Using GROUP_BY and GROUP_CONCAT has_phenotype predicate used is not consistent, e.g.
+each NLP neuron uses a single phenotype, such as ilxtr:neuron-phenotype-para-pre,
+while an Apinatomy neurons may use use multiple phenotype, such as ilxtr:PreGanglionicPhenotype & ilxtr:ParasympatheticPhenotype
 
+"""
 METADATA = """
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -196,32 +207,36 @@ METADATA = """
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
     SELECT DISTINCT ?Neuron_IRI ?Neuron_Label ?Neuron_Pref_Label ?ObservedIn ?Sex
-                    ?Phenotype  ?Forward_Connection
-                    ?Alert ?Citation
+                    (GROUP_CONCAT(DISTINCT ?Phntp ; separator=",") AS ?Phenotype)
+                    ?Forward_Connection ?Alert ?Citation
     WHERE
     {{
-                OPTIONAL{{?Neuron_IRI rdfs:label ?Neuron_Label.}}
-                OPTIONAL{{?Neuron_IRI skos:prefLabel ?Neuron_Pref_Label.}}
+        ?Neuron_IRI rdfs:subClassOf ?type .
+        FILTER ((?type = ilxtr:NeuronEBM && REGEX(LCASE(STR(?Neuron_IRI)), 'type')) || (?type = ilxtr:NeuronSparcNlp))
 
-                ?Neuron_IRI ilxtr:hasSomaLocation ?A_IRI.
-                OPTIONAL {{?Neuron_IRI ilxtr:hasAxonLocation ?C_IRI.}}
-                ?Neuron_IRI (ilxtr:hasAxonTerminalLocation | ilxtr:hasAxonSensoryLocation) ?B_IRI.
+        OPTIONAL {{?Neuron_IRI rdfs:label ?Neuron_Label.}}
+        OPTIONAL {{?Neuron_IRI skos:prefLabel ?Neuron_Pref_Label.}}
 
-                OPTIONAL {{?Neuron_IRI ilxtr:hasPhenotypicSex ?Sex.}}
-                OPTIONAL {{?Neuron_IRI ilxtr:literatureCitation ?Citation.}}
-                OPTIONAL {{?Neuron_IRI ilxtr:alertNote ?Alert.}}
+        OPTIONAL {{?Neuron_IRI ilxtr:hasSomaLocation ?A_IRI.}}
+        OPTIONAL {{?Neuron_IRI ilxtr:hasAxonLocation ?C_IRI.}}
+        OPTIONAL {{?Neuron_IRI (ilxtr:hasAxonTerminalLocation | ilxtr:hasAxonSensoryLocation) ?B_IRI.}}
 
-                OPTIONAL {{?Neuron_IRI ilxtr:isObservedInSpecies ?ObservedIn.}}
+        OPTIONAL {{?Neuron_IRI ilxtr:hasPhenotypicSex ?Sex.}}
+        OPTIONAL {{?Neuron_IRI ilxtr:literatureCitation ?Citation.}}
+        OPTIONAL {{?Neuron_IRI ilxtr:alertNote ?Alert.}}
 
-                OPTIONAL {{?Neuron_IRI ilxtr:hasForwardConnection ?ForwardConnection.}}
+        OPTIONAL {{?Neuron_IRI ilxtr:isObservedInSpecies ?ObservedIn.}}
 
-                OPTIONAL {{?Neuron_IRI (ilxtr:hasNeuronalPhenotype |
-                                      ilxtr:hasFunctionalCircuitRole |
-                                      ilxtr:hasCircuitRole |
-                                      ilxtr:hasProjection
-                                      ) ?Phenotype.}}
+        OPTIONAL {{?Neuron_IRI ilxtr:hasForwardConnection ?ForwardConnection.}}
+
+        OPTIONAL {{?Neuron_IRI (ilxtr:hasNeuronalPhenotype |
+                                ilxtr:hasFunctionalCircuitRole |
+                                ilxtr:hasCircuitRole |
+                                ilxtr:hasProjection
+                                ) ?Phntp.}}
         FILTER(?Neuron_IRI = {entity})
-    }}
+    }} GROUP BY ?Neuron_IRI ?Neuron_Label ?Neuron_Pref_Label ?ObservedIn ?Sex
+        ?Forward_Connection ?Alert ?Citation
 """
 
 CONNECTIVITY_MODELS = """
@@ -257,6 +272,14 @@ MODEL_KNOWLEDGE = """
                 OPTIONAL {{?Neuron_ID ilxtr:reference ?Reference.}}
             }}
         }}
+    }}
+"""
+
+DB_VERSION = """
+    PREFIX TTL: <https://raw.githubusercontent.com/SciCrunch/NIF-Ontology/neurons/ttl/>
+    SELECT DISTINCT ?NPO ?SimpleSCKAN WHERE{{
+        OPTIONAL{{TTL:npo.ttl owl:versionInfo ?NPO.}}
+        OPTIONAL{{TTL:simple-sckan.ttl owl:versionInfo ?SimpleSCKAN.}}
     }}
 """
 
@@ -316,6 +339,9 @@ class NpoSparql:
         return self.__results_as_list(
             self.query(MODEL_KNOWLEDGE.format(entity=sparql_uri(model))))
 
+    def __db_version(self):
+        return self.__result_as_dict(self.query(DB_VERSION))
+
     def get_knowledge(self, entity) -> dict:
         metadata = self.__metadata(entity)
         knowledge = {
@@ -338,7 +364,7 @@ class NpoSparql:
             knowledge['label'] = ''
         knowledge['long-label'] = knowledge['label']
         if 'Phenotype' in metadata:
-            knowledge['phenotypes'] = [metadata['Phenotype']]
+            knowledge['phenotypes'] = [NAMESPACES.curie(p) for p in metadata['Phenotype'].split(',')]
         if 'ObservedIn' in metadata:
             knowledge['taxon'] = metadata['ObservedIn']
         else:
@@ -456,5 +482,8 @@ class NpoSparql:
         for rst in self.__connectivity_models():
             models[rst['Model_ID']] = {"label": "", "version": ""}
         return models
+
+    def npo_released(self):
+        return self.__db_version()['NPO']
 
 #===============================================================================

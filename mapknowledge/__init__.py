@@ -175,6 +175,10 @@ class KnowledgeStore(KnowledgeBase):
         else:
             self.__scicrunch = None
             scicrunch_msg = 'not using SCKAN'
+        self.__npo_db = NpoSparql() if npo else None
+        if self.__npo_db:
+            built = f" built at {self.__npo_db.npo_released()}"
+            scicrunch_msg = f"using NPO{built}"
         log.info(f'Map Knowledge version {__version__} {cache_msg} {scicrunch_msg}')
         # Optionally clear local connectivity knowledge
         if (self.db is not None and clean_connectivity):
@@ -189,7 +193,6 @@ class KnowledgeStore(KnowledgeBase):
             self.db.execute(f'delete from connectivity_models')
             self.db.execute('commit')
         self.__cleaned_connectivity = clean_connectivity
-        self.__npo_db = NpoSparql() if npo else None
 
     @property
     def scicrunch(self):
