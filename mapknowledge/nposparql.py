@@ -30,6 +30,7 @@ import ast
 #===============================================================================
 
 from .namespaces import NAMESPACES
+from .apinatomy import EXCLUDED_LAYERS
 
 #===============================================================================
 
@@ -48,19 +49,6 @@ NPO_DIR = "ttl/generated/neurons"
 NPO_SOURCE = f"https://raw.githubusercontent.com/{NPO_OWNER}/{NPO_REPO}/{NPO_BRANCH}/"
 NPO_PARTIAL_ORDER = "apinat-partial-orders.ttl"
 NPO_PARTIAL_ORDER_URL = f'{NPO_SOURCE}{NPO_DIR}/{NPO_PARTIAL_ORDER}'
-
-EXCLUDED_LAYERS = (
-    None,
-    'UBERON:0000010',      # peripheral nervous system
-    'UBERON:0000178',      # blood
-    'UBERON:0000468',      # multicellular organism
-    'UBERON:0001017',      # central nervous system
-    'UBERON:0001359',      # cerebrospinal fluid
-    'UBERON:0002318',      # spinal cord white matter
-    'UBERON:0003714',      # neural tissue
-    'UBERON:0005844',      # spinal cord segment
-    'UBERON:0016549',      # cns white matter
-)
 
 #===============================================================================
 
@@ -279,7 +267,6 @@ DB_VERSION = """
     PREFIX TTL: <https://raw.githubusercontent.com/SciCrunch/NIF-Ontology/neurons/ttl/>
     SELECT DISTINCT ?NPO ?SimpleSCKAN WHERE{{
         OPTIONAL{{TTL:npo.ttl owl:versionInfo ?NPO.}}
-        OPTIONAL{{TTL:simple-sckan.ttl owl:versionInfo ?SimpleSCKAN.}}
     }}
 """
 
@@ -483,7 +470,12 @@ class NpoSparql:
             models[rst['Model_ID']] = {"label": "", "version": ""}
         return models
 
-    def npo_released(self):
-        return self.__db_version()['NPO']
+    def sckan_build(self):
+        return {
+            'created': self.__db_version()['NPO'],
+            'released': self.__db_version()['NPO'],
+            'release': self.__db_version()['NPO'],
+            'history': self.__db_version()['NPO'],
+        }
 
 #===============================================================================
