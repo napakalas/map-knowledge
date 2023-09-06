@@ -227,6 +227,13 @@ METADATA = """
         ?Forward_Connection ?Alert ?Citation
 """
 
+NODE_METADATA = """
+    SELECT DISTINCT ?label WHERE{{
+        VALUES(?node){{({entity})}}
+        ?node rdfs:label ?label
+    }}
+"""
+
 CONNECTIVITY_MODELS = """
     SELECT DISTINCT ?Model_ID WHERE{
         ?Model_ID rdfs:subClassOf ilxtr:NeuronEBM .
@@ -274,6 +281,10 @@ DB_VERSION = """
 
 def sparql_uri(curie: str) -> str:
     return f'<{NAMESPACES.uri(curie)}>'
+
+def is_node(curie: str) -> bool:
+    prefix = NAMESPACES.curie(curie).split(':')[0]
+    return prefix in ['UBERON', 'ILX']
 
 #===============================================================================
 
@@ -325,16 +336,23 @@ class NpoSparql:
     def __model_knowledge(self, model):
         return self.__results_as_list(
             self.query(MODEL_KNOWLEDGE.format(entity=sparql_uri(model))))
+    
+    def __node_knowledge(self, node):
+        return self.__result_as_dict(
+            self.query(NODE_METADATA.format(entity=sparql_uri(node))))
 
     def __db_version(self):
         return self.__result_as_dict(self.query(DB_VERSION))
 
     def get_knowledge(self, entity) -> dict:
-        metadata = self.__metadata(entity)
         knowledge = {
             'id': entity
         }
-        if len(metadata) == 0: # might be it is about model knowledge
+        if is_node(entity): # it might be UBERON|ILX node
+            metadata = self.__node_knowledge(entity)
+            knowledge['label'] = metadata.get('label', entity)
+            return knowledge
+        if len(metadata := self.__metadata(entity)) == 0: # it might be about model knowledge
             model_knowledge = self.__model_knowledge(entity)
             if len(model_knowledge) == 0:
                 return {}
