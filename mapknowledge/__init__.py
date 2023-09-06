@@ -175,7 +175,7 @@ class KnowledgeStore(KnowledgeBase):
             scicrunch_msg = f"using {release} SCKAN{built} from {self.__scicrunch.sparc_api_endpoint}"
             if self.__npo_db is not None:
                 npo_built = f" built at {self.__npo_db.sckan_build()['release']}"
-                scicrunch_msg = f"{scicrunch_msg } and NPO {npo_built}"
+                scicrunch_msg = f"{scicrunch_msg } and NPO{npo_built}"
         else:
             self.__scicrunch = None
             scicrunch_msg = 'not using SCKAN'
