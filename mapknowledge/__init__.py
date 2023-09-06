@@ -163,11 +163,8 @@ class KnowledgeStore(KnowledgeBase):
             cache_msg = f'with cache {db_name}'
         else:
             cache_msg = f'with no cache'
-        if npo:
-            self.__scicrunch = NpoSparql()
-            built = f" built at {self.__scicrunch.sckan_build()['release']}"
-            scicrunch_msg = f"using NPO{built}"
-        elif scicrunch_api is not None:
+        self.__npo_db = NpoSparql() if npo else None
+        if scicrunch_api is not None:
             self.__scicrunch = SciCrunch(api_endpoint=scicrunch_api,
                                          scicrunch_release=scicrunch_release,
                                          scicrunch_key=scicrunch_key)
@@ -176,6 +173,9 @@ class KnowledgeStore(KnowledgeBase):
                     else '')
             release = 'production' if scicrunch_release == SCICRUNCH_PRODUCTION else 'staging'
             scicrunch_msg = f"using {release} SCKAN{built} from {self.__scicrunch.sparc_api_endpoint}"
+            if self.__npo_db is not None:
+                npo_built = f" built at {self.__npo_db.sckan_build()['release']}"
+                scicrunch_msg = f"{scicrunch_msg } and NPO {npo_built}"
         else:
             self.__scicrunch = None
             scicrunch_msg = 'not using SCKAN'
@@ -207,7 +207,9 @@ class KnowledgeStore(KnowledgeBase):
                         left join labels as l on c.model = l.entity order by model
                     ''')} if self.db is not None else {}
 
-        if self.__scicrunch is not None:
+        if self.__npo_db is not None:
+            return self.__npo_db.connectivity_models()
+        elif self.__scicrunch is not None:
             sckan_models = self.__scicrunch.connectivity_models()
             if not self.__cleaned_connectivity:
                 model_info = cached_models()
@@ -257,10 +259,12 @@ class KnowledgeStore(KnowledgeBase):
 
         if len(knowledge) == 0 or entity == knowledge.get('label', entity):
 
-            if self.__scicrunch is not None:
+            if self.__npo_db is not None: ### and entity.startswith(NPO_NLP_NEURONS):
+                knowledge = self.__npo_db.get_knowledge(entity)
+            elif self.__scicrunch is not None:
                 # Consult SciCrunch if we don't know about the entity
                 knowledge = self.__scicrunch.get_knowledge(entity)
-                if 'connectivity' in knowledge and isinstance(self.__scicrunch, SciCrunch):
+                if 'connectivity' in knowledge:
                     # Get phenotype, taxon, and other metadata
                     knowledge.update(self.__scicrunch.connectivity_metadata(entity))
 
