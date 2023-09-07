@@ -397,7 +397,7 @@ class NpoSparql:
             return
 
         # functions to parse connectivities
-        def parse_connectivities(connectivities, sub_structure, root="blank"):
+        def parse_connectivities(connectivities, sub_structure, root: str|tuple="blank"):
             for sub_sub in sub_structure:
                 adj = (
                     (
