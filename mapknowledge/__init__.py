@@ -212,6 +212,8 @@ class KnowledgeStore(KnowledgeBase):
                     ''')} if self.db is not None else {}
 
         if self.__npo_db is not None:
+            # Future: need to warn when NPO has been updated and make sure user
+            #         clears the cache...
             return self.__npo_db.connectivity_models()
         elif self.__scicrunch is not None:
             sckan_models = self.__scicrunch.connectivity_models()
