@@ -2,7 +2,11 @@
 name = "mapknowledge"
 version = "0.15.0-a.1"
 description = ""
-authors = ["David Brooks <d.brooks@auckland.ac.nz>", "Tom Gillespie <tom.h.gillespie@gmail.com>"]
+authors = [
+    "David Brooks <d.brooks@auckland.ac.nz>",
+    "Tom Gillespie <tom.h.gillespie@gmail.com>",
+    "Yuda Munarko <yuda.munarko@auckland.ac.nz>"
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
