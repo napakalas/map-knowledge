@@ -10,7 +10,7 @@ if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.INFO)
 
-    store = KnowledgeStore(npo=True)
+    store = KnowledgeStore(npo=True, log_build=True)
     print_knowledge(store, 'ilxtr:NeuronKblad')
     print_knowledge(store, 'ilxtr:neuron-type-keast-8')
     print_knowledge(store, 'ilxtr:sparc-nlp/mmset1/3a')

@@ -270,10 +270,10 @@ MODEL_KNOWLEDGE = """
     }}
 """
 
-DB_VERSION = """
-    PREFIX TTL: <https://raw.githubusercontent.com/SciCrunch/NIF-Ontology/neurons/ttl/>
-    SELECT DISTINCT ?NPO ?SimpleSCKAN WHERE{{
-        OPTIONAL{{TTL:npo.ttl owl:versionInfo ?NPO.}}
+DB_VERSION = f"""
+    PREFIX TTL: <{NPO_SOURCE}ttl/>
+    SELECT DISTINCT ?versionDate ?SimpleSCKAN WHERE{{
+        OPTIONAL{{TTL:npo.ttl owl:versionInfo ?versionDate.}}
     }}
 """
 
@@ -488,12 +488,9 @@ class NpoSparql:
             models[rst['Model_ID']] = {"label": "", "version": ""}
         return models
 
-    def sckan_build(self):
+    def build(self):
         return {
-            'created': self.__db_version()['NPO'],
-            'released': self.__db_version()['NPO'],
-            'release': self.__db_version()['NPO'],
-            'history': self.__db_version()['NPO'],
+            'released': self.__db_version()['versionDate'],
         }
 
 #===============================================================================

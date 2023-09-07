@@ -101,8 +101,8 @@ class SciCrunch(object):
                                                               SCICRUNCH_RELEASE=self.__scicrunch_release),
                                 params=params)
 
-    def sckan_build(self):
-    #=====================
+    def build(self):
+    #===============
         data = self.query(SCKAN_BUILD_QUERY)
         if data is not None:
             for node in data['nodes']:

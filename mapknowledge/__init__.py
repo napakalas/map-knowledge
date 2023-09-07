@@ -155,7 +155,7 @@ class KnowledgeStore(KnowledgeBase):
                        create=True,
                        read_only=False,
                        npo=False,
-                       log_sckan_build=False):
+                       log_build=False):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge = {}     # Cache lookups
 
@@ -163,23 +163,27 @@ class KnowledgeStore(KnowledgeBase):
             cache_msg = f'with cache {db_name}'
         else:
             cache_msg = f'with no cache'
-        self.__npo_db = NpoSparql() if npo else None
+        log.info(f'Map Knowledge version {__version__} {cache_msg}')
         if scicrunch_api is not None:
             self.__scicrunch = SciCrunch(api_endpoint=scicrunch_api,
                                          scicrunch_release=scicrunch_release,
                                          scicrunch_key=scicrunch_key)
-            built = (f" built at {build['released']}"
-                        if log_sckan_build and (build := self.__scicrunch.sckan_build()) is not None
-                    else '')
-            release = 'production' if scicrunch_release == SCICRUNCH_PRODUCTION else 'staging'
-            scicrunch_msg = f"using {release} SCKAN{built} from {self.__scicrunch.sparc_api_endpoint}"
-            if self.__npo_db is not None:
-                npo_built = f" built at {self.__npo_db.sckan_build()['release']}"
-                scicrunch_msg = f"{scicrunch_msg } and NPO{npo_built}"
+            scicrunch_build = (f" built at {build['released']}"
+                                if log_build and (build := self.__scicrunch.build()) is not None
+                                else '')
+            release_version = 'production' if scicrunch_release == SCICRUNCH_PRODUCTION else 'staging'
+            log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.sparc_api_endpoint}")
         else:
             self.__scicrunch = None
-            scicrunch_msg = 'not using SCKAN'
-        log.info(f'Map Knowledge version {__version__} {cache_msg} {scicrunch_msg}')
+            log.info('Without SCKAN')
+        if npo:
+            self.__npo_db = NpoSparql()
+            npo_build = f" built at {self.__npo_db.build()['released']}" if log_build else ''
+            log.info(f'With NPO{npo_build}')
+        else:
+            self.__npo_db = None
+            log.info('Without NPO')
+
         # Optionally clear local connectivity knowledge
         if (self.db is not None and clean_connectivity):
             log.info(f'Clearing connectivity knowledge...')
