@@ -279,13 +279,10 @@ class KnowledgeStore(KnowledgeBase):
 
     def entity_knowledge(self, entity):
     #==================================
-        # Optionally refresh local connectivity knowledge from SciCrunch
-        if self.db is not None:
-            # Check local cache
-            knowledge = self.__entity_knowledge.get(entity, {})
-            if len(knowledge):
-                KnowledgeStore.__log_errors(entity, knowledge)
-                return knowledge
+        # Check local cache
+        if (knowledge := self.__entity_knowledge.get(entity)) is not None:
+            KnowledgeStore.__log_errors(entity, knowledge)
+            return knowledge
 
         knowledge = {}
         if self.db is not None:
