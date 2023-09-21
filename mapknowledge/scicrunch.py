@@ -28,7 +28,7 @@ import urllib.parse
 from .apinatomy import Apinatomy, CONNECTIVITY_ONTOLOGIES, APINATOMY_MODEL_PREFIX
 from .apinatomy import PATH_METADATA_QUERY
 from .namespaces import NAMESPACES
-from .utils import log
+from .utils import log                  # type: ignore
 from .utils import request_json
 
 #===============================================================================

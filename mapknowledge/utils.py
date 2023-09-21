@@ -18,14 +18,14 @@
 #===============================================================================
 
 try:
-    from mapmaker.utils import log
+    from mapmaker.utils import log      # type: ignore
 except ImportError:
     import logging as log
 
 #===============================================================================
 
 from json import JSONDecodeError
-import requests
+import requests                         # type: ignore
 
 LOOKUP_TIMEOUT = 30    # seconds; for `requests.get()`
 

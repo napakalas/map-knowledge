@@ -34,7 +34,7 @@ from .apinatomy import CONNECTIVITY_ONTOLOGIES, APINATOMY_MODEL_PREFIX
 from .nposparql import NpoSparql, NPO_NLP_NEURONS
 from .scicrunch import SCICRUNCH_API_ENDPOINT, SCICRUNCH_PRODUCTION, SCICRUNCH_STAGING
 from .scicrunch import SciCrunch
-from .utils import log
+from .utils import log                  # type: ignore
 
 #===============================================================================
 
