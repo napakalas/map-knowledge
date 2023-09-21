@@ -38,7 +38,7 @@ from .utils import log                  # type: ignore
 
 #===============================================================================
 
-KNOWLEDGE_BASE = 'knowledgebase.sqlite'
+KNOWLEDGE_BASE = 'knowledgebase.db'
 
 #===============================================================================
 
