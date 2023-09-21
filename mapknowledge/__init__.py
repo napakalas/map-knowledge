@@ -292,7 +292,6 @@ class KnowledgeStore(KnowledgeBase):
                 knowledge = json.loads(row[0])
 
         if len(knowledge) == 0 or entity == knowledge.get('label', entity):
-
             if self.__npo_db is not None: ### and entity.startswith(NPO_NLP_NEURONS):
                 knowledge = self.__npo_db.get_knowledge(entity)
             elif self.__scicrunch is not None:
@@ -348,7 +347,7 @@ class KnowledgeStore(KnowledgeBase):
         return knowledge['label']
 
     def __update_references(self, entity, references):
-    #===============================================
+    #=================================================
         if self.db is not None:
             with self.db:
                 self.db.execute('delete from publications where entity = ?', (entity, ))
