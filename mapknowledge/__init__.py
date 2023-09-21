@@ -42,7 +42,7 @@ KNOWLEDGE_BASE = 'knowledgebase.sqlite'
 
 #===============================================================================
 
-SCHEMA_VERSION = '1.1'
+SCHEMA_VERSION = '1.2'
 
 KNOWLEDGE_SCHEMA = f"""
     begin;
@@ -60,6 +60,9 @@ KNOWLEDGE_SCHEMA = f"""
 
     create table connectivity_models (model text primary key, version text);
 
+    create table pmr_models (term text, score number, model text, workspace text, exposure text);
+    create index pmr_models_term_index on pmr_models(term, score);
+
     insert into metadata (name, value) values ('schema_version', '{SCHEMA_VERSION}');
     commit;
 """
@@ -69,6 +72,13 @@ SCHEMA_UPGRADES = {
         begin;
         alter table connectivity_models add version text;
         insert or replace into metadata (name, value) values ('schema_version', '1.1');
+        commit;
+    """),
+    '1.1': ('1.2', """
+        begin;
+        create table pmr_models (term text, score number, model text, workspace text, exposure text);
+        create index pmr_models_term_index on pmr_models(term, score);
+        insert or replace into metadata (name, value) values ('schema_version', '1.2');
         commit;
     """)
 }
