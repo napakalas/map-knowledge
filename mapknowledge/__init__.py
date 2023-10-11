@@ -168,6 +168,7 @@ class KnowledgeStore(KnowledgeBase):
                        log_build=False):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge = {}     # Cache lookups
+        self.__npo_entities = []
 
         if (db_name := self.db_name) is not None:
             cache_msg = f'with cache {db_name}'
@@ -231,7 +232,9 @@ class KnowledgeStore(KnowledgeBase):
             if self.__npo_db is not None:
                 # Future: need to warn when NPO has been updated and make sure user
                 #         clears the cache...
-                return self.__npo_db.connectivity_models()
+                npo_models = self.__npo_db.connectivity_models()
+                self.__npo_entities = list(npo_models.keys())
+                return npo_models
             else:
                 log.warning('NPO connectivity models requested but no connection to NPO service')
         elif source == 'APINATOMY':
@@ -292,7 +295,7 @@ class KnowledgeStore(KnowledgeBase):
                 knowledge = json.loads(row[0])
 
         if len(knowledge) == 0 or entity == knowledge.get('label', entity):
-            if self.__npo_db is not None: ### and entity.startswith(NPO_NLP_NEURONS):
+            if self.__npo_db is not None and entity in self.__npo_entities:
                 knowledge = self.__npo_db.get_knowledge(entity)
             elif self.__scicrunch is not None:
                 # Consult SciCrunch if we don't know about the entity
