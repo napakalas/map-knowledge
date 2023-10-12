@@ -295,7 +295,7 @@ class KnowledgeStore(KnowledgeBase):
                 knowledge = json.loads(row[0])
 
         if len(knowledge) == 0 or entity == knowledge.get('label', entity):
-            if self.__npo_db is not None and entity in self.__npo_entities:
+            if self.__npo_db is not None: # and entity in self.__npo_entities:
                 knowledge = self.__npo_db.get_knowledge(entity)
             elif self.__scicrunch is not None:
                 # Consult SciCrunch if we don't know about the entity
