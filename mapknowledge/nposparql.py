@@ -292,6 +292,7 @@ class NpoSparql:
     def __init__(self):
         self.__sparql = SPARQLWrapper2(NPO_SPARQL_ENDPOINT)
         self.__load_apinatomy_connectivities() # load from file due to incompleteness in NPO
+        self.__load_connectivities() # get all connectivities promptly
 
     def query(self, sparql) -> list[dict]:
         self.__sparql.setQuery(sparql)
@@ -482,11 +483,15 @@ class NpoSparql:
                             filtered_connectivities += [edge]
                 self.__apinat_connectivities[neuron.strip()] = filtered_connectivities
 
-    def connectivity_models(self):
+    def __load_connectivities(self):
         models = {}
         for rst in self.__connectivity_models():
-            models[rst['Model_ID']] = {"label": "", "version": ""}
-        return models
+            for neuron in self.__model_knowledge(rst['Model_ID']):
+                models[neuron['Neuron_ID']] = {"label": "", "version": ""}
+        self.__connectivities = models
+
+    def connectivity_models(self):
+        return self.__connectivities
 
     def build(self):
         return {
