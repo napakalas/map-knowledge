@@ -191,6 +191,7 @@ class KnowledgeStore(KnowledgeBase):
             self.__npo_db = NpoSparql()
             npo_build = f" built at {self.__npo_db.build()['released']}" if log_build else ''
             log.info(f'With NPO{npo_build}')
+            self.__npo_entities = list(self.__npo_db.connectivity_paths().keys())
         else:
             self.__npo_db = None
             log.info('Without NPO')
@@ -233,7 +234,6 @@ class KnowledgeStore(KnowledgeBase):
                 # Future: need to warn when NPO has been updated and make sure user
                 #         clears the cache...
                 npo_models = self.__npo_db.connectivity_models()
-                self.__npo_entities = list(npo_models.keys())
                 return npo_models
             else:
                 log.warning('NPO connectivity models requested but no connection to NPO service')
