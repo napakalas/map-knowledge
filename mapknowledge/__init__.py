@@ -234,6 +234,7 @@ class KnowledgeStore(KnowledgeBase):
                 # Future: need to warn when NPO has been updated and make sure user
                 #         clears the cache...
                 npo_models = self.__npo_db.connectivity_models()
+                self.__npo_entities += list(npo_models.keys())
                 return npo_models
             else:
                 log.warning('NPO connectivity models requested but no connection to NPO service')
