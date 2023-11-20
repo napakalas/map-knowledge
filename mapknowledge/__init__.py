@@ -168,7 +168,7 @@ class KnowledgeStore(KnowledgeBase):
                        log_build=False):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge = {}     # Cache lookups
-        self.__npo_entities = []
+        self.__npo_entities = set()
 
         if (db_name := self.db_name) is not None:
             cache_msg = f'with cache {db_name}'
@@ -191,7 +191,8 @@ class KnowledgeStore(KnowledgeBase):
             self.__npo_db = NpoSparql()
             npo_build = f" built at {self.__npo_db.build()['released']}" if log_build else ''
             log.info(f'With NPO{npo_build}')
-            self.__npo_entities = list(self.__npo_db.connectivity_paths().keys())
+            self.__npo_entities = set(self.__npo_db.connectivity_paths().keys())
+            self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
         else:
             self.__npo_db = None
             log.info('Without NPO')
@@ -237,9 +238,7 @@ class KnowledgeStore(KnowledgeBase):
             if self.__npo_db is not None:
                 # Future: need to warn when NPO has been updated and make sure user
                 #         clears the cache...
-                npo_models = self.__npo_db.connectivity_models()
-                self.__npo_entities += list(npo_models.keys())
-                return npo_models
+                return self.__npo_db.connectivity_models()
             else:
                 log.warning('NPO connectivity models requested but no connection to NPO service')
         elif source == 'APINATOMY':
