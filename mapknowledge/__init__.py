@@ -179,20 +179,21 @@ class KnowledgeStore(KnowledgeBase):
             self.__scicrunch = SciCrunch(api_endpoint=scicrunch_api,
                                          scicrunch_release=scicrunch_release,
                                          scicrunch_key=scicrunch_key)
-            scicrunch_build = (f" built at {build['released']}"
-                                if log_build and (build := self.__scicrunch.build()) is not None
-                                else '')
-            release_version = 'production' if scicrunch_release == SCICRUNCH_PRODUCTION else 'staging'
-            log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.sparc_api_endpoint}")
+            if log_build:
+                scicrunch_build = (f" built at {build['released']}"
+                                    if (build := self.__scicrunch.build()) is not None else '')
+                release_version = 'production' if scicrunch_release == SCICRUNCH_PRODUCTION else 'staging'
+                log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.sparc_api_endpoint}")
         else:
             self.__scicrunch = None
             log.info('Without SCKAN')
         if npo:
             self.__npo_db = NpoSparql()
-            npo_build = f" built at {self.__npo_db.build()['released']}" if log_build else ''
-            log.info(f'With NPO{npo_build}')
             self.__npo_entities = set(self.__npo_db.connectivity_paths().keys())
             self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
+            if log_build:
+                npo_build = f" built at {self.__npo_db.build()['released']}"
+                log.info(f'With NPO{npo_build}')
         else:
             self.__npo_db = None
             log.info('Without NPO')
