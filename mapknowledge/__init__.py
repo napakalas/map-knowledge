@@ -192,8 +192,10 @@ class KnowledgeStore(KnowledgeBase):
             self.__npo_entities = set(self.__npo_db.connectivity_paths().keys())
             self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
             if log_build:
-                npo_build = f" built at {self.__npo_db.build()['released']}"
-                log.info(f'With NPO{npo_build}')
+                builds = self.__npo_db.build()
+                npo_build = f" built at {builds['released']}"
+                apinatomy_build = f" path: {builds['path']}, sha: {builds['sha']}, and date: {builds['date']}"
+                log.info(f'With NPO{npo_build}, ApiNATOMY{apinatomy_build}')
         else:
             self.__npo_db = None
             log.info('Without NPO')
