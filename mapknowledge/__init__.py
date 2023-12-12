@@ -191,8 +191,8 @@ class KnowledgeStore(KnowledgeBase):
             self.__npo_db = NpoSparql()
             self.__npo_entities = set(self.__npo_db.connectivity_paths().keys())
             self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
-            if log_build and len(builds:=self.__npo_db.build()) > 0:                
-                log.info(f"With NPO build {builds['released']}")
+            if log_build and len(builds:=self.__npo_db.build()) > 0:
+                log.info(f"With NPO build {builds.get('released', '-')}")
                 log.info(f"ApiNATOMY source: {builds['path']}")
                 log.info(f"ApiNATOMY built: {builds['date']}, SHA: {builds['sha']}")
             else:
