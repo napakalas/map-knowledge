@@ -401,6 +401,8 @@ class NpoSparql:
             knowledge['taxon'] = 'NCBITaxon:40674'      # Default to Mammalia
         if 'Sex' in metadata:
             knowledge['biologicalSex'] = metadata['Sex']
+        if 'Alert' in metadata:
+            knowledge['alert'] = metadata['Alert']
         connectivity = []
         if entity.startswith(NPO_NLP_NEURONS):
             for connection in self.__connectivity(entity):
