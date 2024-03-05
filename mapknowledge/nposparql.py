@@ -472,19 +472,23 @@ class NpoSparql:
                     r"\s+", " ", nested_structure).strip()
                 # adding coma
                 pattern = r"\[([^]]+)\]"
-
                 def add_comma(match):
                     elements = match.group(1).strip().split()
-                    return "[" + ", ".join(elements) + "]"
-
+                    return "[ " + " , ".join(elements) + " ]"
                 nested_structure = re.sub(pattern, add_comma, nested_structure)
-                # Quoting ILX and UBERON
-                pattern = r"(ILX:\d+|UBERON:\d+)"
+                # Quoting terms, e.g. UBERON, ILX
+                pattern = r"(\S+)"
                 nested_structure = re.sub(pattern, r'"\1"', nested_structure)
                 # Specifying tuple
-                nested_structure = nested_structure.replace(" )", ", )").replace(
-                    " ( ", ", ( "
-                )
+                nested_structure = nested_structure. \
+                    replace('"("', '('). \
+                    replace('")"', ')'). \
+                    replace('"["', '['). \
+                    replace('"]"', ']'). \
+                    replace('","', ','). \
+                    replace(" )", ", )"). \
+                    replace(" ( ", ", ( "). \
+                    replace('""', '"')
                 # convert to tuple
                 conn_structure = ast.literal_eval(nested_structure)
                 # parse connectivities
