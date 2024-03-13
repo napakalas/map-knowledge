@@ -2,7 +2,7 @@
 #
 #  Flatmap viewer and annotation tools
 #
-#  Copyright (c) 2019-23  David Brooks
+#  Copyright (c) 2019-24  David Brooks
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 #
 #===============================================================================
 
-__version__ = "0.16.4"
+__version__ = "0.16.5"
 
 #===============================================================================
 
