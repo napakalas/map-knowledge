@@ -20,7 +20,7 @@
 
 from pprint import pprint
 
-from SPARQLWrapper import SPARQLWrapper2
+from SPARQLWrapper import SPARQLWrapper2, SPARQLExceptions
 from SPARQLWrapper.SmartWrapper import Value
 
 import requests
@@ -31,6 +31,7 @@ import ast
 
 from .namespaces import NAMESPACES
 from .apinatomy import EXCLUDED_LAYERS
+from .utils import request_json, LOOKUP_TIMEOUT, log
 
 #===============================================================================
 
@@ -294,12 +295,22 @@ def is_node(curie: str) -> bool:
 class NpoSparql:
     def __init__(self):
         self.__sparql = SPARQLWrapper2(NPO_SPARQL_ENDPOINT)
+        self.__errors = set()
         self.__load_apinatomy_connectivities() # load from file due to incompleteness in NPO
         self.__load_connectivity_paths() # get all connectivity paths promptly
 
     def query(self, sparql) -> list[dict]:
-        self.__sparql.setQuery(sparql)
-        return self.__sparql.query().bindings
+        try:
+            self.__sparql.setQuery(sparql)
+            return self.__sparql.query().bindings
+        except SPARQLExceptions.SPARQLWrapperException as exception:
+            error = f"{exception}"
+        except Exception as exception:
+            error = f"Couldn't access {NPO_SPARQL_ENDPOINT}, Exception: {exception}"
+        if error not in self.__errors:
+            log.warning(error)
+            self.__errors.add(error)
+        return {}
 
     @staticmethod
     def __row_as_dict(result_row: dict[str, Value]):
@@ -349,13 +360,11 @@ class NpoSparql:
         return self.__result_as_dict(self.query(DB_VERSION))
 
     def __apinatomy_build(self):
-        response = requests.get(NPO_PARTIAL_ORDER_API, timeout=10)
-        if response.status_code == 200:
-            if len(rs_list:=response.json()) > 0:
-                rs_json = rs_list[0]
+        if (response:=request_json(NPO_PARTIAL_ORDER_API)) is not None:
+            if len(response) > 0:
                 return {
-                    'sha': rs_json.get('sha', ''),
-                    'date': rs_json.get('commit', {}).get('committer', {}).get('date', ''),
+                    'sha': response[0].get('sha', ''),
+                    'date': response[0].get('commit', {}).get('committer', {}).get('date', ''),
                     'path': NPO_PARTIAL_ORDER_PATH
                 }
         return {}
@@ -392,6 +401,8 @@ class NpoSparql:
             knowledge['taxon'] = 'NCBITaxon:40674'      # Default to Mammalia
         if 'Sex' in metadata:
             knowledge['biologicalSex'] = metadata['Sex']
+        if 'Alert' in metadata:
+            knowledge['alert'] = metadata['Alert']
         connectivity = []
         if entity.startswith(NPO_NLP_NEURONS):
             for connection in self.__connectivity(entity):
@@ -406,11 +417,12 @@ class NpoSparql:
     def __load_apinatomy_connectivities(self):
         # loading partial connectivities from NPO repository
         # due to unvailability in stardog
-        response = requests.get(NPO_PARTIAL_ORDER_URL, timeout=10)
-        if response.status_code == 200:
+        try:
+            response = requests.get(NPO_PARTIAL_ORDER_URL, timeout=LOOKUP_TIMEOUT)
             partial_order_text = response.text
-        else:
-            return
+        except requests.exceptions.RequestException as exception:
+            log.warning(f"ApiNATOMY knowledge won't be retrieved, couldn't access {NPO_PARTIAL_ORDER_URL}: Exception: {exception}")
+            return None
 
         # functions to parse connectivities
         def parse_connectivities(connectivities, sub_structure, root: str|tuple="blank"):
@@ -460,19 +472,23 @@ class NpoSparql:
                     r"\s+", " ", nested_structure).strip()
                 # adding coma
                 pattern = r"\[([^]]+)\]"
-
                 def add_comma(match):
                     elements = match.group(1).strip().split()
-                    return "[" + ", ".join(elements) + "]"
-
+                    return "[ " + " , ".join(elements) + " ]"
                 nested_structure = re.sub(pattern, add_comma, nested_structure)
-                # Quoting ILX and UBERON
-                pattern = r"(ILX:\d+|UBERON:\d+)"
+                # Quoting terms, e.g. UBERON, ILX
+                pattern = r"(\S+)"
                 nested_structure = re.sub(pattern, r'"\1"', nested_structure)
                 # Specifying tuple
-                nested_structure = nested_structure.replace(" )", ", )").replace(
-                    " ( ", ", ( "
-                )
+                nested_structure = nested_structure. \
+                    replace('"("', '('). \
+                    replace('")"', ')'). \
+                    replace('"["', '['). \
+                    replace('"]"', ']'). \
+                    replace('","', ','). \
+                    replace(" )", ", )"). \
+                    replace(" ( ", ", ( "). \
+                    replace('""', '"')
                 # convert to tuple
                 conn_structure = ast.literal_eval(nested_structure)
                 # parse connectivities
@@ -499,15 +515,16 @@ class NpoSparql:
                 self.__apinat_connectivities[neuron.strip()] = filtered_connectivities
 
     def __load_connectivity_paths(self):
-         models = {}
-         for rst in self.__connectivity_models():
-             for neuron in self.__model_knowledge(rst['Model_ID']):
-                 models[neuron['Neuron_ID']] = {"label": "", "version": ""}
-         self.__connectivity_paths = models
+        models = {}
+        self.__connectivity_models = self.__connectivity_models()
+        for rst in self.__connectivity_models:
+            for neuron in self.__model_knowledge(rst['Model_ID']):
+                models[neuron['Neuron_ID']] = {"label": "", "version": ""}
+        self.__connectivity_paths = models
 
     def connectivity_models(self):
         models = {}
-        for rst in self.__connectivity_models():
+        for rst in self.__connectivity_models:
             models[rst['Model_ID']] = {"label": "", "version": ""}
         return models
 
@@ -516,7 +533,8 @@ class NpoSparql:
 
     def build(self):
         builds = self.__apinatomy_build()
-        builds['released'] = self.__db_version()['versionDate']
+        if 'versionDate' in self.__db_version():
+            builds['released'] = self.__db_version()['versionDate']
         return builds
 
 #===============================================================================
