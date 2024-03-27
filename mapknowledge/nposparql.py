@@ -200,7 +200,7 @@ METADATA = """
 
     SELECT DISTINCT ?Neuron_IRI ?Neuron_Label ?Neuron_Pref_Label ?ObservedIn ?Sex
                     (GROUP_CONCAT(DISTINCT ?Phntp ; separator=",") AS ?Phenotype)
-                    ?Forward_Connection ?Alert ?Citation
+                    ?Forward_Connection ?Alert ?Citation ?Dendrite ?Axon
     WHERE
     {{
         ?Neuron_IRI rdfs:subClassOf ?type .
@@ -209,9 +209,9 @@ METADATA = """
         OPTIONAL {{?Neuron_IRI rdfs:label ?Neuron_Label.}}
         OPTIONAL {{?Neuron_IRI skos:prefLabel ?Neuron_Pref_Label.}}
 
-        OPTIONAL {{?Neuron_IRI ilxtr:hasSomaLocation ?A_IRI.}}
+        OPTIONAL {{?Neuron_IRI ilxtr:hasSomaLocation ?Dendrite.}}
         OPTIONAL {{?Neuron_IRI ilxtr:hasAxonLocation ?C_IRI.}}
-        OPTIONAL {{?Neuron_IRI (ilxtr:hasAxonTerminalLocation | ilxtr:hasAxonSensoryLocation) ?B_IRI.}}
+        OPTIONAL {{?Neuron_IRI (ilxtr:hasAxonTerminalLocation | ilxtr:hasAxonSensoryLocation) ?Axon.}}
 
         OPTIONAL {{?Neuron_IRI ilxtr:hasPhenotypicSex ?Sex.}}
         OPTIONAL {{?Neuron_IRI ilxtr:literatureCitation ?Citation.}}
@@ -228,7 +228,7 @@ METADATA = """
                                 ) ?Phntp.}}
         FILTER(?Neuron_IRI = {entity})
     }} GROUP BY ?Neuron_IRI ?Neuron_Label ?Neuron_Pref_Label ?ObservedIn ?Sex
-        ?Forward_Connection ?Alert ?Citation
+        ?Forward_Connection ?Alert ?Citation ?Dendrite ?Axon
 """
 
 NODE_METADATA = """
@@ -333,7 +333,14 @@ class NpoSparql:
     def __result_as_dict(results: list[dict]):
         if len(results):
             ## could have lots of rows if multiple values for query vars, e.g. citation, species, ...
-            return NpoSparql.__row_as_dict(results[0])
+            result_dict = {}
+            for r in results:
+                for k, v in NpoSparql.__row_as_dict(r).items():
+                    if k not in result_dict: result_dict[k] = []
+                    if v not in result_dict[k]: result_dict[k] += [v]
+            for k, v in result_dict.items():
+                result_dict[k] = ','.join(v)
+            return result_dict
         else:
             return {}
 
@@ -403,6 +410,12 @@ class NpoSparql:
             knowledge['biologicalSex'] = metadata['Sex']
         if 'Alert' in metadata:
             knowledge['alert'] = metadata['Alert']
+        if 'Dendrite' in metadata:
+            knowledge['dendrites'] = metadata['Dendrite'].split(',')
+        if 'Axon' in metadata:
+            knowledge['axons'] = metadata['Axon'].split(',')
+        if 'Citation' in metadata:
+            knowledge['references'] = metadata['Citation'].split(',')
         connectivity = []
         if entity.startswith(NPO_NLP_NEURONS):
             for connection in self.__connectivity(entity):
