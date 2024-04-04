@@ -25,13 +25,13 @@ __version__ = "0.16.8"
 import sqlite3
 import json
 import os
-
 from pathlib import Path
 
 #===============================================================================
 
 from .apinatomy import CONNECTIVITY_ONTOLOGIES, APINATOMY_MODEL_PREFIX
-from .nposparql import NpoSparql, NPO_NLP_NEURONS
+# from .nposparql import NpoSparql, NPO_NLP_NEURONS
+from .npo import Npo
 from .scicrunch import SCICRUNCH_API_ENDPOINT, SCICRUNCH_PRODUCTION, SCICRUNCH_STAGING
 from .scicrunch import SciCrunch
 from .utils import log                  # type: ignore
@@ -165,6 +165,7 @@ class KnowledgeStore(KnowledgeBase):
                        create=True,
                        read_only=False,
                        npo=False,
+                       npo_release=None,
                        log_build=False):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge = {}     # Cache lookups
@@ -193,7 +194,8 @@ class KnowledgeStore(KnowledgeBase):
             self.__scicrunch = None
             log.info('Without SCKAN')
         if npo:
-            self.__npo_db = NpoSparql()
+            # self.__npo_db = NpoSparql()
+            self.__npo_db = Npo(npo_release)
             self.__npo_entities = set(self.__npo_db.connectivity_paths().keys())
             self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
             npo_builds = self.__npo_db.build()
