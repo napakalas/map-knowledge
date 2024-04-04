@@ -197,8 +197,8 @@ class KnowledgeStore(KnowledgeBase):
                 log.info(f"With NPO build {builds['released']}")
                 log.info(f"         source: {builds['path']}")
                 log.info(f"         built: {builds['date']}, SHA: {builds['sha']}")
-            else:
-                self.__npo_db = None    
+            elif len(builds:=self.__npo_db.build()) == 0:
+                self.__npo_db = None
         else:
             self.__npo_db = None
             log.info('Without NPO')
