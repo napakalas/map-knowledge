@@ -305,8 +305,8 @@ class Npo:
                 knowledge['taxon'] = taxon
             else:
                 knowledge['taxon'] = ['NCBITaxon:40674']      # Default to Mammalia
-            if len(sex:=path_kn['sex']) > 0:
-                knowledge['biologicalSex'] = sex
+            if len(sex:=path_kn['sex']) == 1:
+                knowledge['biologicalSex'] = sex[0]
             if len(alert:=path_kn['note_alert']) > 0:
                 knowledge['alert'] = alert
             nodes = {}
