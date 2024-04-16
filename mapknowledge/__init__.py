@@ -182,7 +182,9 @@ class KnowledgeStore(KnowledgeBase):
                                          scicrunch_key=scicrunch_key)
             sckan_build = self.__scicrunch.build()
             if sckan_build is not None:
-                self.__sckan_provenance['sckan_released'] = sckan_build['released']
+                self.__sckan_provenance['sckan'] = {
+                    'date': sckan_build['released']
+                }
             if log_build:
                 scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
                 release_version = 'production' if scicrunch_release == SCICRUNCH_PRODUCTION else 'staging'
@@ -196,14 +198,14 @@ class KnowledgeStore(KnowledgeBase):
             self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
             npo_builds = self.__npo_db.build()
             if len(npo_builds):
-                self.__sckan_provenance['npo_released'] = npo_builds['released']
+                self.__sckan_provenance['npo'] = {
+                    'date': npo_builds['released']
+                }
                 self.__sckan_provenance['apinatomy'] = {
-                    'path': npo_builds['path'],
                     'date': npo_builds['date'],
+                    'path': npo_builds['path'],
                     'sha': npo_builds['sha']
                 }
-                self.__sckan_provenance['npo_released'] = npo_builds['released']
-                self.__sckan_provenance['npo_released'] = npo_builds['released']
                 if log_build:
                     log.info(f"With NPO build {npo_builds['released']}")
                     log.info(f"ApiNATOMY source: {npo_builds['path']}")
