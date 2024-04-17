@@ -18,7 +18,7 @@
 #
 #===============================================================================
 
-__version__ = "0.16.6"
+__version__ = "0.16.8"
 
 #===============================================================================
 
@@ -170,6 +170,7 @@ class KnowledgeStore(KnowledgeBase):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge = {}     # Cache lookups
         self.__npo_entities = set()
+        self.__sckan_provenance = {}
 
         if (db_name := self.db_name) is not None:
             cache_msg = f'with cache {db_name}'
@@ -180,9 +181,13 @@ class KnowledgeStore(KnowledgeBase):
             self.__scicrunch = SciCrunch(api_endpoint=scicrunch_api,
                                          scicrunch_release=scicrunch_release,
                                          scicrunch_key=scicrunch_key)
+            sckan_build = self.__scicrunch.build()
+            if sckan_build is not None:
+                self.__sckan_provenance['sckan'] = {
+                    'date': sckan_build['released']
+                }
             if log_build:
-                scicrunch_build = (f" built at {build['released']}"
-                                    if (build := self.__scicrunch.build()) is not None else '')
+                scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
                 release_version = 'production' if scicrunch_release == SCICRUNCH_PRODUCTION else 'staging'
                 log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.sparc_api_endpoint}")
         else:
@@ -193,12 +198,22 @@ class KnowledgeStore(KnowledgeBase):
             self.__npo_db = Npo(npo_release)
             self.__npo_entities = set(self.__npo_db.connectivity_paths().keys())
             self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
-            if log_build and len(builds:=self.__npo_db.build()) > 0:                
-                log.info(f"With NPO build {builds['released']}")
-                log.info(f"         source: {builds['path']}")
-                log.info(f"         built: {builds['date']}, SHA: {builds['sha']}")
-            elif len(builds:=self.__npo_db.build()) == 0:
-                self.__npo_db = None
+            npo_builds = self.__npo_db.build()
+            if len(npo_builds):
+                self.__sckan_provenance['npo'] = {
+                    'date': npo_builds['released']
+                }
+                self.__sckan_provenance['apinatomy'] = {
+                    'date': npo_builds['date'],
+                    'path': npo_builds['path'],
+                    'sha': npo_builds['sha']
+                }
+                if log_build:
+                    log.info(f"With NPO build {npo_builds['released']}")
+                    log.info(f"ApiNATOMY source: {npo_builds['path']}")
+                    log.info(f"ApiNATOMY built: {npo_builds['date']}, SHA: {npo_builds['sha']}")
+            else:
+                self.__npo_db = None    
         else:
             self.__npo_db = None
             log.info('Without NPO')
@@ -224,6 +239,10 @@ class KnowledgeStore(KnowledgeBase):
     @property
     def scicrunch(self):
         return self.__scicrunch
+
+    @property
+    def sckan_provenance(self):
+        return self.__sckan_provenance
 
     def connectivity_models(self, source:str='APINATOMY') -> dict[str, dict[str, str]]:
     #==================================================================================

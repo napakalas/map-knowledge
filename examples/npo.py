@@ -13,6 +13,7 @@ if __name__ == '__main__':
 
     store = KnowledgeStore(npo=True, log_build=True, scicrunch_release=SCICRUNCH_STAGING)
     if store.npo:
+        pprint(store.sckan_provenance)
         print('NPO models:')
         pprint(store.npo.connectivity_models())
         print('NPO paths:')

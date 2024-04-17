@@ -249,27 +249,26 @@ class Npo:
         self.__npo_knowledge, self.__npo_terms = load_knowledge_from_ttl(self.__npo_release)
 
     def __check_npo_release(self, npo_release):
-        response = None
-        if npo_release is not None:
-            response = request_json(f'{NPO_API}/git/refs/tags/{npo_release}')
-        if response is None:
-            releases = request_json(f'{NPO_API}/releases')
-            if releases is not None:
-                identified_release = releases[0]['name']
-                response = request_json(f'{NPO_API}/git/refs/tags/{identified_release}')
+        if (response:=request_json(f'{NPO_API}/releases')) is not None:
+            releases = {r['tag_name']:r for r in response}
+            if npo_release is None or npo_release not in releases:
+                release = response[0]
                 if npo_release is None:
-                    log.warning(f'The NPO release is not provided. It is now set to {identified_release}')
+                    log.warning(f'The NPO release is not provided. It is now set to {release["tag_name"]}')
                 else:
-                    log.warning(f'The NPO {npo_release} release is not found. It is now set to {identified_release}')
-                npo_release = identified_release
-        if response is not None:
+                    log.warning(f'The NPO {npo_release} release is not found. It is now set to {release["tag_name"]}')
+            else:
+                release = releases[npo_release]
+            response = request_json(f'{NPO_API}/git/refs/tags/{release["tag_name"]}')
             self.__npo_build = {
-                'sha': response['object']['sha'],
-                'date': npo_release[len('sckan-'):],
-                'released': npo_release,
-                'path': f'{NPO_GIT}/tree/{npo_release}'
+                'sha': response['object']['sha'] if response is not None else release['tag_name'],
+                'date': release['created_at'],
+                'released': release['created_at'].split('T')[0],
+                'path': f'{NPO_GIT}/tree/{release["tag_name"]}'
             }
-            return npo_release
+            return release['tag_name']
+        else:
+            log.error(f'{NPO_API} is not reachable.')
 
     def connectivity_models(self):
         return {v['class']:{'label': '', 'version': ''} for v in self.__npo_knowledge.values()}
