@@ -301,9 +301,9 @@ class Npo:
             if len(phenotype:=path_kn['phenotype']+path_kn['circuit_type']) > 0:
                 knowledge['phenotypes'] = phenotype
             if len(taxon:=path_kn['species']) > 0:
-                knowledge['taxon'] = taxon
+                knowledge['taxons'] = taxon
             else:
-                knowledge['taxon'] = ['NCBITaxon:40674']      # Default to Mammalia
+                knowledge['taxons'] = ['NCBITaxon:40674']      # Default to Mammalia
             if len(sex:=path_kn['sex']) == 1:
                 knowledge['biologicalSex'] = sex[0]
             if len(alert:=path_kn['note_alert']) > 0:
