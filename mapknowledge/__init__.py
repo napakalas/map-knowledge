@@ -192,7 +192,7 @@ class KnowledgeStore(KnowledgeBase):
                 log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.sparc_api_endpoint}")
         else:
             self.__scicrunch = None
-            log.info('Without SCKAN')
+            log.info('Without Scicrunch')
         if npo:
             # self.__npo_db = NpoSparql()
             self.__npo_db = Npo(npo_release)
