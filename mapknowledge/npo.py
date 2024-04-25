@@ -262,8 +262,8 @@ class Npo:
             response = request_json(f'{NPO_API}/git/refs/tags/{release["tag_name"]}')
             self.__npo_build = {
                 'sha': response['object']['sha'] if response is not None else release['tag_name'],
-                'date': release['created_at'],
                 'released': release['created_at'].split('T')[0],
+                'release': release["tag_name"],
                 'path': f'{NPO_GIT}/tree/{release["tag_name"]}'
             }
             return release['tag_name']
