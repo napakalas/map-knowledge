@@ -183,11 +183,9 @@ class KnowledgeStore(KnowledgeBase):
                                          scicrunch_key=scicrunch_key)
             sckan_build = self.__scicrunch.build()
             if sckan_build is not None:
-                self.__sckan_provenance['sckan'] = {
-                    'scicrunch':{
-                        'url': scicrunch_api,
-                        'date': sckan_build['released']
-                    }
+                self.__sckan_provenance['scicrunch'] = {
+                    'url': scicrunch_api,
+                    'date': sckan_build['released']
                 }
             if log_build:
                 scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
@@ -203,8 +201,7 @@ class KnowledgeStore(KnowledgeBase):
             self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
             npo_builds = self.__npo_db.build()
             if len(npo_builds):
-                if 'sckan' not in self.__sckan_provenance: self.__sckan_provenance['sckan'] = {}
-                self.__sckan_provenance['sckan']['npo'] = {
+                self.__sckan_provenance['npo'] = {
                         'date': npo_builds['released'],
                         'release': npo_builds['release'],
                         'path': npo_builds['path'],
