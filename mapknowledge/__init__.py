@@ -203,13 +203,12 @@ class KnowledgeStore(KnowledgeBase):
             self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
             npo_builds = self.__npo_db.build()
             if len(npo_builds):
-                self.__sckan_provenance['sckan'] = {
-                    'npo':{
+                if 'sckan' not in self.__sckan_provenance: self.__sckan_provenance['sckan'] = {}
+                self.__sckan_provenance['sckan']['npo'] = {
                         'date': npo_builds['released'],
                         'release': npo_builds['release'],
                         'path': npo_builds['path'],
                         'sha': npo_builds['sha']
-                    }
                 }
                 if log_build:
                     log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
