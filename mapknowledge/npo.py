@@ -25,6 +25,7 @@ from pyontutils.namespaces import rdfs, ilxtr
 from neurondm.core import Config, graphBase, NegPhenotype
 from neurondm.core import OntTerm, OntId, RDFL
 from neurondm import orders
+import git
 
 #===============================================================================
 
@@ -204,43 +205,49 @@ def get_connectivity_edges(partial_order):
     return list(set(filtered_connectivities))
 
 def load_knowledge_from_ttl(npo_release):
-    config = Config('random-merge')
     g = OntGraph()  # load and query graph
-
-    # remove scigraph and interlex calls
-    graphBase._sgv = None
-    del graphBase._sgv
-    if len(OntTerm.query._services) > 1:
-        # backup services and avoid issues on rerun
-        _old_query_services = OntTerm.query._services
-        _noloc_query_services = _old_query_services[1:]
-
-    OntTerm.query._services = (RDFL(g, OntId),)
-
-    for f in NPO_TTLS:
-        ori = OntResIri(f'{NPO_RAW}/{npo_release}/{gen_neurons_path}{f}{SUFFIX}')
-        [g.add(t) for t in ori.graph]
-
-    for f in ('apinatomy-neuron-populations', 
-                '../../npo'):
-        p = os.path.normpath(gen_neurons_path + f)
-        ori = OntResIri(f'{NPO_RAW}/{npo_release}/{p}{SUFFIX}')
-        [g.add((s, rdfs.label, o)) for s, o in ori.graph[:rdfs.label:]]
-
-    config.load_existing(g)
-    neurons = config.neurons()  # scigraph required here if deps not removed above
-    
     neuron_knowledge = {}
     neuron_terms = {}
-    for n in neurons:
-        neuron = for_composer(n)
-        neuron['connectivity'] = get_connectivity_edges(neuron['order'])
-        neuron['class'] = f'ilxtr:{type(n).__name__}'
-        neuron['terms-dict'] = {NAMESPACES.curie(str(p.p)):str(p.pLabel) for p in n}
-        neuron_terms = {**neuron_terms, **neuron['terms-dict']}
-        neuron_knowledge[neuron['id']] = neuron
-    return neuron_knowledge, neuron_terms, g
 
+    try:
+        config = Config('random-merge')
+
+        # remove scigraph and interlex calls
+        graphBase._sgv = None
+        del graphBase._sgv
+        if len(OntTerm.query._services) > 1:
+            # backup services and avoid issues on rerun
+            _old_query_services = OntTerm.query._services
+            _noloc_query_services = _old_query_services[1:]
+
+        OntTerm.query._services = (RDFL(g, OntId),)
+
+        for f in NPO_TTLS:
+            ori = OntResIri(f'{NPO_RAW}/{npo_release}/{gen_neurons_path}{f}{SUFFIX}')
+            [g.add(t) for t in ori.graph]
+
+        for f in ('apinatomy-neuron-populations',
+                    '../../npo'):
+            p = os.path.normpath(gen_neurons_path + f)
+            ori = OntResIri(f'{NPO_RAW}/{npo_release}/{p}{SUFFIX}')
+            [g.add((s, rdfs.label, o)) for s, o in ori.graph[:rdfs.label:]]
+
+        config.load_existing(g)
+        neurons = config.neurons()  # scigraph required here if deps not removed above
+
+        for n in neurons:
+            neuron = for_composer(n)
+            neuron['connectivity'] = get_connectivity_edges(neuron['order'])
+            neuron['class'] = f'ilxtr:{type(n).__name__}'
+            neuron['terms-dict'] = {NAMESPACES.curie(str(p.p)):str(p.pLabel) for p in n}
+            neuron_terms = {**neuron_terms, **neuron['terms-dict']}
+            neuron_knowledge[neuron['id']] = neuron
+
+    except (git.exc.InvalidGitRepositoryError, git.exc.NoSuchPathError) as e:
+        log.warning(e)
+        log.warning('The provided repository is error or not exist')
+
+    return neuron_knowledge, neuron_terms, g
 #===============================================================================
 
 class Npo:
