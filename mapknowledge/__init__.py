@@ -183,7 +183,8 @@ class KnowledgeStore(KnowledgeBase):
                                          scicrunch_key=scicrunch_key)
             sckan_build = self.__scicrunch.build()
             if sckan_build is not None:
-                self.__sckan_provenance['sckan'] = {
+                self.__sckan_provenance['scicrunch'] = {
+                    'url': scicrunch_api,
                     'date': sckan_build['released']
                 }
             if log_build:
@@ -192,7 +193,7 @@ class KnowledgeStore(KnowledgeBase):
                 log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.sparc_api_endpoint}")
         else:
             self.__scicrunch = None
-            log.info('Without SCKAN')
+            log.info('Without Scicrunch')
         if npo:
             # self.__npo_db = NpoSparql()
             self.__npo_db = Npo(npo_release)
@@ -201,17 +202,13 @@ class KnowledgeStore(KnowledgeBase):
             npo_builds = self.__npo_db.build()
             if len(npo_builds):
                 self.__sckan_provenance['npo'] = {
-                    'date': npo_builds['released']
-                }
-                self.__sckan_provenance['apinatomy'] = {
-                    'date': npo_builds['date'],
-                    'path': npo_builds['path'],
-                    'sha': npo_builds['sha']
+                        'date': npo_builds['released'],
+                        'release': npo_builds['release'],
+                        'path': npo_builds['path'],
+                        'sha': npo_builds['sha']
                 }
                 if log_build:
-                    log.info(f"With NPO build {npo_builds['released']}")
-                    log.info(f"ApiNATOMY source: {npo_builds['path']}")
-                    log.info(f"ApiNATOMY built: {npo_builds['date']}, SHA: {npo_builds['sha']}")
+                    log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
             else:
                 self.__npo_db = None    
         else:

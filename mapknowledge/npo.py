@@ -239,14 +239,14 @@ def load_knowledge_from_ttl(npo_release):
         neuron['terms-dict'] = {NAMESPACES.curie(str(p.p)):str(p.pLabel) for p in n}
         neuron_terms = {**neuron_terms, **neuron['terms-dict']}
         neuron_knowledge[neuron['id']] = neuron
-    return neuron_knowledge, neuron_terms
+    return neuron_knowledge, neuron_terms, g
 
 #===============================================================================
 
 class Npo:
     def __init__(self, npo_release):
         self.__npo_release = self.__check_npo_release(npo_release)
-        self.__npo_knowledge, self.__npo_terms = load_knowledge_from_ttl(self.__npo_release)
+        self.__npo_knowledge, self.__npo_terms, self.__rdf_graph = load_knowledge_from_ttl(self.__npo_release)
 
     def __check_npo_release(self, npo_release):
         if (response:=request_json(f'{NPO_API}/releases')) is not None:
@@ -262,8 +262,8 @@ class Npo:
             response = request_json(f'{NPO_API}/git/refs/tags/{release["tag_name"]}')
             self.__npo_build = {
                 'sha': response['object']['sha'] if response is not None else release['tag_name'],
-                'date': release['created_at'],
                 'released': release['created_at'].split('T')[0],
+                'release': release["tag_name"],
                 'path': f'{NPO_GIT}/tree/{release["tag_name"]}'
             }
             return release['tag_name']
@@ -283,19 +283,22 @@ class Npo:
         knowledge = {
             'id': entity
         }
-        # check if entity is an ILX or UBERON term
+        # get label from npo_terms or from rdflib's graph
         if entity in self.__npo_terms:
             knowledge['label'] = self.__npo_terms[entity]
+        else:
+            if len(labels:=[o for o in self.__rdf_graph.objects(subject=NAMESPACES.uri(entity), predicate=rdfs.label)]) > 0:
+                knowledge['label'] = labels[0]
 
         # check if entity is a connectivity model
         if entity in self.connectivity_models():
-            knowledge['label'] = entity
+            if 'label' not in knowledge: knowledge['label'] = entity
             knowledge['paths'] = [{'id': v['id'], 'models': v['id']} for v in self.__npo_knowledge.values() if v['class'] == entity]
             knowledge['references'] = []
 
         # check if entity is a connecitvity path
         if (path_kn:=self.__npo_knowledge.get(entity)) is not None:
-            knowledge['label'] = path_kn['label']
+            if 'label' not in knowledge: knowledge['label'] = path_kn['label']
             knowledge['long-label'] = path_kn['label']
             knowledge['connectivity'] = path_kn['connectivity']
             if len(phenotype:=path_kn['phenotype']+path_kn['circuit_type']) > 0:
@@ -312,10 +315,12 @@ class Npo:
             for c in path_kn['connectivity']:
                 nodes[tuple([c[0][0]] + list(c[0][1]))] = c[0]
                 nodes[tuple([c[1][0]] + list(c[1][1]))] = c[1]
-            dendrites = [nodes[c] for d in path_kn['origin'] for c in nodes if d in c]
+            c_dendrites = {d:[c for c in nodes if d in c] for d in path_kn['origin']}
+            dendrites = [nodes[c] for cd_list in c_dendrites.values() for c in cd_list if len(c) == len(max(cd_list, key=len))]
             knowledge['dendrites'] = list(set(dendrites))
-            axons = [nodes[c] for a in path_kn['dest'] for c in nodes if a['loc'] in c]
-            knowledge['axons'] = axons
+            c_axons = {a['loc']:[c for c in nodes if a['loc'] in c] for a in path_kn['dest']}
+            axons = [nodes[c] for cd_list in c_axons.values() for c in cd_list if len(c) == len(max(cd_list, key=len))]
+            knowledge['axons'] = list(set(axons))
             if len(references:=path_kn['provenance']) > 0:
                 knowledge['references'] = references
 
