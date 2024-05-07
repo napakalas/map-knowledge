@@ -166,7 +166,8 @@ class KnowledgeStore(KnowledgeBase):
                        read_only=False,
                        npo=False,
                        npo_release=None,
-                       log_build=False):
+                       sckan_provenance=False,
+                       log_provenance=False):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge = {}     # Cache lookups
         self.__npo_entities = set()
@@ -181,34 +182,35 @@ class KnowledgeStore(KnowledgeBase):
             self.__scicrunch = SciCrunch(api_endpoint=scicrunch_api,
                                          scicrunch_release=scicrunch_release,
                                          scicrunch_key=scicrunch_key)
-            sckan_build = self.__scicrunch.build()
-            if sckan_build is not None:
-                self.__sckan_provenance['scicrunch'] = {
-                    'url': scicrunch_api,
-                    'date': sckan_build['released']
-                }
-            if log_build:
-                scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
-                release_version = 'production' if scicrunch_release == SCICRUNCH_PRODUCTION else 'staging'
-                log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.sparc_api_endpoint}")
+            if sckan_provenance:
+                sckan_build = self.__scicrunch.build()
+                if sckan_build is not None:
+                    self.__sckan_provenance['scicrunch'] = {
+                        'url': scicrunch_api,
+                        'date': sckan_build['released']
+                    }
+                if log_provenance:
+                    scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
+                    release_version = 'production' if scicrunch_release == SCICRUNCH_PRODUCTION else 'staging'
+                    log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.sparc_api_endpoint}")
         else:
             self.__scicrunch = None
             log.info('Without Scicrunch')
         if npo:
-            # self.__npo_db = NpoSparql()
             self.__npo_db = Npo(npo_release)
             self.__npo_entities = set(self.__npo_db.connectivity_paths().keys())
             self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
-            npo_builds = self.__npo_db.build()
-            if len(npo_builds):
-                self.__sckan_provenance['npo'] = {
-                        'date': npo_builds['released'],
-                        'release': npo_builds['release'],
-                        'path': npo_builds['path'],
-                        'sha': npo_builds['sha']
-                }
-                if log_build:
-                    log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
+            if sckan_provenance:
+                npo_builds = self.__npo_db.build()
+                if len(npo_builds):
+                    self.__sckan_provenance['npo'] = {
+                            'date': npo_builds['released'],
+                            'release': npo_builds['release'],
+                            'path': npo_builds['path'],
+                            'sha': npo_builds['sha']
+                    }
+                    if log_provenance:
+                        log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
             else:
                 self.__npo_db = None    
         else:
