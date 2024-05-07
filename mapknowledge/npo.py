@@ -19,18 +19,24 @@
 #===============================================================================
 
 import os
-import rdflib
-from pyontutils.core import OntGraph, OntResIri
-from pyontutils.namespaces import rdfs, ilxtr
-from neurondm.core import Config, graphBase, NegPhenotype
-from neurondm.core import OntTerm, OntId, RDFL
-from neurondm import orders
-import git
 
 #===============================================================================
 
-from .namespaces import NAMESPACES
+import git
+
+from neurondm.core import Config, graphBase, NegPhenotype
+from neurondm.core import OntTerm, OntId, RDFL
+from neurondm import orders
+
+from pyontutils.core import OntGraph, OntResIri
+from pyontutils.namespaces import rdfs, ilxtr
+
+import rdflib
+
+#===============================================================================
+
 from .apinatomy import EXCLUDED_LAYERS
+from .namespaces import NAMESPACES
 from .utils import request_json, log
 
 #===============================================================================
@@ -66,7 +72,6 @@ def makelpesrdf():
             neuron.core_graph[neuron.identifier:predicate]]
 
     return lpes, lrdf, collect
-
 
 def simplify(e):
     if e is None:
