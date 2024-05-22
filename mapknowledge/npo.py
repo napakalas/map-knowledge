@@ -24,7 +24,6 @@ import tempfile
 
 #===============================================================================
 
-import git
 # Create a temporary directory for neurondm to look in to see if NPO is already
 # checked out. This prevents neurondm from trying to use some other git repository
 # above the installation directory of its Python package
@@ -70,8 +69,9 @@ NPO_TTLS = ('apinat-partial-orders',
             'apinat-pops-more',
             'apinat-simple-sheet',
             'sparc-nlp')
-SUFFIX = '.ttl'
-gen_neurons_path = 'ttl/generated/neurons/'
+
+GEN_NEURONS_PATH = 'ttl/generated/neurons/'
+TURTLE_SUFFIX = '.ttl'
 
 #===============================================================================
 
@@ -234,45 +234,39 @@ def load_knowledge_from_ttl(npo_release):
     neuron_knowledge = {}
     neuron_terms = {}
 
-    try:
-        config = Config('random-merge')
+    # remove scigraph and interlex calls
+    graphBase._sgv = None
+    del graphBase._sgv
+    if len(OntTerm.query._services) > 1:
+        # backup services and avoid issues on rerun
+        _old_query_services = OntTerm.query._services
+        _noloc_query_services = _old_query_services[1:]
 
-        # remove scigraph and interlex calls
-        graphBase._sgv = None
-        del graphBase._sgv
-        if len(OntTerm.query._services) > 1:
-            # backup services and avoid issues on rerun
-            _old_query_services = OntTerm.query._services
-            _noloc_query_services = _old_query_services[1:]
+    OntTerm.query._services = (RDFL(g, OntId),)
 
-        OntTerm.query._services = (RDFL(g, OntId),)
+    for f in NPO_TTLS:
+        ori = OntResIri(f'{NPO_RAW}/{npo_release}/{GEN_NEURONS_PATH}{f}{TURTLE_SUFFIX}')
+        [g.add(t) for t in ori.graph]
 
-        for f in NPO_TTLS:
-            ori = OntResIri(f'{NPO_RAW}/{npo_release}/{gen_neurons_path}{f}{SUFFIX}')
-            [g.add(t) for t in ori.graph]
+    for f in ('apinatomy-neuron-populations', '../../npo'):
+        p = os.path.normpath(GEN_NEURONS_PATH + f)
+        ori = OntResIri(f'{NPO_RAW}/{npo_release}/{p}{TURTLE_SUFFIX}')
+        [g.add((s, rdfs.label, o)) for s, o in ori.graph[:rdfs.label:]]
 
-        for f in ('apinatomy-neuron-populations',
-                    '../../npo'):
-            p = os.path.normpath(gen_neurons_path + f)
-            ori = OntResIri(f'{NPO_RAW}/{npo_release}/{p}{SUFFIX}')
-            [g.add((s, rdfs.label, o)) for s, o in ori.graph[:rdfs.label:]]
+    config = Config('npo-connectivity')
+    config.load_existing(g)
+    neurons = config.neurons()  # scigraph required here if deps not removed above
 
-        config.load_existing(g)
-        neurons = config.neurons()  # scigraph required here if deps not removed above
-
-        for n in neurons:
-            neuron = for_composer(n)
-            neuron['connectivity'] = get_connectivity_edges(neuron['order'])
-            neuron['class'] = f'ilxtr:{type(n).__name__}'
-            neuron['terms-dict'] = {NAMESPACES.curie(str(p.p)):str(p.pLabel) for p in n}
-            neuron_terms = {**neuron_terms, **neuron['terms-dict']}
-            neuron_knowledge[neuron['id']] = neuron
-
-    except (git.exc.InvalidGitRepositoryError, git.exc.NoSuchPathError) as e:
-        log.warning(e)
-        log.warning('The provided repository is error or not exist')
+    for n in neurons:
+        neuron = for_composer(n)
+        neuron['connectivity'] = get_connectivity_edges(neuron['order'])
+        neuron['class'] = f'ilxtr:{type(n).__name__}'
+        neuron['terms-dict'] = {NAMESPACES.curie(str(p.p)):str(p.pLabel) for p in n}
+        neuron_terms = {**neuron_terms, **neuron['terms-dict']}
+        neuron_knowledge[neuron['id']] = neuron
 
     return neuron_knowledge, neuron_terms, g
+
 #===============================================================================
 
 class Npo:
