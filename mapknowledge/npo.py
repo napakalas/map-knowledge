@@ -20,10 +20,17 @@
 
 import os
 import logging
+import tempfile
 
 #===============================================================================
 
 import git
+# Create a temporary directory for neurondm to look in to see if NPO is already
+# checked out. This prevents neurondm from trying to use some other git repository
+# above the installation directory of its Python package
+
+temp_directory = tempfile.TemporaryDirectory()
+os.environ['PYONTUTILS_ONTOLOGY_LOCAL_REPO'] = temp_directory.name
 
 # Suppress logging of all messages while neurondm and pyontutils are imported
 logging.disable(logging.CRITICAL+1)
