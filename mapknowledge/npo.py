@@ -75,6 +75,11 @@ TURTLE_SUFFIX = '.ttl'
 
 #===============================================================================
 
+class NPOException(Exception):
+    pass
+
+#===============================================================================
+
 #### Functions to load knowledge from SCKAN Github ###
 
 def makelpesrdf():
@@ -274,27 +279,31 @@ class Npo:
         self.__npo_release = self.__check_npo_release(npo_release)
         self.__npo_knowledge, self.__npo_terms, self.__rdf_graph = load_knowledge_from_ttl(self.__npo_release)
 
-    def __check_npo_release(self, npo_release):
+    def __check_npo_release(self, npo_release) -> str:
+    #=================================================
         if (response:=request_json(f'{NPO_API}/releases')) is not None:
-            releases = {r['tag_name']:r for r in response}
-            if npo_release is None or npo_release not in releases:
-                release = response[0]
-                if npo_release is None:
-                    log.warning(f'The NPO release is not provided. It is now set to {release["tag_name"]}')
+            releases = {r['tag_name']:r for r in response if r['tag_name'].startswith('sckan-')}
+            if npo_release is None:
+                if len(releases):
+                    # Use most recent
+                    npo_release = sorted(releases.keys())[-1]
+                    log.warning(f'No NPO release given: used {npo_release}')
                 else:
-                    log.warning(f'The NPO {npo_release} release is not found. It is now set to {release["tag_name"]}')
-            else:
-                release = releases[npo_release]
+                    raise NPOException(f'No NPO releases available')
+            elif npo_release not in releases:
+                raise NPOException(f'Unknown NPO release: {npo_release}')
+
+            release = releases[npo_release]
             response = request_json(f'{NPO_API}/git/refs/tags/{release["tag_name"]}')
             self.__npo_build = {
-                'sha': response['object']['sha'] if response is not None else release['tag_name'],
+                'sha': response['object']['sha'] if response is not None else None,
                 'released': release['created_at'].split('T')[0],
                 'release': release["tag_name"],
                 'path': f'{NPO_GIT}/tree/{release["tag_name"]}'
             }
             return release['tag_name']
         else:
-            log.error(f'{NPO_API} is not reachable.')
+            raise NPOException(f'NPO at {NPO_API} is not available')
 
     def connectivity_models(self) -> list[str]:
     #==========================================
