@@ -22,13 +22,13 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
     print('Production:')
-    store = KnowledgeStore(scicrunch_release=SCICRUNCH_PRODUCTION)
+    store = KnowledgeStore(sckan_release=SCICRUNCH_PRODUCTION)
     print_knowledge(store, KEAST_MODEL)
     print_knowledge(store, KEAST_NEURON(9))
     store.close()
 
     print('Staging:')
-    store = KnowledgeStore(scicrunch_release=SCICRUNCH_STAGING)
+    store = KnowledgeStore(sckan_release=SCICRUNCH_STAGING)
     print_knowledge(store, KEAST_MODEL)
     print_knowledge(store, KEAST_NEURON(9))
     store.close()

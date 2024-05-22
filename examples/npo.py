@@ -1,6 +1,5 @@
 from pprint import pprint
 from mapknowledge import KnowledgeStore
-from mapknowledge.scicrunch import SCICRUNCH_PRODUCTION, SCICRUNCH_STAGING
 
 def print_knowledge(store, entity):
     print(f'{entity}:')
@@ -11,7 +10,7 @@ if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.INFO)
 
-    store = KnowledgeStore(npo=True, log_build=True, scicrunch_release=SCICRUNCH_STAGING)
+    store = KnowledgeStore(npo=True, log_provenance=True, sckan_release='sckan-2024-03-26', scicrunch_api=None)
     if store.npo:
         pprint(store.sckan_provenance)
         print('NPO models:')
