@@ -19,10 +19,14 @@
 #===============================================================================
 
 import os
+import logging
 
 #===============================================================================
 
 import git
+
+# Suppress logging of all messages while neurondm and pyontutils are imported
+logging.disable(logging.CRITICAL+1)
 
 from neurondm.core import Config, graphBase, NegPhenotype
 from neurondm.core import OntTerm, OntId, RDFL
@@ -30,6 +34,15 @@ from neurondm import orders
 
 from pyontutils.core import OntGraph, OntResIri
 from pyontutils.namespaces import rdfs, ilxtr
+
+# Renable general logging
+logging.disable(logging.NOTSET)
+
+# Suppress all but critical messages from neurondm
+logger = logging.getLogger('neurondm')
+logger.setLevel(logging.CRITICAL+1)
+
+#===============================================================================
 
 import rdflib
 
