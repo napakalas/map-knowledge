@@ -223,14 +223,6 @@ class KnowledgeStore(KnowledgeBase):
         self.__cleaned_connectivity = clean_connectivity
 
     @property
-    def npo(self):
-        return self.__npo_db
-
-    @property
-    def scicrunch(self):
-        return self.__scicrunch
-
-    @property
     def sckan_provenance(self):
         return self.__sckan_provenance
 
