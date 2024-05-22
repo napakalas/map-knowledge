@@ -26,13 +26,14 @@ import sqlite3
 import json
 import os
 from pathlib import Path
+from typing import Optional
 
 #===============================================================================
 
 from .apinatomy import CONNECTIVITY_ONTOLOGIES, APINATOMY_MODEL_PREFIX
 # from .nposparql import NpoSparql, NPO_NLP_NEURONS
 from .npo import Npo
-from .scicrunch import SCICRUNCH_API_ENDPOINT, SCICRUNCH_PRODUCTION, SCICRUNCH_STAGING
+from .scicrunch import SCICRUNCH_PRODUCTION, SCICRUNCH_STAGING
 from .scicrunch import SciCrunch
 from .utils import log                  # type: ignore
 
@@ -161,11 +162,9 @@ class KnowledgeStore(KnowledgeBase):
                        create=True,
                        read_only=False,
                        clean_connectivity=False,
-                       scicrunch_api=SCICRUNCH_API_ENDPOINT,
-                       scicrunch_release=SCICRUNCH_PRODUCTION,
                        scicrunch_key=None,
-                       npo=False,
-                       npo_release=None,
+                       scicrunch_version=SCICRUNCH_PRODUCTION,
+                       sckan_version: Optional[str]=None,
                        sckan_provenance=False,
                        log_provenance=False):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
@@ -178,43 +177,36 @@ class KnowledgeStore(KnowledgeBase):
         else:
             cache_msg = f'with no cache'
         log.info(f'Map Knowledge version {__version__} {cache_msg}')
-        if scicrunch_api is not None:
-            self.__scicrunch = SciCrunch(api_endpoint=scicrunch_api,
-                                         scicrunch_release=scicrunch_release,
-                                         scicrunch_key=scicrunch_key)
-            if sckan_provenance:
-                sckan_build = self.__scicrunch.build()
-                if sckan_build is not None:
-                    self.__sckan_provenance['scicrunch'] = {
-                        'url': scicrunch_api,
-                        'date': sckan_build['released']
-                    }
+
+        self.__scicrunch = SciCrunch(scicrunch_release=scicrunch_version, scicrunch_key=scicrunch_key)
+        if sckan_provenance:
+            sckan_build = self.__scicrunch.build()
+            if sckan_build is not None:
+                self.__sckan_provenance['scicrunch'] = {
+                    'url': self.__scicrunch.api_endpoint,
+                    'date': sckan_build['released']
+                }
+            if log_provenance:
+                scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
+                release_version = 'production' if scicrunch_version == SCICRUNCH_PRODUCTION else 'staging'
+                log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.api_endpoint}")
+
+        self.__npo_db = Npo(sckan_version)
+        self.__npo_entities = set(self.__npo_db.connectivity_paths())
+        self.__npo_entities.update(self.__npo_db.connectivity_models())
+        if sckan_provenance:
+            npo_builds = self.__npo_db.build()
+            if len(npo_builds):
+                self.__sckan_provenance['npo'] = {
+                        'date': npo_builds['released'],
+                        'release': npo_builds['release'],
+                        'path': npo_builds['path'],
+                        'sha': npo_builds['sha']
+                }
                 if log_provenance:
-                    scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
-                    release_version = 'production' if scicrunch_release == SCICRUNCH_PRODUCTION else 'staging'
-                    log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.sparc_api_endpoint}")
-        else:
-            self.__scicrunch = None
-        if npo:
-            self.__npo_db = Npo(npo_release)
-            self.__npo_entities = set(self.__npo_db.connectivity_paths().keys())
-            self.__npo_entities.update(self.__npo_db.connectivity_models().keys())
-            if sckan_provenance:
-                npo_builds = self.__npo_db.build()
-                if len(npo_builds):
-                    self.__sckan_provenance['npo'] = {
-                            'date': npo_builds['released'],
-                            'release': npo_builds['release'],
-                            'path': npo_builds['path'],
-                            'sha': npo_builds['sha']
-                    }
-                    if log_provenance:
-                        log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
-            else:
-                self.__npo_db = None    
+                    log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
         else:
             self.__npo_db = None
-            log.info('Without NPO')
 
         # Optionally clear local connectivity knowledge
         if (self.db is not None and clean_connectivity):
@@ -322,10 +314,14 @@ class KnowledgeStore(KnowledgeBase):
                 knowledge = json.loads(row[0])
 
         if len(knowledge) == 0 or entity == knowledge.get('label', entity):
-            if self.__npo_db is not None and entity in self.__npo_entities:
-                knowledge = self.__npo_db.get_knowledge(entity)
-            elif self.__scicrunch is not None:
-                # Consult SciCrunch if we don't know about the entity
+            # We don't have knowledge or a valid label for the entity
+            ontology = entity.split(':')[0]
+            if entity in self.__npo_entities or ontology in CONNECTIVITY_ONTOLOGIES:
+                # Always consult NPO for connectivity or if we know it has the term
+                if self.__npo_db:
+                    knowledge = self.__npo_db.get_knowledge(entity)
+            else:
+                # Otherwise consult Scicrunch
                 knowledge = self.__scicrunch.get_knowledge(entity)
                 if 'connectivity' in knowledge:
                     # Get phenotype, taxon, and other metadata

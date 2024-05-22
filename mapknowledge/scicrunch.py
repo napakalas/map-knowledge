@@ -51,8 +51,8 @@ CONNECTIVITY_QUERY_NEXT = 'neru-7'
 
 #===============================================================================
 
-SCICRUNCH_INTERLEX_VOCAB = '{API_ENDPOINT}/ilx/search/curie/{TERM}'
-SCICRUNCH_SPARC_API = '{API_ENDPOINT}/{SCICRUNCH_RELEASE}'
+SCICRUNCH_INTERLEX_VOCAB = f'{SCICRUNCH_API_ENDPOINT}/ilx/search/curie/{{TERM}}'
+SCICRUNCH_SPARC_API = f'{SCICRUNCH_API_ENDPOINT}/{{SCICRUNCH_RELEASE}}'
 
 SCICRUNCH_SPARC_CYPHER = f'{SCICRUNCH_SPARC_API}/cypher/execute.json'
 SCICRUNCH_SPARC_VOCAB = f'{SCICRUNCH_SPARC_API}/vocabulary/id/{{TERM}}.json'
@@ -73,11 +73,9 @@ SCKAN_RELEASE_NOTES = 'https://github.com/SciCrunch/sparc-curation/blob/master/d
 #===============================================================================
 
 class SciCrunch(object):
-    def __init__(self, api_endpoint=SCICRUNCH_API_ENDPOINT, scicrunch_release=SCICRUNCH_PRODUCTION, scicrunch_key=None):
-        self.__api_endpoint = api_endpoint
+    def __init__(self, scicrunch_release=SCICRUNCH_PRODUCTION, scicrunch_key=None):
         self.__scicrunch_release = scicrunch_release
-        self.__sparc_api_endpoint = SCICRUNCH_SPARC_API.format(API_ENDPOINT=api_endpoint,
-                                                               SCICRUNCH_RELEASE=scicrunch_release)
+        self.__api_endpoint = SCICRUNCH_SPARC_API.format(SCICRUNCH_RELEASE=scicrunch_release)
         self.__connectivity_query = CONNECTIVITY_QUERY if scicrunch_release == SCICRUNCH_PRODUCTION else CONNECTIVITY_QUERY_NEXT
         self.__unknown_entities = []
         self.__scicrunch_key = scicrunch_key if scicrunch_key is not None else os.environ.get('SCICRUNCH_API_KEY')
@@ -85,8 +83,8 @@ class SciCrunch(object):
             log.warning('Undefined SCICRUNCH_API_KEY: SciCrunch knowledge will not be looked up')
 
     @property
-    def sparc_api_endpoint(self):
-        return self.__sparc_api_endpoint
+    def api_endpoint(self):
+        return self.__api_endpoint
 
     def query(self, cypher: str, **kwds) -> Optional[dict]:
     #======================================================
@@ -97,8 +95,7 @@ class SciCrunch(object):
             }
             params['cypherQuery'] = cypher
             params.update(kwds)
-            return request_json(SCICRUNCH_SPARC_CYPHER.format(API_ENDPOINT=self.__api_endpoint,
-                                                              SCICRUNCH_RELEASE=self.__scicrunch_release),
+            return request_json(SCICRUNCH_SPARC_CYPHER.format(SCICRUNCH_RELEASE=self.__scicrunch_release),
                                 params=params)
 
     def build(self):
@@ -123,8 +120,7 @@ class SciCrunch(object):
                 'api_key': self.__scicrunch_key,
                 'limit': 9999,
             }
-            data = request_json(SCICRUNCH_MODELS_WITH_VERSION.format(API_ENDPOINT=self.__api_endpoint,
-                                                                     SCICRUNCH_RELEASE=self.__scicrunch_release),
+            data = request_json(SCICRUNCH_MODELS_WITH_VERSION.format(SCICRUNCH_RELEASE=self.__scicrunch_release),
                                 params=params)
             if data is not None:
                 local_to_uri = {
@@ -149,30 +145,26 @@ class SciCrunch(object):
             }
             ontology = entity.split(':')[0]
             if   ontology in INTERLEX_ONTOLOGIES:
-                data = request_json(SCICRUNCH_INTERLEX_VOCAB.format(API_ENDPOINT=self.__api_endpoint,
-                                                                    SCICRUNCH_RELEASE=self.__scicrunch_release,
+                data = request_json(SCICRUNCH_INTERLEX_VOCAB.format(SCICRUNCH_RELEASE=self.__scicrunch_release,
                                                                     TERM=entity),
                                     params=params)
                 if data is not None:
                     knowledge['label'] = data.get('data', {}).get('label', entity)
             elif ontology in CONNECTIVITY_ONTOLOGIES:
-                data = request_json(SCICRUNCH_CONNECTIVITY_NEURONS.format(API_ENDPOINT=self.__api_endpoint,
-                                                                          SCICRUNCH_RELEASE=self.__scicrunch_release,
+                data = request_json(SCICRUNCH_CONNECTIVITY_NEURONS.format(SCICRUNCH_RELEASE=self.__scicrunch_release,
                                                                           CONNECTIVITY_QUERY=self.__connectivity_query,
                                                                           NEURON_ID=entity),
                                     params=params)
                 if data is not None:
                     knowledge = Apinatomy.neuron_knowledge(entity, data)
             elif entity.startswith(APINATOMY_MODEL_PREFIX):
-                data = request_json(SCICRUNCH_MODEL_REFERENCES.format(API_ENDPOINT=self.__api_endpoint,
-                                                                      SCICRUNCH_RELEASE=self.__scicrunch_release,
+                data = request_json(SCICRUNCH_MODEL_REFERENCES.format(SCICRUNCH_RELEASE=self.__scicrunch_release,
                                                                       MODEL_ID=urllib.parse.quote(entity, '')),
                                     params=params)
                 if data is not None:
                     knowledge = Apinatomy.model_knowledge(entity, data)
             else:
-                data = request_json(SCICRUNCH_SPARC_VOCAB.format(API_ENDPOINT=self.__api_endpoint,
-                                                                 SCICRUNCH_RELEASE=self.__scicrunch_release,
+                data = request_json(SCICRUNCH_SPARC_VOCAB.format(SCICRUNCH_RELEASE=self.__scicrunch_release,
                                                                  TERM=entity),
                                     params=params)
                 if data is not None:
