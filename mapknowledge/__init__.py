@@ -234,28 +234,22 @@ class KnowledgeStore(KnowledgeBase):
     def sckan_provenance(self):
         return self.__sckan_provenance
 
-    def connectivity_models(self, source:str='APINATOMY') -> dict[str, dict[str, str]]:
-    #==================================================================================
+    def connectivity_models(self) -> list[str]:
+    #==========================================
         """
-        Get URIs of connectivity models held in a knowledge source.
+        Get URIs of connectivity models held in thr NPO knowledge source.
 
-        :param      source:  The source of knowledge, either ``APINATOMY`` or ``NPO``.
-                             Defaults to ``APINATOMY``.
-        :type       source:  str
-
-        :returns:   A dictionary with each entry's key being the URI of either
-                    an ApiNATOMY connectivity model or an NPO model, and
-                    its value being a dictionary with two entries giving details about
-                    the model: ``label`` and `version`.
-        :rtype:     dict[str, dict[str, str]]
+        :returns:   A list of model URIs
         """
-        if source == 'NPO':
-            if self.__npo_db is not None:
-                # Future: need to warn when NPO has been updated and make sure user
-                #         clears the cache...
-                return self.__npo_db.connectivity_models()
-            else:
-                log.warning('NPO connectivity models requested but no connection to NPO service')
+        if self.__npo_db is not None:
+            # Future: need to warn when NPO has been updated and make sure user
+            #         clears the cache...
+            return self.__npo_db.connectivity_models()
+        else:
+            log.warning('NPO connectivity models requested but no connection to NPO service')
+        """
+        ## FUTURE: Code has been kept to be adapted for caching of NPO connectivity
+        ##
         elif source == 'APINATOMY':
             def cached_models():
                 return {row[0]: {'label': row[1], 'version': row[2]}
@@ -284,7 +278,23 @@ class KnowledgeStore(KnowledgeBase):
             return cached_models()
         else:
             log.warning(f'Unknown connectivity model source -- must be APINATOMY or NPO')
-        return {}
+        """
+        return []
+
+    def connectivity_paths(self) -> list[str]:
+    #=========================================
+        """
+        Get URIs of connectivity paths held in thr NPO knowledge source.
+
+        :returns:   A list of path URIs
+        """
+        if self.__npo_db is not None:
+            # Future: need to warn when NPO has been updated and make sure user
+            #         clears the cache...
+            return self.__npo_db.connectivity_paths()
+        else:
+            log.warning('NPO connectivity paths requested but no connection to NPO service')
+        return []
 
     def labels(self):
     #================

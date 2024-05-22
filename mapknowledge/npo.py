@@ -302,11 +302,13 @@ class Npo:
         else:
             log.error(f'{NPO_API} is not reachable.')
 
-    def connectivity_models(self):
-        return {v['class']:{'label': '', 'version': ''} for v in self.__npo_knowledge.values()}
+    def connectivity_models(self) -> list[str]:
+    #==========================================
+        return [v['class'] for v in self.__npo_knowledge.values()]
     
-    def connectivity_paths(self):
-        return {k:{'label': '', 'version': ''} for k in self.__npo_knowledge.keys()}
+    def connectivity_paths(self) -> list[str]:
+    #=========================================
+        return list(self.__npo_knowledge.keys())
 
     def build(self):
         return self.__npo_build

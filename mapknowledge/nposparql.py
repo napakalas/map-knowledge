@@ -528,20 +528,14 @@ class NpoSparql:
                 self.__apinat_connectivities[neuron.strip()] = filtered_connectivities
 
     def __load_connectivity_paths(self):
-        models = {}
-        self.__connectivity_models = self.__connectivity_models()
-        for rst in self.__connectivity_models:
-            for neuron in self.__model_knowledge(rst['Model_ID']):
-                models[neuron['Neuron_ID']] = {"label": "", "version": ""}
-        self.__connectivity_paths = models
+        self.__connectivity_paths = [neuron['Neuron_ID']
+                                        for rst in self.__connectivity_models()
+                                            for neuron in self.__model_knowledge(rst['Model_ID'])]
 
-    def connectivity_models(self):
-        models = {}
-        for rst in self.__connectivity_models:
-            models[rst['Model_ID']] = {"label": "", "version": ""}
-        return models
+    def connectivity_models(self) -> list[str]:
+        return [rst['Model_ID'] for rst in self.__connectivity_models()]
 
-    def connectivity_paths(self):
+    def connectivity_paths(self) -> list[str]:
         return self.__connectivity_paths
 
     def build(self):
