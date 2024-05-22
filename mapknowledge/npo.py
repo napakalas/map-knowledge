@@ -21,6 +21,7 @@
 import os
 import logging
 import tempfile
+from typing import Any
 
 #===============================================================================
 
@@ -44,7 +45,7 @@ from pyontutils.namespaces import rdfs, ilxtr
 # Renable general logging
 logging.disable(logging.NOTSET)
 
-# Suppress all but critical messages from neurondm
+# Suppress all messages from neurondm
 logger = logging.getLogger('neurondm')
 logger.setLevel(logging.CRITICAL+1)
 
@@ -65,6 +66,7 @@ NPO_REPO = 'NIF-Ontology'
 NPO_API = f'https://api.github.com/repos/{NPO_OWNER}/{NPO_REPO}'
 NPO_RAW = f'https://raw.githubusercontent.com/{NPO_OWNER}/{NPO_REPO}'
 NPO_GIT = f'https://github.com/{NPO_OWNER}/{NPO_REPO}'
+
 NPO_TTLS = ('apinat-partial-orders',
             'apinat-pops-more',
             'apinat-simple-sheet',
@@ -82,7 +84,8 @@ class NPOException(Exception):
 
 #### Functions to load knowledge from SCKAN Github ###
 
-def makelpesrdf():
+def makelpesrdf() -> tuple:
+#==========================
     collect = []
     def lpes(neuron, predicate):
         """ get predicates from python bags """
@@ -98,7 +101,8 @@ def makelpesrdf():
 
     return lpes, lrdf, collect
 
-def simplify(e):
+def simplify(e: Any) -> Any:
+#===========================
     if e is None:
         return
     elif isinstance(e, rdflib.Literal):  # blank case
@@ -107,6 +111,7 @@ def simplify(e):
         return OntTerm(e).curie
 
 def simplify_nested(f, nested):
+#==============================
     for e in nested:
         if isinstance(e, list) or isinstance(e, tuple):
             yield tuple(simplify_nested(f, e))
@@ -115,7 +120,8 @@ def simplify_nested(f, nested):
         else:
             yield f(e)
 
-def for_composer(n, cull=False):
+def for_composer(n, cull=False) -> dict[str, Any]:
+#=================================================
     lpes, lrdf, collect = makelpesrdf()
     _po = n.partialOrder()
     fc = dict(
@@ -177,7 +183,8 @@ def for_composer(n, cull=False):
                      for pos in unaccounted_pos]]))
     return {k:v for k, v in fc.items() if v} if cull else fc
 
-def get_connectivity_edges(partial_order):
+def get_connectivity_edges(partial_order) -> list:
+#=================================================
     # functions to parse connectivities
     def parse_connectivities(connectivities, partial_order):#, root: str|tuple="blank"):
         if len(partial_order) > 1:
@@ -234,7 +241,8 @@ def get_connectivity_edges(partial_order):
         filtered_connectivities += [tuple(new_edge)]
     return list(set(filtered_connectivities))
 
-def load_knowledge_from_ttl(npo_release):
+def load_knowledge_from_ttl(npo_release: str) -> tuple:
+#======================================================
     g = OntGraph()  # load and query graph
     neuron_knowledge = {}
     neuron_terms = {}
@@ -313,10 +321,12 @@ class Npo:
     #=========================================
         return list(self.__npo_knowledge.keys())
 
-    def build(self):
+    def build(self) -> dict[str, str]:
+    #=================================
         return self.__npo_build
     
-    def get_knowledge(self, entity) -> dict:
+    def get_knowledge(self, entity) -> dict[str, Any]:
+    #=================================================
         knowledge = {
             'id': entity
         }
