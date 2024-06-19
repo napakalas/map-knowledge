@@ -69,13 +69,13 @@ files = [
 
 [[package]]
 name = "certifi"
-version = "2024.2.2"
+version = "2024.6.2"
 description = "Python package for providing Mozilla's CA Bundle."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "certifi-2024.2.2-py3-none-any.whl", hash = "sha256:dc383c07b76109f368f6106eee2b593b04a011ea4d55f652c6ca24a754d1cdd1"},
-    {file = "certifi-2024.2.2.tar.gz", hash = "sha256:0569859f95fc761b18b45ef421b1290a0f65f147e92a1e5eb3e635f9a5e4e66f"},
+    {file = "certifi-2024.6.2-py3-none-any.whl", hash = "sha256:ddc6c8ce995e6987e7faf5e3f1b02b302836a0e5d98ece18392cb1a36c72ad56"},
+    {file = "certifi-2024.6.2.tar.gz", hash = "sha256:3cd43f1c6fa7dedc5899d69d3ad0398fd018ad1a17fba83ddaf78aa46c747516"},
 ]
 
 [[package]]
@@ -361,13 +361,13 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2,<1.0.dev0)"]
 
 [[package]]
 name = "google-api-python-client"
-version = "2.129.0"
+version = "2.133.0"
 description = "Google API Client Library for Python"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google-api-python-client-2.129.0.tar.gz", hash = "sha256:984cc8cc8eb4923468b1926d2b8effc5b459a4dda3c845896eb87c153b28ef84"},
-    {file = "google_api_python_client-2.129.0-py2.py3-none-any.whl", hash = "sha256:d50f7e2dfdbb7fc2732f6a0cba1c54d7bb676390679526c6bb628c901e43ec86"},
+    {file = "google-api-python-client-2.133.0.tar.gz", hash = "sha256:293092905b66a046d3187a99ac454e12b00cc2c70444f26eb2f1f9c1a82720b4"},
+    {file = "google_api_python_client-2.133.0-py2.py3-none-any.whl", hash = "sha256:396fe676ea0dfed066654dcf9f8dea77a1342f9d9bb23bb88e45b7b81e773926"},
 ]
 
 [package.dependencies]
@@ -379,13 +379,13 @@ uritemplate = ">=3.0.1,<5"
 
 [[package]]
 name = "google-auth"
-version = "2.29.0"
+version = "2.30.0"
 description = "Google Authentication Library"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google-auth-2.29.0.tar.gz", hash = "sha256:672dff332d073227550ffc7457868ac4218d6c500b155fe6cc17d2b13602c360"},
-    {file = "google_auth-2.29.0-py2.py3-none-any.whl", hash = "sha256:d452ad095688cd52bae0ad6fafe027f6a6d6f560e810fec20914e17a09526415"},
+    {file = "google-auth-2.30.0.tar.gz", hash = "sha256:ab630a1320f6720909ad76a7dbdb6841cdf5c66b328d690027e4867bdfb16688"},
+    {file = "google_auth-2.30.0-py2.py3-none-any.whl", hash = "sha256:8df7da660f62757388b8a7f249df13549b3373f24388cb5d2f1dd91cc18180b5"},
 ]
 
 [package.dependencies]
@@ -435,17 +435,17 @@ tool = ["click (>=6.0.0)"]
 
 [[package]]
 name = "googleapis-common-protos"
-version = "1.63.0"
+version = "1.63.1"
 description = "Common protobufs used in Google APIs"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "googleapis-common-protos-1.63.0.tar.gz", hash = "sha256:17ad01b11d5f1d0171c06d3ba5c04c54474e883b66b949722b4938ee2694ef4e"},
-    {file = "googleapis_common_protos-1.63.0-py2.py3-none-any.whl", hash = "sha256:ae45f75702f7c08b541f750854a678bd8f534a1a6bace6afe975f1d0a82d6632"},
+    {file = "googleapis-common-protos-1.63.1.tar.gz", hash = "sha256:c6442f7a0a6b2a80369457d79e6672bb7dcbaab88e0848302497e3ec80780a6a"},
+    {file = "googleapis_common_protos-1.63.1-py2.py3-none-any.whl", hash = "sha256:0e1c2cdfcbc354b76e4a211a35ea35d6926a835cba1377073c4861db904a1877"},
 ]
 
 [package.dependencies]
-protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<5.0.0.dev0"
+protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<6.0.0.dev0"
 
 [package.extras]
 grpc = ["grpcio (>=1.44.0,<2.0.0.dev0)"]
@@ -505,13 +505,13 @@ zdesk = ["pyyaml", "zdesk"]
 
 [[package]]
 name = "idlib"
-version = "0.0.1.dev20"
+version = "0.0.1.dev21"
 description = "A library for working with identifiers of all kinds."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "idlib-0.0.1.dev20-py2.py3-none-any.whl", hash = "sha256:309b8adb6993d9fa4abe1952da069c61f9d06a78a2770c247e6f873be8b36f1f"},
-    {file = "idlib-0.0.1.dev20.tar.gz", hash = "sha256:8844396fe044ea6c16be39fc9d12d6b50556e5f055519cfd8625fe86a9ae57e3"},
+    {file = "idlib-0.0.1.dev21-py2.py3-none-any.whl", hash = "sha256:68b8d93fdc3ded6b01ce00cc05cdf3f52d3aec0ba9aa2b9bb67259adb968df8e"},
+    {file = "idlib-0.0.1.dev21.tar.gz", hash = "sha256:52a41bee8c84738c93f924d426788d99c65d801b3cb4f3477ec372de0c57d40f"},
 ]
 
 [package.dependencies]
@@ -1110,13 +1110,13 @@ files = [
 
 [[package]]
 name = "rdflib"
-version = "6.3.2"
+version = "7.0.0"
 description = "RDFLib is a Python library for working with RDF, a simple yet powerful language for representing information."
 optional = false
-python-versions = ">=3.7,<4.0"
+python-versions = ">=3.8.1,<4.0.0"
 files = [
-    {file = "rdflib-6.3.2-py3-none-any.whl", hash = "sha256:36b4e74a32aa1e4fa7b8719876fb192f19ecd45ff932ea5ebbd2e417a0247e63"},
-    {file = "rdflib-6.3.2.tar.gz", hash = "sha256:72af591ff704f4caacea7ecc0c5a9056b8553e0489dd4f35a9bc52dbd41522e0"},
+    {file = "rdflib-7.0.0-py3-none-any.whl", hash = "sha256:0438920912a642c866a513de6fe8a0001bd86ef975057d6962c79ce4771687cd"},
+    {file = "rdflib-7.0.0.tar.gz", hash = "sha256:9995eb8569428059b8c1affd26b25eac510d64f5043d9ce8c84e0d0036e995ae"},
 ]
 
 [package.dependencies]
@@ -1160,13 +1160,13 @@ rdflib-jsonld = "0.6.1"
 
 [[package]]
 name = "requests"
-version = "2.32.2"
+version = "2.32.3"
 description = "Python HTTP for Humans."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "requests-2.32.2-py3-none-any.whl", hash = "sha256:fc06670dd0ed212426dfeb94fc1b983d917c4f9847c863f313c9dfaaffb7c23c"},
-    {file = "requests-2.32.2.tar.gz", hash = "sha256:dd951ff5ecf3e3b3aa26b40703ba77495dab41da839ae72ef3c8e5d8e2433289"},
+    {file = "requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"},
+    {file = "requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760"},
 ]
 
 [package.dependencies]
@@ -1422,4 +1422,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "a92e37b1be77d4db17c3cdf07a98c5068edbf32cee4a7bb9c007ec4e2609fd65"
+content-hash = "f65cd7a935118bac4ace0a360fdd6372410a4db5620ffe817010d190078c3eda"
