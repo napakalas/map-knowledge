@@ -167,7 +167,8 @@ class KnowledgeStore(KnowledgeBase):
                        sckan_version: Optional[str]=None,
                        sckan_provenance=False,
                        log_provenance=False,
-                       use_npo=True):
+                       use_npo=True,
+                       use_scicrunch=True):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge = {}     # Cache lookups
         self.__npo_entities = set()
@@ -179,8 +180,10 @@ class KnowledgeStore(KnowledgeBase):
             cache_msg = f'with no cache'
         log.info(f'Map Knowledge version {__version__} {cache_msg}')
 
-        self.__scicrunch = SciCrunch(scicrunch_release=scicrunch_version, scicrunch_key=scicrunch_key)
-        if sckan_provenance:
+        self.__scicrunch = (SciCrunch(scicrunch_release=scicrunch_version, scicrunch_key=scicrunch_key)
+                                if use_scicrunch else
+                            None)
+        if self.__scicrunch is not None and sckan_provenance:
             sckan_build = self.__scicrunch.build()
             if sckan_build is not None:
                 self.__sckan_provenance['scicrunch'] = {
@@ -324,7 +327,7 @@ class KnowledgeStore(KnowledgeBase):
                 # Always consult NPO for connectivity or if we know it has the term
                 if self.__npo_db:
                     knowledge = self.__npo_db.get_knowledge(entity)
-            else:
+            elif self.__scicrunch is not None:
                 # Otherwise consult Scicrunch
                 knowledge = self.__scicrunch.get_knowledge(entity)
                 if 'connectivity' in knowledge:
