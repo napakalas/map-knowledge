@@ -235,16 +235,14 @@ class KnowledgeStore(KnowledgeBase):
 
         # Optionally clear local connectivity knowledge
         if (self.db is not None and clean_connectivity):
-            log.info(f'Clearing connectivity knowledge...')
-            entities = [f'{APINATOMY_MODEL_PREFIX}%']
-            entities.extend([f'{ontology}:%' for ontology in CONNECTIVITY_ONTOLOGIES])
-            condition = ' or '.join(len(entities)*['entity like ?'])
+            log.info(f'Clearing connectivity knowledge for `{self.__source}`...')
+            namespaces = [f'{APINATOMY_MODEL_PREFIX}%']
+            namespaces.extend([f'{ontology}:%' for ontology in CONNECTIVITY_ONTOLOGIES])
+            condition = ' or '.join(len(namespaces)*['entity like ?'])
+            params = [self.__source] + namespaces
             self.db.execute('begin')
-            self.db.execute(f'delete from knowledge where {condition}', tuple(entities))
-            self.db.execute(f'delete from labels where {condition}', tuple(entities))
-            self.db.execute(f'delete from publications where {condition}', tuple(entities))
-            self.db.execute(f'delete from connectivity_models')
-            self.db.execute(f'delete from connectivity_nodes')
+            self.db.execute(f'delete from knowledge where source=? and ({condition})', tuple(params))
+            self.db.execute(f'delete from connectivity_nodes where source=?', (self.__source,))
             self.db.commit()
         self.__cleaned_connectivity = clean_connectivity
 
