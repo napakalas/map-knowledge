@@ -26,7 +26,7 @@ import sqlite3
 import json
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 #===============================================================================
 
@@ -170,9 +170,9 @@ class KnowledgeStore(KnowledgeBase):
                        use_npo=True,
                        use_scicrunch=True):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
-        self.__entity_knowledge = {}     # Cache lookups
-        self.__npo_entities = set()
-        self.__sckan_provenance = {}
+        self.__entity_knowledge: dict[tuple[Optional[str], str], dict[str, Any]] = {}     # Cache lookups
+        self.__npo_entities: set[str] = set()
+        self.__sckan_provenance: dict[str, Optional[str]|dict[str, str]] = {}
 
         if (db_name := self.db_name) is not None:
             cache_msg = f'with cache {db_name}'
