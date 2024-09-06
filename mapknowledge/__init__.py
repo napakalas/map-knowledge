@@ -325,7 +325,6 @@ class KnowledgeStore(KnowledgeBase):
 
         if len(knowledge) == 0 or entity == knowledge.get('label', entity):
             # We don't have knowledge or a valid label for the entity so check SCKAN
-            knowledge['source'] = self.__source
             ontology = entity.split(':')[0]
             if entity in self.__npo_entities or ontology in CONNECTIVITY_ONTOLOGIES:
                 # Always consult NPO for connectivity or if we know it has the term
@@ -338,7 +337,8 @@ class KnowledgeStore(KnowledgeBase):
                     # Get phenotype, taxon, and other metadata
                     knowledge.update(self.__scicrunch.connectivity_metadata(entity))
 
-            if len(knowledge) and self.db is not None and not self.read_only:
+            knowledge['source'] = self.__source
+            if len(knowledge) > 1 and self.db is not None and not self.read_only:
                 if not self.db.in_transaction:
                     self.db.execute('begin')
                 # Use 'long-label' if the entity's label' is the same as itself.
