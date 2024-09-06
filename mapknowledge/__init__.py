@@ -230,6 +230,9 @@ class KnowledgeStore(KnowledgeBase):
         else:
             self.__npo_db = None
 
+        if self.__source is None and self.db:
+            row = self.db.execute('select distinct source from knowledge order by source desc').fetchone()
+            self.__source = row[0]
         if self.__source:
             self.__sckan_provenance['knowledge_source'] = self.__source
 
