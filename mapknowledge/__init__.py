@@ -160,7 +160,7 @@ class KnowledgeBase(object):
             if not self.__db.in_transaction:
                 self.__db.execute('begin')
             self.__db.execute('replace into metadata values (?, ?)', (name,value))
-            self.__db.execute('commit')
+            self.__db.commit()
 
 #===============================================================================
 
@@ -239,7 +239,7 @@ class KnowledgeStore(KnowledgeBase):
             self.db.execute(f'delete from labels where {condition}', tuple(entities))
             self.db.execute(f'delete from publications where {condition}', tuple(entities))
             self.db.execute(f'delete from connectivity_models')
-            self.db.execute('commit')
+            self.db.commit()
         self.__cleaned_connectivity = clean_connectivity
 
     @property
@@ -372,7 +372,7 @@ class KnowledgeStore(KnowledgeBase):
                     connectivity_terms.update(node1[1])
                 for connectivity_term in connectivity_terms:
                     self.label(connectivity_term)
-            if len(knowledge) > 0 and self.db is not None and not self.read_only:
+            if len(knowledge) and self.db is not None and not self.read_only:
                 if not self.db.in_transaction:
                     self.db.execute('begin')
                 # Use 'long-label' if the entity's label' is the same as itself.
@@ -386,6 +386,7 @@ class KnowledgeStore(KnowledgeBase):
                     self.db.execute('replace into labels values (?, ?)', (entity, knowledge['label']))
                 if 'references' in knowledge:
                     self.__update_references(entity, knowledge.get('references', []))
+                # Finished entity specific updates so commit transaction
                 self.db.commit()
 
         # Use the entity's value as its label if none is defined
