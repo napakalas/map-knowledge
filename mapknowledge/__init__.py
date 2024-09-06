@@ -269,38 +269,6 @@ class KnowledgeStore(KnowledgeBase):
             return self.__npo_db.connectivity_models()
         else:
             log.warning('NPO connectivity models requested but no connection to NPO service')
-        """
-        ## FUTURE: Code has been kept to be adapted for caching of NPO connectivity
-        ##
-        elif source == 'APINATOMY':
-            def cached_models():
-                return {row[0]: {'label': row[1], 'version': row[2]}
-                    for row in self.db.execute('''
-                        select c.model, l.label, c.version from connectivity_models as c
-                            left join labels as l on c.model = l.entity order by model
-                        ''')} if self.db is not None else {}
-            if self.__scicrunch is not None:
-                sckan_models = self.__scicrunch.connectivity_models()
-                if not self.__cleaned_connectivity:
-                    model_info = cached_models()
-                    for model, properties in sckan_models.items():
-                        if ((cached_properties := model_info.get(model)) is not None
-                        and cached_properties['version'] != properties['version']):
-                            raise ValueError(f'Connectivity model {model} has changed in SCKAN -- please `clean connectivity`')
-                if self.db is not None and not self.read_only:
-                    if not self.db.in_transaction:
-                        self.db.execute('begin')
-                    for model, properties in sckan_models.items():
-                        self.db.execute('replace into connectivity_models values (?, ?)', (model, properties['version']))
-                        self.db.execute('replace into labels values (?, ?)', (model, properties['label']))
-                    self.db.commit()
-                return sckan_models
-            else:
-                log.warning('APINATOMY connectivity models requested but no connection to SCKAN service, cached data returned')
-            return cached_models()
-        else:
-            log.warning(f'Unknown connectivity model source -- must be APINATOMY or NPO')
-        """
         return []
 
     def connectivity_paths(self) -> list[str]:
