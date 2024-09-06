@@ -64,6 +64,9 @@ KNOWLEDGE_SCHEMA = f"""
     create table pmr_models (term text, score number, model text, workspace text, exposure text);
     create index pmr_models_term_index on pmr_models(term, score);
 
+    create table connectivity_nodes (source text, node text, path text);
+    create unique index connectivity_nodes_index on connectivity_nodes(source, node, path);
+
     insert into metadata (name, value) values ('schema_version', '{SCHEMA_VERSION}');
     commit;
 """
@@ -87,6 +90,8 @@ SCHEMA_UPGRADES = {
         alter table knowledge add source text;
         drop index knowledge_index;
         create unique index knowledge_index on knowledge(source, entity);
+        create table connectivity_nodes (source text, node text, path text);
+        create unique index connectivity_nodes_index on connectivity_nodes(source, node, path);
         insert or replace into metadata (name, value) values ('schema_version', '1.3');
         commit;
     """)
@@ -239,6 +244,7 @@ class KnowledgeStore(KnowledgeBase):
             self.db.execute(f'delete from labels where {condition}', tuple(entities))
             self.db.execute(f'delete from publications where {condition}', tuple(entities))
             self.db.execute(f'delete from connectivity_models')
+            self.db.execute(f'delete from connectivity_nodes')
             self.db.commit()
         self.__cleaned_connectivity = clean_connectivity
 
@@ -386,6 +392,14 @@ class KnowledgeStore(KnowledgeBase):
                     self.db.execute('replace into labels values (?, ?)', (entity, knowledge['label']))
                 if 'references' in knowledge:
                     self.__update_references(entity, knowledge.get('references', []))
+                if 'connectivity' in knowledge:
+                    seen_nodes = set()
+                    for edge in knowledge['connectivity']:
+                        for node in edge:
+                            if node not in seen_nodes:
+                                seen_nodes.add(node)
+                                self.db.execute('insert or replace into connectivity_nodes (source, node, path) values (?, ?, ?)',
+                                                                                (self.__source, json.dumps(node), entity))
                 # Finished entity specific updates so commit transaction
                 self.db.commit()
 
