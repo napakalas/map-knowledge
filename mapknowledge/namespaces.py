@@ -26,7 +26,7 @@ class NAMESPACES:
         'UBERON': 'http://purl.obolibrary.org/obo/UBERON_',
         'apinatomy': 'https://apinatomy.org/uris/readable/',
         'ilxtr': 'http://uri.interlex.org/tgbugs/uris/readable/',
-        'ilx': 'http://uri.interlex.org/',   # More general need to be ordererd later
+        'ilx': 'http://uri.interlex.org/',   # More general need to be ordered later
     }
 
     @staticmethod
