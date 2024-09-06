@@ -21,7 +21,7 @@
 import os
 import logging
 import tempfile
-from typing import Any
+from typing import Any, Optional
 
 #===============================================================================
 
@@ -283,9 +283,14 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
 #===============================================================================
 
 class Npo:
-    def __init__(self, npo_release):
+    def __init__(self, npo_release: Optional[str]):
         self.__npo_release = self.__check_npo_release(npo_release)
         self.__npo_knowledge, self.__npo_terms, self.__rdf_graph = load_knowledge_from_ttl(self.__npo_release)
+
+    @property
+    def release(self) -> str:
+    #========================
+        return self.__npo_release
 
     def __check_npo_release(self, npo_release) -> str:
     #=================================================

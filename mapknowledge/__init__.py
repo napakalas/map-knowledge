@@ -43,14 +43,14 @@ KNOWLEDGE_BASE = 'knowledgebase.db'
 
 #===============================================================================
 
-SCHEMA_VERSION = '1.2'
+SCHEMA_VERSION = '1.3'
 
 KNOWLEDGE_SCHEMA = f"""
     begin;
     create table metadata (name text primary key, value text);
 
-    create table knowledge (entity text primary key, knowledge text);
-    create unique index knowledge_index on knowledge(entity);
+    create table knowledge (source text, entity text primary key, knowledge text);
+    create unique index knowledge_index on knowledge(source, entity);
 
     create table labels (entity text primary key, label text);
     create unique index labels_index on labels(entity);
@@ -80,6 +80,14 @@ SCHEMA_UPGRADES = {
         create table pmr_models (term text, score number, model text, workspace text, exposure text);
         create index pmr_models_term_index on pmr_models(term, score);
         insert or replace into metadata (name, value) values ('schema_version', '1.2');
+        commit;
+    """),
+    '1.2': ('1.3', """
+        begin;
+        alter table knowledge add source text;
+        drop index knowledge_index;
+        create unique index knowledge_index on knowledge(source, entity);
+        insert or replace into metadata (name, value) values ('schema_version', '1.3');
         commit;
     """)
 }
@@ -180,17 +188,20 @@ class KnowledgeStore(KnowledgeBase):
             cache_msg = f'with no cache'
         log.info(f'Map Knowledge version {__version__} {cache_msg}')
 
+        self.__source = None
         self.__scicrunch = (SciCrunch(scicrunch_release=scicrunch_version, scicrunch_key=scicrunch_key)
                                 if use_scicrunch else
                             None)
-        if self.__scicrunch is not None and sckan_provenance:
+        if self.__scicrunch is not None and (sckan_provenance or not use_npo):
             sckan_build = self.__scicrunch.build()
             if sckan_build is not None:
-                self.__sckan_provenance['scicrunch'] = {
-                    'url': self.__scicrunch.api_endpoint,
-                    'date': sckan_build['released']
-                }
-            if log_provenance:
+                self.__source = f'{sckan_build["released"]}-sckan'
+                if sckan_provenance:
+                    self.__sckan_provenance['scicrunch'] = {
+                        'url': self.__scicrunch.api_endpoint,
+                        'date': sckan_build['released']
+                    }
+            if log_provenance and sckan_provenance:
                 scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
                 release_version = 'production' if scicrunch_version == SCICRUNCH_PRODUCTION else 'staging'
                 log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.api_endpoint}")
@@ -210,8 +221,12 @@ class KnowledgeStore(KnowledgeBase):
                     }
                     if log_provenance:
                         log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
+            self.__source = f'{self.__npo_db.release}-npo'
         else:
             self.__npo_db = None
+
+        if self.__source:
+            self.__sckan_provenance['knowledge_source'] = self.__source
 
         # Optionally clear local connectivity knowledge
         if (self.db is not None and clean_connectivity):
@@ -226,6 +241,10 @@ class KnowledgeStore(KnowledgeBase):
             self.db.execute(f'delete from connectivity_models')
             self.db.execute('commit')
         self.__cleaned_connectivity = clean_connectivity
+
+    @property
+    def source(self):
+        return self.__source
 
     @property
     def sckan_provenance(self):
@@ -306,22 +325,32 @@ class KnowledgeStore(KnowledgeBase):
         for error in knowledge.get('errors', []):
             log.error(f'SCKAN knowledge error: {entity}: {error}')
 
-    def entity_knowledge(self, entity):
-    #==================================
+    def entity_knowledge(self, entity: str, source=None):
+    #====================================================
+        if source is None:
+            source = self.__source
+
         # Check local cache
-        if (knowledge := self.__entity_knowledge.get(entity)) is not None:
+        if (knowledge := self.__entity_knowledge.get((source, entity))) is not None:
             KnowledgeStore.__log_errors(entity, knowledge)
             return knowledge
 
         knowledge = {}
         if self.db is not None:
             # Check our database
-            row = self.db.execute('select knowledge from knowledge where entity=?', (entity,)).fetchone()
+            if source is not None:
+                row = self.db.execute('select source, knowledge from knowledge where source=? and entity=?',
+                                                                            (source, entity)).fetchone()
+            else:
+                row = self.db.execute('select source, knowledge from knowledge where entity=? order by source desc',
+                                                                            (entity,)).fetchone()
             if row is not None:
-                knowledge = json.loads(row[0])
+                knowledge = json.loads(row[1])
+                knowledge['source'] = row[0]
 
         if len(knowledge) == 0 or entity == knowledge.get('label', entity):
-            # We don't have knowledge or a valid label for the entity
+            # We don't have knowledge or a valid label for the entity so check SCKAN
+            knowledge['source'] = self.__source
             ontology = entity.split(':')[0]
             if entity in self.__npo_entities or ontology in CONNECTIVITY_ONTOLOGIES:
                 # Always consult NPO for connectivity or if we know it has the term
@@ -350,7 +379,8 @@ class KnowledgeStore(KnowledgeBase):
                 if 'label' in knowledge:
                     if knowledge['label'] == entity and 'long-label' in knowledge:
                         knowledge['label'] = knowledge['long-label']                # Save knowledge in our database
-                self.db.execute('replace into knowledge values (?, ?)', (entity, json.dumps(knowledge)))
+                self.db.execute('replace into knowledge (source, entity, knowledge) values (?, ?, ?)',
+                                                    (self.__source, entity, json.dumps(knowledge)))
                 # Save label and references in their own tables
                 if 'label' in knowledge:
                     self.db.execute('replace into labels values (?, ?)', (entity, knowledge['label']))
@@ -363,12 +393,19 @@ class KnowledgeStore(KnowledgeBase):
             knowledge['label'] = entity
 
         # Cache local knowledge
-        self.__entity_knowledge[entity] = knowledge
+        self.__entity_knowledge[(knowledge['source'], entity)] = knowledge
 
         # Log any errors
         KnowledgeStore.__log_errors(entity, knowledge)
 
         return knowledge
+
+    def knowledge_sources(self) -> list[str]:
+    #========================================
+        return ([row[0]
+                    for row in self.db.execute(
+                        'select distinct source from knowledge order by source').fetchall()] if self.db
+                else [])
 
     def label(self, entity):
     #=======================
