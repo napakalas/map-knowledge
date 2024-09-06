@@ -369,15 +369,6 @@ class KnowledgeStore(KnowledgeBase):
                     # Get phenotype, taxon, and other metadata
                     knowledge.update(self.__scicrunch.connectivity_metadata(entity))
 
-            if self.db is not None and 'connectivity' in knowledge:
-                # Make sure we have labels for each entity used for connectivity
-                connectivity_terms = set()
-                for (node0, node1) in knowledge['connectivity']:
-                    connectivity_terms.update([node0[0], node1[0]])
-                    connectivity_terms.update(node0[1])
-                    connectivity_terms.update(node1[1])
-                for connectivity_term in connectivity_terms:
-                    self.label(connectivity_term)
             if len(knowledge) and self.db is not None and not self.read_only:
                 if not self.db.in_transaction:
                     self.db.execute('begin')
@@ -392,6 +383,8 @@ class KnowledgeStore(KnowledgeBase):
                     self.db.execute('replace into labels values (?, ?)', (entity, knowledge['label']))
                 if 'references' in knowledge:
                     self.__update_references(entity, knowledge.get('references', []))
+
+                connectivity_terms = set()
                 if 'connectivity' in knowledge:
                     seen_nodes = set()
                     for edge in knowledge['connectivity']:
@@ -400,8 +393,14 @@ class KnowledgeStore(KnowledgeBase):
                                 seen_nodes.add(node)
                                 self.db.execute('insert or replace into connectivity_nodes (source, node, path) values (?, ?, ?)',
                                                                                 (self.__source, json.dumps(node), entity))
+                                connectivity_terms.update([node[0]] + list(node[1]))
+
                 # Finished entity specific updates so commit transaction
                 self.db.commit()
+
+                # Now make sure we have knowledge for each entity used for connectivity
+                for term in connectivity_terms:
+                    self.entity_knowledge(term)
 
         # Use the entity's value as its label if none is defined
         if 'label' not in knowledge:
