@@ -35,7 +35,7 @@ from .apinatomy import CONNECTIVITY_ONTOLOGIES, APINATOMY_MODEL_PREFIX
 from .npo import Npo
 from .scicrunch import SCICRUNCH_PRODUCTION, SCICRUNCH_STAGING
 from .scicrunch import SciCrunch
-from .utils import log                  # type: ignore
+from .utils import log
 
 #===============================================================================
 

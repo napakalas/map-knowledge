@@ -33,7 +33,7 @@ from rdflib.extras import external_graph_libs as egl
 
 #===============================================================================
 
-from .utils import log                  # type: ignore
+from .utils import log
 
 #===============================================================================
 

@@ -21,6 +21,7 @@ try:
     from mapmaker.utils import log      # type: ignore
 except ImportError:
     import logging as log
+log = log
 
 #===============================================================================
 
