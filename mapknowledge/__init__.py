@@ -75,14 +75,14 @@ SCHEMA_UPGRADES = {
     None: ('1.1', """
         begin;
         alter table connectivity_models add version text;
-        insert or replace into metadata (name, value) values ('schema_version', '1.1');
+        replace into metadata (name, value) values ('schema_version', '1.1');
         commit;
     """),
     '1.1': ('1.2', """
         begin;
         create table pmr_models (term text, score number, model text, workspace text, exposure text);
         create index pmr_models_term_index on pmr_models(term, score);
-        insert or replace into metadata (name, value) values ('schema_version', '1.2');
+        replace into metadata (name, value) values ('schema_version', '1.2');
         commit;
     """),
     '1.2': ('1.3', """
@@ -92,7 +92,7 @@ SCHEMA_UPGRADES = {
         create unique index knowledge_index on knowledge(source, entity);
         create table connectivity_nodes (source text, node text, path text);
         create unique index connectivity_nodes_index on connectivity_nodes(source, node, path);
-        insert or replace into metadata (name, value) values ('schema_version', '1.3');
+        replace into metadata (name, value) values ('schema_version', '1.3');
         commit;
     """)
 }
@@ -364,8 +364,8 @@ class KnowledgeStore(KnowledgeBase):
                         for node in edge:
                             if node not in seen_nodes:
                                 seen_nodes.add(node)
-                                self.db.execute('insert or replace into connectivity_nodes (source, node, path) values (?, ?, ?)',
-                                                                                (self.__source, json.dumps(node), entity))
+                                self.db.execute('replace into connectivity_nodes (source, node, path) values (?, ?, ?)',
+                                                                              (self.__source, json.dumps(node), entity))
                                 connectivity_terms.update([node[0]] + list(node[1]))
 
                 # Finished entity specific updates so commit transaction
