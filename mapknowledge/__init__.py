@@ -181,7 +181,8 @@ class KnowledgeStore(KnowledgeBase):
                        sckan_provenance=False,
                        log_provenance=False,
                        use_npo=True,
-                       use_scicrunch=True):
+                       use_scicrunch=True,
+                       knowledge_source=None):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge: dict[tuple[Optional[str], str], dict[str, Any]] = {}     # Cache lookups
         self.__npo_entities: set[str] = set()
@@ -192,6 +193,12 @@ class KnowledgeStore(KnowledgeBase):
         else:
             cache_msg = f'with no cache'
         log.info(f'Map Knowledge version {__version__} {cache_msg}')
+
+        if use_npo or use_scicrunch:
+            if  knowledge_source is not None:
+                raise ValueError('Cannot specify `knowledge_source` when geeting knowledge from SCKAN')
+        elif self.db is None:
+            raise ValueError('Knowledge unavailable as local store nor SCKAN connection is provided')
 
         self.__source = None
         self.__scicrunch = (SciCrunch(scicrunch_release=scicrunch_version, scicrunch_key=scicrunch_key)
@@ -231,8 +238,14 @@ class KnowledgeStore(KnowledgeBase):
             self.__npo_db = None
 
         if self.__source is None and self.db:
-            row = self.db.execute('select distinct source from knowledge order by source desc').fetchone()
-            self.__source = row[0]
+            if knowledge_source is None:
+                row = self.db.execute('select distinct source from knowledge order by source desc').fetchone()
+                if row is not None:
+                    self.__source = row[0]
+            elif knowledge_source not in self.knowledge_sources():
+                raise ValueError(f'Unknown knowledge source: `{knowledge_source}`')
+            else:
+                self.__source = knowledge_source
         if self.__source:
             self.__sckan_provenance['knowledge_source'] = self.__source
 
