@@ -237,17 +237,8 @@ class KnowledgeStore(KnowledgeBase):
             self.__sckan_provenance['knowledge_source'] = self.__source
 
         # Optionally clear local connectivity knowledge
-        if (self.db is not None and clean_connectivity):
-            log.info(f'Clearing connectivity knowledge for `{self.__source}`...')
-            namespaces = [f'{APINATOMY_MODEL_PREFIX}%']
-            namespaces.extend([f'{ontology}:%' for ontology in CONNECTIVITY_ONTOLOGIES])
-            condition = ' or '.join(len(namespaces)*['entity like ?'])
-            params = [self.__source] + namespaces
-            self.db.execute('begin')
-            self.db.execute(f'delete from knowledge where source=? and ({condition})', tuple(params))
-            self.db.execute(f'delete from connectivity_nodes where source=?', (self.__source,))
-            self.db.commit()
-        self.__cleaned_connectivity = clean_connectivity
+        if clean_connectivity:
+            self.clean_connectivity(self.__source)
 
     @property
     def source(self):
@@ -256,6 +247,19 @@ class KnowledgeStore(KnowledgeBase):
     @property
     def sckan_provenance(self):
         return self.__sckan_provenance
+
+    def clean_connectivity(self, knowledge_source):
+    #==============================================
+        if self.db is not None and knowledge_source is not None:
+            log.info(f'Clearing connectivity knowledge for `{knowledge_source}`...')
+            namespaces = [f'{APINATOMY_MODEL_PREFIX}%']
+            namespaces.extend([f'{ontology}:%' for ontology in CONNECTIVITY_ONTOLOGIES])
+            condition = ' or '.join(len(namespaces)*['entity like ?'])
+            params = [knowledge_source] + namespaces
+            self.db.execute('begin')
+            self.db.execute(f'delete from knowledge where source=? and ({condition})', tuple(params))
+            self.db.execute(f'delete from connectivity_nodes where source=?', (knowledge_source,))
+            self.db.commit()
 
     def connectivity_models(self) -> list[str]:
     #==========================================
