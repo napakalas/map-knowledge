@@ -1,7 +1,8 @@
 #!/bin/sh
 
-clean=`git status | grep -q "nothing to commit"`
-if (( !clean )); then
+git status | grep -q "nothing to commit"
+dirty=($? != 0)
+if (( dirty )); then
     git stash -u
 fi
 
@@ -12,6 +13,6 @@ git push upstream v$1
 gh release create v$1 --verify-tag --title "Release $1" --notes ""
 gh release upload v$1 dist/mapknowledge-$1-py3-none-any.whl
 
-if (( !clean )); then
+if (( dirty )); then
     git stash pop --quiet
 fi
