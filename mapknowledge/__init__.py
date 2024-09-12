@@ -150,7 +150,7 @@ class KnowledgeBase(object):
                     while schema_version != SCHEMA_VERSION:
                         if (upgrade := SCHEMA_UPGRADES.get(schema_version)) is None:
                             raise ValueError(f'Unable to upgrade knowledge base schema from {schema_version}')
-                        log.info(f'Upgrading knowledge base schema from {schema_version} to version {upgrade[0]}')
+                        log.warn(f'Upgrading knowledge base schema from {schema_version} to version {upgrade[0]}')
                         schema_version = upgrade[0]
                         self.__db.executescript(upgrade[1])
 
@@ -182,17 +182,20 @@ class KnowledgeStore(KnowledgeBase):
                        log_provenance=False,
                        use_npo=True,
                        use_scicrunch=True,
-                       knowledge_source=None):
+                       knowledge_source=None,
+                       verbose=True):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge: dict[tuple[Optional[str], str], dict[str, Any]] = {}     # Cache lookups
         self.__npo_entities: set[str] = set()
         self.__sckan_provenance: dict[str, Optional[str]|dict[str, str]] = {}
+        self.__verbose = verbose
 
         if (db_name := self.db_name) is not None:
             cache_msg = f'with cache {db_name}'
         else:
             cache_msg = f'with no cache'
-        log.info(f'Map Knowledge version {__version__} {cache_msg}')
+        if verbose:
+            log.info(f'Map Knowledge version {__version__} {cache_msg}')
 
         if use_npo or use_scicrunch:
             if  knowledge_source is not None:
@@ -213,7 +216,7 @@ class KnowledgeStore(KnowledgeBase):
                         'url': self.__scicrunch.api_endpoint,
                         'date': sckan_build['released']
                     }
-            if log_provenance and sckan_provenance:
+            if verbose and log_provenance and sckan_provenance:
                 scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
                 release_version = 'production' if scicrunch_version == SCICRUNCH_PRODUCTION else 'staging'
                 log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.api_endpoint}")
@@ -231,7 +234,7 @@ class KnowledgeStore(KnowledgeBase):
                             'path': npo_builds['path'],
                             'sha': npo_builds['sha']
                     }
-                    if log_provenance:
+                    if verbose and log_provenance:
                         log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
             self.__source = f'{self.__npo_db.release}-npo'
         else:
@@ -264,7 +267,8 @@ class KnowledgeStore(KnowledgeBase):
     def clean_connectivity(self, knowledge_source):
     #==============================================
         if self.db is not None and knowledge_source is not None:
-            log.info(f'Clearing connectivity knowledge for `{knowledge_source}`...')
+            if self.__verbose:
+                log.info(f'Clearing connectivity knowledge for `{knowledge_source}`...')
             namespaces = [f'{APINATOMY_MODEL_PREFIX}%']
             namespaces.extend([f'{ontology}:%' for ontology in CONNECTIVITY_ONTOLOGIES])
             condition = ' or '.join(len(namespaces)*['entity like ?'])
@@ -345,10 +349,14 @@ class KnowledgeStore(KnowledgeBase):
             ontology = entity.split(':')[0]
             if entity in self.__npo_entities or ontology in CONNECTIVITY_ONTOLOGIES:
                 # Always consult NPO for connectivity or if we know it has the term
+                if self.__verbose:
+                    log.info(f'Consulting NPO for knowledge about {entity}')
                 if self.__npo_db:
                     knowledge = self.__npo_db.get_knowledge(entity)
             elif self.__scicrunch is not None:
                 # Otherwise consult Scicrunch
+                if self.__verbose:
+                    log.info(f'Consulting SciCrunch for knowledge about {entity}')
                 knowledge = self.__scicrunch.get_knowledge(entity)
                 if 'connectivity' in knowledge:
                     # Get phenotype, taxon, and other metadata
@@ -393,7 +401,8 @@ class KnowledgeStore(KnowledgeBase):
             knowledge['label'] = entity
 
         # Cache local knowledge
-        self.__entity_knowledge[(knowledge['source'], entity)] = knowledge
+        if 'source' in knowledge:
+            self.__entity_knowledge[(knowledge['source'], entity)] = knowledge
 
         # Log any errors
         KnowledgeStore.__log_errors(entity, knowledge)
