@@ -196,7 +196,7 @@ class KnowledgeStore(KnowledgeBase):
 
         if use_npo or use_scicrunch:
             if  knowledge_source is not None:
-                raise ValueError('Cannot specify `knowledge_source` when geeting knowledge from SCKAN')
+                raise ValueError('Cannot specify `knowledge_source` when getting knowledge from SCKAN')
         elif self.db is None:
             raise ValueError('Knowledge unavailable as local store nor SCKAN connection is provided')
 
