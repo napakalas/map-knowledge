@@ -179,9 +179,8 @@ class KnowledgeStore(KnowledgeBase):
                        scicrunch_version=SCICRUNCH_PRODUCTION,
                        sckan_version: Optional[str]=None,
                        sckan_provenance=False,
-                       use_npo=True,
-                       use_scicrunch=True,
                        knowledge_source=None,
+                       use_sckan=True,
                        verbose=True):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
         self.__entity_knowledge: dict[tuple[Optional[str], str], dict[str, Any]] = {}     # Cache lookups
@@ -196,17 +195,16 @@ class KnowledgeStore(KnowledgeBase):
         if verbose:
             log.info(f'Map Knowledge version {__version__} {cache_msg}')
 
-        if use_npo or use_scicrunch:
+        if not read_only:
             if  knowledge_source is not None:
                 raise ValueError('Cannot specify `knowledge_source` when getting knowledge from SCKAN')
         elif self.db is None:
             raise ValueError('Knowledge unavailable as local store nor SCKAN connection is provided')
 
         self.__source = None
-        self.__scicrunch = (SciCrunch(scicrunch_release=scicrunch_version, scicrunch_key=scicrunch_key)
-                                if use_scicrunch else
-                            None)
-        if self.__scicrunch is not None and (sckan_provenance or not use_npo):
+        self.__scicrunch = (None if (read_only or not use_sckan)
+                       else SciCrunch(scicrunch_release=scicrunch_version, scicrunch_key=scicrunch_key))
+        if self.__scicrunch is not None and sckan_provenance:
             sckan_build = self.__scicrunch.build()
             if sckan_build is not None:
                 self.__source = f'{sckan_build["released"]}-sckan'
@@ -220,7 +218,7 @@ class KnowledgeStore(KnowledgeBase):
                 release_version = 'production' if scicrunch_version == SCICRUNCH_PRODUCTION else 'staging'
                 log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.api_endpoint}")
 
-        if use_npo:
+        if not read_only and use_sckan:
             self.__npo_db = Npo(sckan_version)
             self.__npo_entities = set(self.__npo_db.connectivity_paths())
             self.__npo_entities.update(self.__npo_db.connectivity_models())
