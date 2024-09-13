@@ -179,7 +179,6 @@ class KnowledgeStore(KnowledgeBase):
                        scicrunch_version=SCICRUNCH_PRODUCTION,
                        sckan_version: Optional[str]=None,
                        sckan_provenance=False,
-                       log_provenance=False,
                        use_npo=True,
                        use_scicrunch=True,
                        knowledge_source=None,
@@ -216,7 +215,7 @@ class KnowledgeStore(KnowledgeBase):
                         'url': self.__scicrunch.api_endpoint,
                         'date': sckan_build['released']
                     }
-            if verbose and log_provenance and sckan_provenance:
+            if verbose and sckan_provenance:
                 scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
                 release_version = 'production' if scicrunch_version == SCICRUNCH_PRODUCTION else 'staging'
                 log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.api_endpoint}")
@@ -234,7 +233,7 @@ class KnowledgeStore(KnowledgeBase):
                             'path': npo_builds['path'],
                             'sha': npo_builds['sha']
                     }
-                    if verbose and log_provenance:
+                    if verbose:
                         log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
             self.__source = f'{self.__npo_db.release}-npo'
         else:
