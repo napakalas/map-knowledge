@@ -49,7 +49,7 @@ KNOWLEDGE_SCHEMA = f"""
     begin;
     create table metadata (name text primary key, value text);
 
-    create table knowledge (source text, entity text primary key, knowledge text);
+    create table knowledge (source text, entity text, knowledge text);
     create unique index knowledge_index on knowledge(source, entity);
 
     create table labels (entity text primary key, label text);
@@ -87,8 +87,10 @@ SCHEMA_UPGRADES = {
     """),
     '1.2': ('1.3', """
         begin;
-        alter table knowledge add source text;
-        drop index knowledge_index;
+        create table knowledge_copy (source text, entity text, knowledge text);
+        insert into knowledge_copy (source, entity, knowledge) select null, entity, knowledge from knowledge;
+        drop table knowledge;
+        alter table knowledge_copy rename to knowledge;
         create unique index knowledge_index on knowledge(source, entity);
         create table connectivity_nodes (source text, node text, path text);
         create unique index connectivity_nodes_index on connectivity_nodes(source, node, path);
