@@ -413,7 +413,7 @@ class KnowledgeStore(KnowledgeBase):
     #========================================
         return ([row[0]
                     for row in self.db.execute(
-                        'select distinct source from knowledge order by source').fetchall()] if self.db
+                        'select distinct source from knowledge order by source desc').fetchall()] if self.db
                 else [])
 
     def label(self, entity):
