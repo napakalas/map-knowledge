@@ -147,7 +147,11 @@ class KnowledgeBase(object):
                             raise ValueError(f'Unable to upgrade knowledge base schema from version {schema_version}')
                         log.warn(f'Upgrading knowledge base schema from version {schema_version} to {upgrade[0]}')
                         schema_version = upgrade[0]
-                        self.__db.executescript(upgrade[1])
+                        try:
+                            self.__db.executescript(upgrade[1])
+                        except sqlite3.Error as e:
+                            self.__db.rollback()
+                            raise ValueError(f'Unable to upgrade knowledge base schema to version {schema_version}: {str(e)}')
                         self.__db.commit()
 
     def metadata(self, name):
