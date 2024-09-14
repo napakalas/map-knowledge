@@ -46,7 +46,6 @@ KNOWLEDGE_BASE = 'knowledgebase.db'
 SCHEMA_VERSION = '1.3'
 
 KNOWLEDGE_SCHEMA = f"""
-    begin;
     create table metadata (name text primary key, value text);
 
     create table knowledge (source text, entity text, knowledge text);
@@ -68,25 +67,19 @@ KNOWLEDGE_SCHEMA = f"""
     create unique index connectivity_nodes_index on connectivity_nodes(source, node, path);
 
     insert into metadata (name, value) values ('schema_version', '{SCHEMA_VERSION}');
-    commit;
 """
 
 SCHEMA_UPGRADES = {
     None: ('1.1', """
-        begin;
         alter table connectivity_models add version text;
         replace into metadata (name, value) values ('schema_version', '1.1');
-        commit;
     """),
     '1.1': ('1.2', """
-        begin;
         create table pmr_models (term text, score number, model text, workspace text, exposure text);
         create index pmr_models_term_index on pmr_models(term, score);
         replace into metadata (name, value) values ('schema_version', '1.2');
-        commit;
     """),
     '1.2': ('1.3', """
-        begin;
         create table knowledge_copy (source text, entity text, knowledge text);
         insert into knowledge_copy (source, entity, knowledge) select null, entity, knowledge from knowledge;
         drop table knowledge;
@@ -95,7 +88,6 @@ SCHEMA_UPGRADES = {
         create table connectivity_nodes (source text, node text, path text);
         create unique index connectivity_nodes_index on connectivity_nodes(source, node, path);
         replace into metadata (name, value) values ('schema_version', '1.3');
-        commit;
     """)
 }
 
@@ -116,9 +108,10 @@ class KnowledgeBase(object):
             if not self.__db_name.exists():
                 if not create:
                     raise IOError(f'Missing KnowledgeBase: {self.__db_name}')
-                db = sqlite3.connect(self.__db_name,
+                db = sqlite3.connect(self.__db_name, autocommit=False,
                     detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
                 db.executescript(KNOWLEDGE_SCHEMA)
+                db.commit()
                 db.close()
             self.open(read_only=read_only)
 
@@ -143,7 +136,7 @@ class KnowledgeBase(object):
         self.close()
         if self.__db_name is not None:
             db_uri = '{}?mode=ro'.format(self.__db_name.as_uri()) if read_only else self.__db_name.as_uri()
-            self.__db = sqlite3.connect(db_uri, uri=True,
+            self.__db = sqlite3.connect(db_uri, uri=True, autocommit=False,
                                         detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
             if self.__db is not None:
                 if (schema_version := self.metadata('schema_version')) != SCHEMA_VERSION:
@@ -155,6 +148,7 @@ class KnowledgeBase(object):
                         log.warn(f'Upgrading knowledge base schema from version {schema_version} to {upgrade[0]}')
                         schema_version = upgrade[0]
                         self.__db.executescript(upgrade[1])
+                        self.__db.commit()
 
     def metadata(self, name):
         if self.__db is not None:
@@ -164,8 +158,6 @@ class KnowledgeBase(object):
 
     def set_metadata(self, name, value):
         if self.__db is not None:
-            if not self.__db.in_transaction:
-                self.__db.execute('begin')
             self.__db.execute('replace into metadata values (?, ?)', (name,value))
             self.__db.commit()
 
@@ -272,7 +264,6 @@ class KnowledgeStore(KnowledgeBase):
             namespaces.extend([f'{ontology}:%' for ontology in CONNECTIVITY_ONTOLOGIES])
             condition = ' or '.join(len(namespaces)*['entity like ?'])
             params = [knowledge_source] + namespaces
-            self.db.execute('begin')
             self.db.execute(f'delete from knowledge where source=? and ({condition})', tuple(params))
             self.db.execute(f'delete from connectivity_nodes where source=?', (knowledge_source,))
             self.db.commit()
@@ -363,8 +354,6 @@ class KnowledgeStore(KnowledgeBase):
 
             knowledge['source'] = self.__source
             if len(knowledge) > 1 and self.db is not None and not self.read_only:
-                if not self.db.in_transaction:
-                    self.db.execute('begin')
                 # Use 'long-label' if the entity's label' is the same as itself.
                 if 'label' in knowledge:
                     if knowledge['label'] == entity and 'long-label' in knowledge:
