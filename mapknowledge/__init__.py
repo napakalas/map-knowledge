@@ -135,7 +135,7 @@ class KnowledgeBase(object):
     def open(self, read_only=False):
         self.close()
         if self.__db_name is not None:
-            db_uri = '{}?mode=ro'.format(self.__db_name.as_uri()) if read_only else self.__db_name.as_uri()
+            db_uri = f'{self.__db_name.as_uri()}?mode=ro' if read_only else self.__db_name.as_uri()
             self.__db = sqlite3.connect(db_uri, uri=True, autocommit=False,
                                         detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
             if self.__db is not None:
@@ -173,11 +173,11 @@ class KnowledgeStore(KnowledgeBase):
                        create=True,
                        read_only=False,
                        clean_connectivity=False,
+                       knowledge_source=None,
                        scicrunch_key=None,
                        scicrunch_version=SCICRUNCH_PRODUCTION,
                        sckan_version: Optional[str]=None,
                        sckan_provenance=False,
-                       knowledge_source=None,
                        use_sckan=True,
                        verbose=True):
         super().__init__(store_directory, create=create, knowledge_base=knowledge_base, read_only=read_only)
