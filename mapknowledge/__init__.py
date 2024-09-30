@@ -321,20 +321,19 @@ class KnowledgeStore(KnowledgeBase):
 
     def entity_knowledge(self, entity: str, source=None):
     #====================================================
-        if source is None:
-            source = self.__source
+        use_source = self.__source if source is None else source
 
         # Check local cache
-        if (knowledge := self.__entity_knowledge.get((source, entity))) is not None:
+        if (knowledge := self.__entity_knowledge.get((use_source, entity))) is not None:
             KnowledgeStore.__log_errors(entity, knowledge)
             return knowledge
 
         knowledge = {}
         if self.db is not None:
             # Check our database
-            if source is not None:
+            if use_source is not None:
                 row = self.db.execute('select source, knowledge from knowledge where source=? and entity=?',
-                                                                            (source, entity)).fetchone()
+                                                                            (use_source, entity)).fetchone()
             else:
                 row = self.db.execute('select source, knowledge from knowledge where entity=? order by source desc',
                                                                             (entity,)).fetchone()
@@ -342,7 +341,8 @@ class KnowledgeStore(KnowledgeBase):
                 knowledge = json.loads(row[1])
                 knowledge['source'] = row[0]
 
-        if len(knowledge) == 0 or entity == knowledge.get('label', entity):
+        if ((len(knowledge) == 0 or entity == knowledge.get('label', entity))
+        and (source is None or source == self.__source)):
             # We don't have knowledge or a valid label for the entity so check SCKAN
             ontology = entity.split(':')[0]
             if entity in self.__npo_entities or ontology in CONNECTIVITY_ONTOLOGIES:
