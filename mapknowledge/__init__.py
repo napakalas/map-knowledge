@@ -248,6 +248,9 @@ class KnowledgeStore(KnowledgeBase):
         if self.__source:
             self.__sckan_provenance['knowledge-source'] = self.__source
 
+        if verbose:
+            log.info(f'Using knowledge source: {self.__source}')
+
         # Optionally clear local connectivity knowledge
         if clean_connectivity:
             self.clean_connectivity(self.__source)
