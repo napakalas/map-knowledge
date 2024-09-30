@@ -54,7 +54,7 @@ KNOWLEDGE_SCHEMA = f"""
     create table labels (entity text primary key, label text);
     create unique index labels_index on labels(entity);
 
-    create table publications (entity text, publication text);
+    create table publications (source text, entity text, publication text);
     create index publications_entity_index on publications(entity);
     create index publications_publication_index on publications(publication);
 
@@ -85,6 +85,7 @@ SCHEMA_UPGRADES = {
         drop table knowledge;
         alter table knowledge_copy rename to knowledge;
         create unique index knowledge_index on knowledge(source, entity);
+        alter table publications add source text;
         create table connectivity_nodes (source text, node text, path text);
         create unique index connectivity_nodes_index on connectivity_nodes(source, node, path);
         replace into metadata (name, value) values ('schema_version', '1.3');
@@ -421,9 +422,9 @@ class KnowledgeStore(KnowledgeBase):
     #=================================================
         if self.db is not None:
             with self.db:
-                self.db.execute('delete from publications where entity = ?', (entity, ))
-                self.db.executemany('insert into publications(entity, publication) values (?, ?)',
-                    ((entity, reference) for reference in references))
+                self.db.execute('delete from publications where source=? and entity=?', (self.__source, entity, ))
+                self.db.executemany('insert into publications(source, entity, publication) values (?, ?, ?)',
+                    ((self.__source, entity, reference) for reference in references))
 
 #===============================================================================
 
