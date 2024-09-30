@@ -245,7 +245,7 @@ class KnowledgeStore(KnowledgeBase):
             else:
                 self.__source = knowledge_source
         if self.__source:
-            self.__sckan_provenance['knowledge_source'] = self.__source
+            self.__sckan_provenance['knowledge-source'] = self.__source
 
         # Optionally clear local connectivity knowledge
         if clean_connectivity:
