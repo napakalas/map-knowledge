@@ -135,7 +135,8 @@ def for_composer(n, cull=False) -> dict[str, Any]:
             [dict(loc=l, type='AXON-T') for l in lpes(n, ilxtr.hasAxonPresynapticElementIn)] +
             # XXX I strongly reccoment renaming this to SENSORY-T so that the
             # short forms are harder to confuse A-T and S-T
-            [dict(loc=l, type='AFFERENT-T') for l in lpes(n, ilxtr.hasAxonSensorySubcellularElementIn)]
+            [dict(loc=l, type='AFFERENT-T') for l in lpes(n, ilxtr.hasAxonSensorySubcellularElementIn)] +
+            [dict(loc=l, type='AFFERENT-T') for l in lpes(n, ilxtr.hasAxonLeadingToSensorySubcellularElementIn)]
         ),
         order = tuple(simplify_nested(simplify, _po)) if _po else [],
         path = (  # TODO pull ordering from partial orders (not implemented in core atm)
