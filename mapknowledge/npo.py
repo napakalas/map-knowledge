@@ -22,6 +22,7 @@ import os
 import logging
 import tempfile
 from typing import Any, Optional
+import networkx as nx
 
 #===============================================================================
 
@@ -276,6 +277,10 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
         neuron['connectivity'] = get_connectivity_edges(neuron['order'])
         neuron['class'] = f'ilxtr:{type(n).__name__}'
         neuron['terms-dict'] = {NAMESPACES.curie(str(p.p)):str(p.pLabel) for p in n}
+        if neuron['connectivity']:
+            neuron['is-connected'] = nx.is_connected(nx.Graph(neuron['connectivity']))
+        else:
+            neuron['is-connected'] = False
         neuron_terms = {**neuron_terms, **neuron['terms-dict']}
         neuron_knowledge[neuron['id']] = neuron
 
@@ -376,6 +381,7 @@ class Npo:
             knowledge['axons'] = list(set(axons))
             if len(references:=path_kn['provenance']) > 0:
                 knowledge['references'] = references
+            knowledge['is-connected'] = path_kn.get('is-connected', False)
 
         return knowledge
 
