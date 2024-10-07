@@ -326,7 +326,7 @@ class Npo:
 
     def connectivity_models(self) -> list[str]:
     #==========================================
-        return [v['class'] for v in self.__npo_knowledge.values()]
+        return list({v['class'] for v in self.__npo_knowledge.values()})
     
     def connectivity_paths(self) -> list[str]:
     #=========================================
