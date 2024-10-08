@@ -277,6 +277,7 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
         neuron['connectivity'] = get_connectivity_edges(neuron['order'])
         neuron['class'] = f'ilxtr:{type(n).__name__}'
         neuron['terms-dict'] = {NAMESPACES.curie(str(p.p)):str(p.pLabel) for p in n}
+        neuron['terms-dict'][neuron['id']] = neuron['label']
         if neuron['connectivity']:
             neuron['is-connected'] = nx.is_connected(nx.Graph(neuron['connectivity']))
         else:
@@ -328,9 +329,12 @@ class Npo:
     #==========================================
         return list({v['class'] for v in self.__npo_knowledge.values()})
     
-    def connectivity_paths(self) -> list[str]:
+    def connectivity_paths(self, connected_only = True) -> list[str]:
     #=========================================
-        return list(self.__npo_knowledge.keys())
+        if connected_only:
+            return list(path for path, knowledge in self.__npo_knowledge.items() if knowledge['is-connected'])
+        else:
+            return list(path for path in self.__npo_knowledge.keys())
 
     def build(self) -> dict[str, str]:
     #=================================
