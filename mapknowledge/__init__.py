@@ -429,5 +429,19 @@ class KnowledgeStore(KnowledgeBase):
                 self.db.executemany('insert into publications(source, entity, publication) values (?, ?, ?)',
                     ((self.__source, entity, reference) for reference in references))
 
+    def extract_knowledge(self) -> dict:
+        """
+        Get JSON knowledge of terms in the NPO knowledge source.
+
+        :returns:   A ditionary of terms
+        """
+        if self.__npo_db is not None:
+            # Future: need to warn when NPO has been updated and make sure user
+            #         clears the cache...
+            return self.__npo_db.extracted_knowledge()
+        else:
+            log.warning('NPO knowledge terms requested but no connection to NPO service')
+        return dict()
+
 #===============================================================================
 

@@ -389,4 +389,17 @@ class Npo:
 
         return knowledge
 
+    def extracted_knowledge(self):
+    #==========================================
+        source = f'{self.__npo_release}-npo'
+        npo_knowledge = {
+            'source': source,
+            'knowledge': []
+        }
+        for term in self.__npo_terms:
+            term_knowledge = self.get_knowledge(term)
+            term_knowledge['source'] = f'{self.__npo_release}-npo'
+            npo_knowledge['knowledge'].append(term_knowledge)
+
+        return npo_knowledge
 #===============================================================================
