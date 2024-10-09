@@ -382,7 +382,7 @@ class Npo:
             knowledge['axons'] = list(set(axons))
             if len(references:=path_kn['provenance']) > 0:
                 knowledge['references'] = references
-            knowledge['path-connected'] = path_kn.get('connected', False)
+            knowledge['pathDisconnected'] = not path_kn.get('connected', False)
 
         return knowledge
 
