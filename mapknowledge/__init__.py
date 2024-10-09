@@ -291,7 +291,7 @@ class KnowledgeStore(KnowledgeBase):
             log.warning('NPO connectivity models requested but no connection to NPO service')
         return []
 
-    def connectivity_paths(self, connected_only=True) -> list[str]:
+    def connectivity_paths(self) -> list[str]:
     #=========================================
         """
         Get URIs of connectivity paths held in the NPO knowledge source.
@@ -301,7 +301,7 @@ class KnowledgeStore(KnowledgeBase):
         if self.__npo_db is not None:
             # Future: need to warn when NPO has been updated and make sure user
             #         clears the cache...
-            return self.__npo_db.connectivity_paths(connected_only)
+            return self.__npo_db.connectivity_paths()
         else:
             log.warning('NPO connectivity paths requested but no connection to NPO service')
         return []

@@ -279,9 +279,9 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
         neuron['terms-dict'] = {NAMESPACES.curie(str(p.p)):str(p.pLabel) for p in n}
         neuron['terms-dict'][neuron['id']] = neuron['label']
         if neuron['connectivity']:
-            neuron['is-connected'] = nx.is_connected(nx.Graph(neuron['connectivity']))
+            neuron['connected'] = nx.is_connected(nx.Graph(neuron['connectivity']))
         else:
-            neuron['is-connected'] = False
+            neuron['connected'] = False
         neuron_terms = {**neuron_terms, **neuron['terms-dict']}
         neuron_knowledge[neuron['id']] = neuron
 
@@ -329,12 +329,9 @@ class Npo:
     #==========================================
         return list({v['class'] for v in self.__npo_knowledge.values()})
     
-    def connectivity_paths(self, connected_only = True) -> list[str]:
+    def connectivity_paths(self) -> list[str]:
     #=========================================
-        if connected_only:
-            return list(path for path, knowledge in self.__npo_knowledge.items() if knowledge['is-connected'])
-        else:
-            return list(path for path in self.__npo_knowledge.keys())
+        return list(path for path in self.__npo_knowledge.keys())
 
     def build(self) -> dict[str, str]:
     #=================================
@@ -385,7 +382,7 @@ class Npo:
             knowledge['axons'] = list(set(axons))
             if len(references:=path_kn['provenance']) > 0:
                 knowledge['references'] = references
-            knowledge['is-connected'] = path_kn.get('is-connected', False)
+            knowledge['path-connected'] = path_kn.get('connected', False)
 
         return knowledge
 
