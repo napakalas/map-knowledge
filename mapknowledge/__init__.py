@@ -117,15 +117,18 @@ class KnowledgeBase(object):
             self.open(read_only=read_only)
 
     @property
-    def db(self):
+    def db(self) -> Optional[sqlite3.Connection]:
+    #============================================
         return self.__db
 
     @property
-    def db_name(self):
-        return self.__db_name
+    def db_name(self) -> Optional[str]:
+    #==================================
+        return str(self.__db_name) if self.__db_name is not None else None
 
     @property
-    def read_only(self):
+    def read_only(self) -> bool:
+    #===========================
         return self.__read_only
 
     def close(self):
@@ -133,7 +136,8 @@ class KnowledgeBase(object):
             self.__db.close()
             self.__db = None
 
-    def open(self, read_only=False):
+    def open(self, read_only: bool=False):
+    #=====================================
         self.close()
         if self.__db_name is not None:
             db_uri = f'{self.__db_name.as_uri()}?mode=ro' if read_only else self.__db_name.as_uri()
@@ -155,13 +159,15 @@ class KnowledgeBase(object):
                             raise ValueError(f'Unable to upgrade knowledge base schema to version {schema_version}: {str(e)}')
                         self.__db.commit()
 
-    def metadata(self, name):
+    def metadata(self, name: str) -> Optional[str]:
+    #==============================================
         if self.__db is not None:
             row = self.__db.execute('select value from metadata where name=?', (name,)).fetchone()
             if row is not None:
                 return row[0]
 
-    def set_metadata(self, name, value):
+    def set_metadata(self, name: str, value: str):
+    #=============================================
         if self.__db is not None:
             self.__db.execute('replace into metadata values (?, ?)', (name,value))
             self.__db.commit()
@@ -263,8 +269,8 @@ class KnowledgeStore(KnowledgeBase):
     def sckan_provenance(self):
         return self.__sckan_provenance
 
-    def clean_connectivity(self, knowledge_source):
-    #==============================================
+    def clean_connectivity(self, knowledge_source: Optional[str]):
+    #=============================================================
         if self.db is not None and knowledge_source is not None:
             if self.__verbose:
                 log.info(f'Clearing connectivity knowledge for `{knowledge_source}`...')
@@ -319,8 +325,8 @@ class KnowledgeStore(KnowledgeBase):
         for error in knowledge.get('errors', []):
             log.error(f'SCKAN knowledge error: {entity}: {error}')
 
-    def entity_knowledge(self, entity: str, source=None):
-    #====================================================
+    def entity_knowledge(self, entity: str, source: Optional[str]=None) -> dict:
+    #===========================================================================
         use_source = self.__source if source is None else source
 
         # Check local cache
@@ -412,8 +418,8 @@ class KnowledgeStore(KnowledgeBase):
                         'select distinct source from knowledge order by source desc').fetchall()] if self.db
                 else [])
 
-    def label(self, entity):
-    #=======================
+    def label(self, entity: str) -> str:
+    #===================================
         if self.db is not None:
             row = self.db.execute('select label from labels where entity=?', (entity,)).fetchone()
             if row is not None:
