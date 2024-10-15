@@ -132,6 +132,7 @@ class KnowledgeBase(object):
         return self.__read_only
 
     def close(self):
+    #===============
         if self.__db is not None:
             self.__db.close()
             self.__db = None
@@ -269,6 +270,12 @@ class KnowledgeStore(KnowledgeBase):
     def sckan_provenance(self):
         return self.__sckan_provenance
 
+    @staticmethod
+    def __log_errors(entity: str, knowledge: dict):
+    #==============================================
+        for error in knowledge.get('errors', []):
+            log.error(f'SCKAN knowledge error: {entity}: {error}')
+
     def clean_connectivity(self, knowledge_source: Optional[str]):
     #=============================================================
         if self.db is not None and knowledge_source is not None:
@@ -318,12 +325,6 @@ class KnowledgeStore(KnowledgeBase):
             return [tuple(row) for row in self.db.execute('select entity, label from labels order by entity')]
         else:
             return []
-
-    @staticmethod
-    def __log_errors(entity, knowledge):
-    #===================================
-        for error in knowledge.get('errors', []):
-            log.error(f'SCKAN knowledge error: {entity}: {error}')
 
     def entity_knowledge(self, entity: str, source: Optional[str]=None) -> dict:
     #===========================================================================
