@@ -43,20 +43,13 @@ KNOWLEDGE_BASE = 'knowledgebase.db'
 
 #===============================================================================
 
-SCHEMA_VERSION = '1.3'
+SCHEMA_VERSION = '1.4'
 
 KNOWLEDGE_SCHEMA = f"""
     create table metadata (name text primary key, value text);
 
     create table knowledge (source text, entity text, knowledge text);
     create unique index knowledge_index on knowledge(source, entity);
-
-    create table labels (entity text primary key, label text);
-    create unique index labels_index on labels(entity);
-
-    create table publications (source text, entity text, publication text);
-    create index publications_entity_index on publications(entity);
-    create index publications_publication_index on publications(publication);
 
     create table connectivity_models (model text primary key, version text);
 
@@ -89,6 +82,11 @@ SCHEMA_UPGRADES = {
         create table connectivity_nodes (source text, node text, path text);
         create unique index connectivity_nodes_index on connectivity_nodes(source, node, path);
         replace into metadata (name, value) values ('schema_version', '1.3');
+    """),
+    '1.3': ('1.4', """
+        drop table labels;
+        drop table publications;
+        replace into metadata (name, value) values ('schema_version', '1.4');
     """)
 }
 
@@ -319,13 +317,6 @@ class KnowledgeStore(KnowledgeBase):
             log.warning('NPO connectivity paths requested but no connection to NPO service')
         return []
 
-    def labels(self):
-    #================
-        if self.db is not None:
-            return [tuple(row) for row in self.db.execute('select entity, label from labels order by entity')]
-        else:
-            return []
-
     def entity_knowledge(self, entity: str, source: Optional[str]=None) -> dict:
     #===========================================================================
         use_source = self.__source if source is None else source
@@ -375,12 +366,6 @@ class KnowledgeStore(KnowledgeBase):
                         knowledge['label'] = knowledge['long-label']                # Save knowledge in our database
                 self.db.execute('replace into knowledge (source, entity, knowledge) values (?, ?, ?)',
                                                     (self.__source, entity, json.dumps(knowledge)))
-                # Save label and references in their own tables
-                if 'label' in knowledge:
-                    self.db.execute('replace into labels values (?, ?)', (entity, knowledge['label']))
-                if 'references' in knowledge:
-                    self.__update_references(entity, knowledge.get('references', []))
-
                 connectivity_terms = set()
                 if 'connectivity' in knowledge:
                     seen_nodes = set()
@@ -421,20 +406,8 @@ class KnowledgeStore(KnowledgeBase):
 
     def label(self, entity: str) -> str:
     #===================================
-        if self.db is not None:
-            row = self.db.execute('select label from labels where entity=?', (entity,)).fetchone()
-            if row is not None:
-                return row[0]
         knowledge = self.entity_knowledge(entity)
-        return knowledge['label']
-
-    def __update_references(self, entity, references):
-    #=================================================
-        if self.db is not None:
-            with self.db:
-                self.db.execute('delete from publications where source=? and entity=?', (self.__source, entity, ))
-                self.db.executemany('insert into publications(source, entity, publication) values (?, ?, ?)',
-                    ((self.__source, entity, reference) for reference in references))
+        return knowledge.get('label', knowledge['entity'])
 
 #===============================================================================
 
