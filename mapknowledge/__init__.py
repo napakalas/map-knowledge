@@ -410,5 +410,25 @@ class KnowledgeStore(KnowledgeBase):
         knowledge = self.entity_knowledge(entity)
         return knowledge.get('label', knowledge['entity'])
 
+    def stored_knowledge(self, source: Optional[str]=None) -> list[dict]:
+    #====================================================================
+        stored_knowledge = []
+        source = self.__source if source is None else source
+        if self.db is not None:
+            if source is not None:
+                rows = self.db.execute(
+                    'select source, entity, knowledge from knowledge where source=? or source is null order by entity, source desc',
+                                                                            (source, )).fetchall()
+            else:
+                rows = self.db.execute('select source, entity, knowledge from knowledge order by entity, source desc').fetchall()
+            last_entity = None
+            for row in rows:
+                if row[1] != last_entity:
+                    knowledge = json.loads(row[2])
+                    knowledge['source'] = row[0]
+                    stored_knowledge.append(knowledge)
+                    last_entity = row[1]
+        return stored_knowledge
+
 #===============================================================================
 
