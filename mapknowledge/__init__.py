@@ -295,8 +295,6 @@ class KnowledgeStore(KnowledgeBase):
         :returns:   A list of model URIs
         """
         if self.__npo_db is not None:
-            # Future: need to warn when NPO has been updated and make sure user
-            #         clears the cache...
             return self.__npo_db.connectivity_models()
         else:
             log.warning('NPO connectivity models requested but no connection to NPO service')
@@ -310,8 +308,6 @@ class KnowledgeStore(KnowledgeBase):
         :returns:   A list of path URIs
         """
         if self.__npo_db is not None:
-            # Future: need to warn when NPO has been updated and make sure user
-            #         clears the cache...
             return self.__npo_db.connectivity_paths()
         else:
             log.warning('NPO connectivity paths requested but no connection to NPO service')
