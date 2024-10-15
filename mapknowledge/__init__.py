@@ -410,6 +410,10 @@ class KnowledgeStore(KnowledgeBase):
         knowledge = self.entity_knowledge(entity)
         return knowledge.get('label', knowledge['entity'])
 
+    def labels(self) -> list[tuple[str, str]]:
+    #=========================================
+        return [(kn['entity'], kn.get('label', kn['entity'])) for kn in self.stored_knowledge()]
+
     def stored_knowledge(self, source: Optional[str]=None) -> list[dict]:
     #====================================================================
         stored_knowledge = []
