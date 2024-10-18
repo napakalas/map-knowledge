@@ -18,7 +18,7 @@
 #
 #===============================================================================
 
-__version__ = "0.19.2"
+__version__ = "0.19.3"
 
 #===============================================================================
 
@@ -279,7 +279,7 @@ class KnowledgeStore(KnowledgeBase):
     def connectivity_models(self) -> list[str]:
     #==========================================
         """
-        Get URIs of connectivity models held in thr NPO knowledge source.
+        Get URIs of connectivity models held in the NPO knowledge source.
 
         :returns:   A list of model URIs
         """
@@ -294,7 +294,7 @@ class KnowledgeStore(KnowledgeBase):
     def connectivity_paths(self) -> list[str]:
     #=========================================
         """
-        Get URIs of connectivity paths held in thr NPO knowledge source.
+        Get URIs of connectivity paths held in the NPO knowledge source.
 
         :returns:   A list of path URIs
         """
