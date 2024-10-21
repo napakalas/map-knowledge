@@ -13,11 +13,11 @@ class PathError(Exception):
 
 """
 This script is used to extract knowledge from a particular SCKAN release.
-The results are stored as a json file in the specified directoty.
-The file name will be 'sckan-xxxx-xx-xx-npo.json'
+The results are stored as a JSON file in the specified directory.
+The file name will be sckan-xxxx-xx-xx-npo.json.
 """
 
-def ectracting_knowlede(args):
+def extracting_knowledge(args):
     store = KnowledgeStore(sckan_version=args.sckan_version)
     
     knowledge = dict()
@@ -55,7 +55,7 @@ def main():
 
     try:
         args = parser.parse_args()
-        ectracting_knowlede(args)
+        extracting_knowledge(args)
     except PathError as error:
         sys.stderr.write(f'{error}\n')
         sys.exit(1)
