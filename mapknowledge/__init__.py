@@ -18,7 +18,7 @@
 #
 #===============================================================================
 
-__version__ = "0.20.0"
+__version__ = "0.20.1"
 
 #===============================================================================
 
@@ -149,7 +149,7 @@ class KnowledgeBase(object):
                     while schema_version != SCHEMA_VERSION:
                         if (upgrade := SCHEMA_UPGRADES.get(schema_version)) is None:
                             raise ValueError(f'Unable to upgrade knowledge base schema from version {schema_version}')
-                        log.warn(f'Upgrading knowledge base schema from version {schema_version} to {upgrade[0]}')
+                        log.warning(f'Upgrading knowledge base schema from version {schema_version} to {upgrade[0]}')
                         schema_version = upgrade[0]
                         try:
                             self.__db.executescript(upgrade[1])
