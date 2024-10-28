@@ -18,7 +18,7 @@
 #
 #===============================================================================
 
-__version__ = "0.19.3"
+__version__ = "0.20.1"
 
 #===============================================================================
 
@@ -43,20 +43,13 @@ KNOWLEDGE_BASE = 'knowledgebase.db'
 
 #===============================================================================
 
-SCHEMA_VERSION = '1.3'
+SCHEMA_VERSION = '1.4'
 
 KNOWLEDGE_SCHEMA = f"""
     create table metadata (name text primary key, value text);
 
     create table knowledge (source text, entity text, knowledge text);
     create unique index knowledge_index on knowledge(source, entity);
-
-    create table labels (entity text primary key, label text);
-    create unique index labels_index on labels(entity);
-
-    create table publications (source text, entity text, publication text);
-    create index publications_entity_index on publications(entity);
-    create index publications_publication_index on publications(publication);
 
     create table connectivity_models (model text primary key, version text);
 
@@ -89,6 +82,11 @@ SCHEMA_UPGRADES = {
         create table connectivity_nodes (source text, node text, path text);
         create unique index connectivity_nodes_index on connectivity_nodes(source, node, path);
         replace into metadata (name, value) values ('schema_version', '1.3');
+    """),
+    '1.3': ('1.4', """
+        drop table labels;
+        drop table publications;
+        replace into metadata (name, value) values ('schema_version', '1.4');
     """)
 }
 
@@ -117,23 +115,28 @@ class KnowledgeBase(object):
             self.open(read_only=read_only)
 
     @property
-    def db(self):
+    def db(self) -> Optional[sqlite3.Connection]:
+    #============================================
         return self.__db
 
     @property
-    def db_name(self):
-        return self.__db_name
+    def db_name(self) -> Optional[str]:
+    #==================================
+        return str(self.__db_name) if self.__db_name is not None else None
 
     @property
-    def read_only(self):
+    def read_only(self) -> bool:
+    #===========================
         return self.__read_only
 
     def close(self):
+    #===============
         if self.__db is not None:
             self.__db.close()
             self.__db = None
 
-    def open(self, read_only=False):
+    def open(self, read_only: bool=False):
+    #=====================================
         self.close()
         if self.__db_name is not None:
             db_uri = f'{self.__db_name.as_uri()}?mode=ro' if read_only else self.__db_name.as_uri()
@@ -146,7 +149,7 @@ class KnowledgeBase(object):
                     while schema_version != SCHEMA_VERSION:
                         if (upgrade := SCHEMA_UPGRADES.get(schema_version)) is None:
                             raise ValueError(f'Unable to upgrade knowledge base schema from version {schema_version}')
-                        log.warn(f'Upgrading knowledge base schema from version {schema_version} to {upgrade[0]}')
+                        log.warning(f'Upgrading knowledge base schema from version {schema_version} to {upgrade[0]}')
                         schema_version = upgrade[0]
                         try:
                             self.__db.executescript(upgrade[1])
@@ -155,13 +158,15 @@ class KnowledgeBase(object):
                             raise ValueError(f'Unable to upgrade knowledge base schema to version {schema_version}: {str(e)}')
                         self.__db.commit()
 
-    def metadata(self, name):
+    def metadata(self, name: str) -> Optional[str]:
+    #==============================================
         if self.__db is not None:
             row = self.__db.execute('select value from metadata where name=?', (name,)).fetchone()
             if row is not None:
                 return row[0]
 
-    def set_metadata(self, name, value):
+    def set_metadata(self, name: str, value: str):
+    #=============================================
         if self.__db is not None:
             self.__db.execute('replace into metadata values (?, ?)', (name,value))
             self.__db.commit()
@@ -263,8 +268,14 @@ class KnowledgeStore(KnowledgeBase):
     def sckan_provenance(self):
         return self.__sckan_provenance
 
-    def clean_connectivity(self, knowledge_source):
+    @staticmethod
+    def __log_errors(entity: str, knowledge: dict):
     #==============================================
+        for error in knowledge.get('errors', []):
+            log.error(f'SCKAN knowledge error: {entity}: {error}')
+
+    def clean_connectivity(self, knowledge_source: Optional[str]):
+    #=============================================================
         if self.db is not None and knowledge_source is not None:
             if self.__verbose:
                 log.info(f'Clearing connectivity knowledge for `{knowledge_source}`...')
@@ -284,8 +295,6 @@ class KnowledgeStore(KnowledgeBase):
         :returns:   A list of model URIs
         """
         if self.__npo_db is not None:
-            # Future: need to warn when NPO has been updated and make sure user
-            #         clears the cache...
             return self.__npo_db.connectivity_models()
         else:
             log.warning('NPO connectivity models requested but no connection to NPO service')
@@ -299,28 +308,13 @@ class KnowledgeStore(KnowledgeBase):
         :returns:   A list of path URIs
         """
         if self.__npo_db is not None:
-            # Future: need to warn when NPO has been updated and make sure user
-            #         clears the cache...
             return self.__npo_db.connectivity_paths()
         else:
             log.warning('NPO connectivity paths requested but no connection to NPO service')
         return []
 
-    def labels(self):
-    #================
-        if self.db is not None:
-            return [tuple(row) for row in self.db.execute('select entity, label from labels order by entity')]
-        else:
-            return []
-
-    @staticmethod
-    def __log_errors(entity, knowledge):
-    #===================================
-        for error in knowledge.get('errors', []):
-            log.error(f'SCKAN knowledge error: {entity}: {error}')
-
-    def entity_knowledge(self, entity: str, source=None):
-    #====================================================
+    def entity_knowledge(self, entity: str, source: Optional[str]=None) -> dict:
+    #===========================================================================
         use_source = self.__source if source is None else source
 
         # Check local cache
@@ -332,7 +326,8 @@ class KnowledgeStore(KnowledgeBase):
         if self.db is not None:
             # Check our database
             if use_source is not None:
-                row = self.db.execute('select source, knowledge from knowledge where source=? and entity=?',
+                row = self.db.execute(
+                    'select source, knowledge from knowledge where (source=? or source is null) and entity=? order by source desc',
                                                                             (use_source, entity)).fetchone()
             else:
                 row = self.db.execute('select source, knowledge from knowledge where entity=? order by source desc',
@@ -368,12 +363,6 @@ class KnowledgeStore(KnowledgeBase):
                         knowledge['label'] = knowledge['long-label']                # Save knowledge in our database
                 self.db.execute('replace into knowledge (source, entity, knowledge) values (?, ?, ?)',
                                                     (self.__source, entity, json.dumps(knowledge)))
-                # Save label and references in their own tables
-                if 'label' in knowledge:
-                    self.db.execute('replace into labels values (?, ?)', (entity, knowledge['label']))
-                if 'references' in knowledge:
-                    self.__update_references(entity, knowledge.get('references', []))
-
                 connectivity_terms = set()
                 if 'connectivity' in knowledge:
                     seen_nodes = set()
@@ -412,22 +401,34 @@ class KnowledgeStore(KnowledgeBase):
                         'select distinct source from knowledge order by source desc').fetchall()] if self.db
                 else [])
 
-    def label(self, entity):
-    #=======================
-        if self.db is not None:
-            row = self.db.execute('select label from labels where entity=?', (entity,)).fetchone()
-            if row is not None:
-                return row[0]
+    def label(self, entity: str) -> str:
+    #===================================
         knowledge = self.entity_knowledge(entity)
-        return knowledge['label']
+        return knowledge.get('label', knowledge['entity'])
 
-    def __update_references(self, entity, references):
-    #=================================================
+    def labels(self) -> list[tuple[str, str]]:
+    #=========================================
+        return [(kn['entity'], kn.get('label', kn['entity'])) for kn in self.stored_knowledge()]
+
+    def stored_knowledge(self, source: Optional[str]=None) -> list[dict]:
+    #====================================================================
+        stored_knowledge = []
+        source = self.__source if source is None else source
         if self.db is not None:
-            with self.db:
-                self.db.execute('delete from publications where source=? and entity=?', (self.__source, entity, ))
-                self.db.executemany('insert into publications(source, entity, publication) values (?, ?, ?)',
-                    ((self.__source, entity, reference) for reference in references))
+            if source is not None:
+                rows = self.db.execute(
+                    'select source, entity, knowledge from knowledge where source=? or source is null order by entity, source desc',
+                                                                            (source, )).fetchall()
+            else:
+                rows = self.db.execute('select source, entity, knowledge from knowledge order by entity, source desc').fetchall()
+            last_entity = None
+            for row in rows:
+                if row[1] != last_entity:
+                    knowledge = json.loads(row[2])
+                    knowledge['source'] = row[0]
+                    stored_knowledge.append(knowledge)
+                    last_entity = row[1]
+        return stored_knowledge
 
 #===============================================================================
 
