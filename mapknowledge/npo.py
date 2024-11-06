@@ -380,6 +380,9 @@ class Npo:
             c_axons = {a['loc']:[c for c in nodes if a['loc'] in c] for a in path_kn['path'] if a['type'] == 'AXON'}
             axons = [nodes[c] for cd_list in c_axons.values() for c in cd_list]
             knowledge['axons'] = list(set(axons))
+            c_somas = {s:[c for c in nodes if s in c] for s in path_kn['origin']}
+            somas = [nodes[c] for cd_list in c_somas.values() for c in cd_list]
+            knowledge['somas'] = list(set(somas))
             if len(references:=path_kn['provenance']) > 0:
                 knowledge['references'] = references
             knowledge['pathDisconnected'] = not path_kn.get('connected', False)
