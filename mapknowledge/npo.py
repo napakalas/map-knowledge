@@ -374,8 +374,8 @@ class Npo:
             for c in path_kn['connectivity']:
                 nodes[tuple([c[0][0]] + list(c[0][1]))] = c[0]
                 nodes[tuple([c[1][0]] + list(c[1][1]))] = c[1]
-            c_dendrites = {d:[c for c in nodes if d in c] for d in path_kn['origin']}
-            dendrites = [nodes[c] for cd_list in c_dendrites.values() for c in cd_list if len(c) == len(max(cd_list, key=len))]
+            c_dendrites = {d['loc']:[c for c in nodes if d['loc'] in c] for d in path_kn['path'] if d['type'] == 'DENDRITE'}
+            dendrites = [nodes[c] for cd_list in c_dendrites.values() for c in cd_list]
             knowledge['dendrites'] = list(set(dendrites))
             c_axons = {a['loc']:[c for c in nodes if a['loc'] in c] for a in path_kn['dest']}
             axons = [nodes[c] for cd_list in c_axons.values() for c in cd_list if len(c) == len(max(cd_list, key=len))]
