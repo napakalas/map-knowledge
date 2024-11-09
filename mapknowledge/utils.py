@@ -18,10 +18,12 @@
 #===============================================================================
 
 try:
-    from mapmaker.utils import log      # type: ignore
+    from mapmaker.utils import log as logger     # type: ignore
 except ImportError:
-    import logging as log
-log = log
+    import structlog
+    logger = structlog.get_logger()
+
+log = logger.bind(type='knowledge')
 
 #===============================================================================
 
@@ -47,7 +49,7 @@ def request_json(endpoint, **kwds):
             error = response.reason
     except requests.exceptions.RequestException as exception:
         error = f'Exception: {exception}'
-    log.warning(f"Couldn't access {endpoint}: {error}")
+    log.warning("Couldn't access endpoint", endpoint=endpoint, error=error)
     return None
 
 #===============================================================================
