@@ -173,7 +173,7 @@ class SciCrunch(object):
                     else:
                         knowledge['label'] = entity
         if len(knowledge) == 0 and entity not in self.__unknown_entities:
-            log.warning('Unknown anatomical entity: {}'.format(entity))
+            log.warning('Unknown anatomical entity', entity=entity)
             self.__unknown_entities.append(entity)
         return knowledge
 
@@ -182,7 +182,7 @@ class SciCrunch(object):
         if (data := self.query(PATH_METADATA_QUERY, neuron_id=entity)) is not None:
             return Apinatomy.get_metadata(data)
         elif entity not in self.__unknown_entities:
-            log.warning('Unknown anatomical entity: {}'.format(entity))
+            log.warning('Unknown anatomical entity', entity=entity)
             self.__unknown_entities.append(entity)
         return {}
 
