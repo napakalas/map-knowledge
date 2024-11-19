@@ -28,7 +28,7 @@ log = logger.bind(type='knowledge')
 #===============================================================================
 
 from json import JSONDecodeError
-import requests                         # type: ignore
+import requests
 
 LOOKUP_TIMEOUT = 30    # seconds; for `requests.get()`
 
