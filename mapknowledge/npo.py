@@ -377,7 +377,8 @@ class Npo:
             c_dendrites = {d['loc']:[c for c in nodes if d['loc'] in c] for d in path_kn['path'] if d['type'] == 'DENDRITE'}
             dendrites = [nodes[c] for cd_list in c_dendrites.values() for c in cd_list]
             knowledge['dendrites'] = list(set(dendrites))
-            c_axons = {a['loc']:[c for c in nodes if a['loc'] in c] for a in path_kn['path'] if a['type'] == 'AXON'}
+            c_axons = {**{a['loc']:[c for c in nodes if a['loc'] in c] for a in path_kn['path'] if a['type'] == 'AXON'},
+                       **{a['loc']:[c for c in nodes if a['loc'] in c] for a in path_kn['dest']}}
             axons = [nodes[c] for cd_list in c_axons.values() for c in cd_list]
             knowledge['axons'] = list(set(axons))
             c_somas = {s:[c for c in nodes if s in c] for s in path_kn['origin']}
