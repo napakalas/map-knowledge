@@ -200,9 +200,7 @@ def upgrade(args):
 
 DEFAULT_STORE = 'knowledgebase.db'
 
-if __name__ == '__main__':
-#=========================
-
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(description='Load, extract, and restore SCKAN NPO connectivity knowledge in a local knowledge store.')
@@ -235,5 +233,11 @@ if __name__ == '__main__':
     if not args.quiet:
         logging.basicConfig(level=logging.INFO)
     args.func(args)
+
+#===============================================================================
+
+if __name__ == '__main__':
+#=========================
+    main()
 
 #===============================================================================

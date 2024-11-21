@@ -18,6 +18,12 @@ neurondm = {url = "https://github.com/tgbugs/pyontutils/releases/download/neuron
 structlog = "^24.4.0"
 rich = "^13.9.4"
 
+[tool.poetry.group.tools.dependencies]
+tqdm = "^4.66.5"
+
+[tool.poetry.scripts]
+sckan_connectivity = 'tools.sckan_connectivity:main'
+
 [build-system]
 requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
