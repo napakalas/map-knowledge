@@ -404,11 +404,11 @@ class KnowledgeStore(KnowledgeBase):
     def label(self, entity: str) -> str:
     #===================================
         knowledge = self.entity_knowledge(entity)
-        return knowledge.get('label', knowledge['entity'])
+        return knowledge.get('label', knowledge['id'])
 
     def labels(self) -> list[tuple[str, str]]:
     #=========================================
-        return [(kn['entity'], kn.get('label', kn['entity'])) for kn in self.stored_knowledge()]
+        return [(kn['id'], kn.get('label', kn['id'])) for kn in self.stored_knowledge()]
 
     def stored_knowledge(self, source: Optional[str]=None) -> list[dict]:
     #====================================================================
