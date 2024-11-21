@@ -283,8 +283,8 @@ class KnowledgeStore(KnowledgeBase):
             namespaces.extend([f'{ontology}:%' for ontology in CONNECTIVITY_ONTOLOGIES])
             condition = ' or '.join(len(namespaces)*['entity like ?'])
             params = [knowledge_source] + namespaces
-            self.db.execute(f'delete from knowledge where source=? and ({condition})', tuple(params))
-            self.db.execute(f'delete from connectivity_nodes where source=?', (knowledge_source,))
+            self.db.execute(f'delete from knowledge where (source=? or source is null) and ({condition})', tuple(params))
+            self.db.execute(f'delete from connectivity_nodes where source=? or source is null', (knowledge_source,))
             self.db.commit()
 
     def connectivity_models(self) -> list[str]:
