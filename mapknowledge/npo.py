@@ -23,6 +23,7 @@ import logging
 import tempfile
 from typing import Any, Optional
 import networkx as nx
+import urllib.parse
 
 #===============================================================================
 
@@ -264,7 +265,7 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
         [g.add(t) for t in ori.graph]
 
     for f in ('apinatomy-neuron-populations', '../../npo'):
-        p = os.path.normpath(GEN_NEURONS_PATH + f)
+        p = urllib.parse.quote(GEN_NEURONS_PATH + f)
         ori = OntResIri(f'{NPO_RAW}/{npo_release}/{p}{TURTLE_SUFFIX}')
         [g.add((s, rdfs.label, o)) for s, o in ori.graph[:rdfs.label:]]
 
