@@ -18,6 +18,7 @@ neurondm = {url = "https://github.com/tgbugs/pyontutils/releases/download/neuron
 pyontutils = {url = "https://github.com/tgbugs/pyontutils/releases/download/0.1.38/pyontutils-0.1.38-py2.py3-none-any.whl"}
 structlog = "^24.4.0"
 rich = "^13.9.4"
+psycopg = {extras = ["binary", "pool"], version = "^3.2.5"}
 
 [tool.poetry.group.tools.dependencies]
 tqdm = "^4.66.5"
