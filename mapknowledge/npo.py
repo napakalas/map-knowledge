@@ -388,7 +388,14 @@ class Npo:
             if len(references:=path_kn['provenance']) > 0:
                 knowledge['references'] = references
             knowledge['pathDisconnected'] = not path_kn.get('connected', False)
-
+            c_axon_terminal = [[c for c in nodes if a['loc'] in c] for a in path_kn['dest'] if a['type'] == 'AXON-T']
+            knowledge['axon-terminals'] = [nodes[c] for cd_list in c_axon_terminal for c in cd_list]
+            c_afferent_terminal = [[c for c in nodes if a['loc'] in c] for a in path_kn['dest'] if a['type'] == 'AFFERENT-T']
+            knowledge['afferent-terminals'] = [nodes[c] for cd_list in c_afferent_terminal for c in cd_list]
+            c_axon_location = [[c for c in nodes if a['loc'] in c] for a in path_kn['path'] if a['type'] == 'AXON']
+            knowledge['axon-locations'] = [nodes[c] for cd_list in c_axon_location for c in cd_list]
+            knowledge['forward-connections'] = path_kn['forward_connection']
+            knowledge['nodes'] = [node for node in nodes.values() if node not in knowledge['axons'] + knowledge['dendrites'] + knowledge['somas']]
         return knowledge
 
 #===============================================================================
