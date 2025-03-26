@@ -159,7 +159,7 @@ def for_composer(n, cull=False) -> dict[str, Any]:
         other_phenotype = (  lpes(n, ilxtr.hasPhenotype)
                            + lpes(n, ilxtr.hasMolecularPhenotype)
                            + lpes(n, ilxtr.hasProjectionPhenotype)),
-        forward_connection = lpes(n, ilxtr.hasForwardConnectionPhenotype),
+        forward_connections = lpes(n, ilxtr.hasForwardConnectionPhenotype),
 
         # direct references from individual individual neurons
         provenance =      lrdf(n, ilxtr.literatureCitation),
@@ -394,7 +394,8 @@ class Npo:
             knowledge['afferent-terminals'] = [nodes[c] for cd_list in c_afferent_terminal for c in cd_list]
             c_axon_location = [[c for c in nodes if a['loc'] in c] for a in path_kn['path'] if a['type'] == 'AXON']
             knowledge['axon-locations'] = [nodes[c] for cd_list in c_axon_location for c in cd_list]
-            knowledge['forward-connections'] = path_kn['forward_connection']
+            if len(path_kn['forward_connections']) > 0:
+                knowledge['forward-connections'] = path_kn['forward_connections']
             knowledge['nodes'] = [node for node in nodes.values() if node not in knowledge['axons'] + knowledge['dendrites'] + knowledge['somas']]
         return knowledge
 
