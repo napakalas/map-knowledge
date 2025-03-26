@@ -389,14 +389,18 @@ class Npo:
                 knowledge['references'] = references
             knowledge['pathDisconnected'] = not path_kn.get('connected', False)
             c_axon_terminal = [[c for c in nodes if a['loc'] in c] for a in path_kn['dest'] if a['type'] == 'AXON-T']
-            knowledge['axon-terminals'] = [nodes[c] for cd_list in c_axon_terminal for c in cd_list]
+            if len(axon_terminals := [nodes[c] for cd_list in c_axon_terminal for c in cd_list]) > 0:
+                knowledge['axon-terminals'] = axon_terminals
             c_afferent_terminal = [[c for c in nodes if a['loc'] in c] for a in path_kn['dest'] if a['type'] == 'AFFERENT-T']
-            knowledge['afferent-terminals'] = [nodes[c] for cd_list in c_afferent_terminal for c in cd_list]
+            if len(afferent_terminals := [nodes[c] for cd_list in c_afferent_terminal for c in cd_list]) > 0:
+                knowledge['afferent-terminals'] = afferent_terminals
             c_axon_location = [[c for c in nodes if a['loc'] in c] for a in path_kn['path'] if a['type'] == 'AXON']
-            knowledge['axon-locations'] = [nodes[c] for cd_list in c_axon_location for c in cd_list]
+            if len(axon_locations := [nodes[c] for cd_list in c_axon_location for c in cd_list]) > 0:
+                knowledge['axon-locations'] = axon_locations
             if len(path_kn['forward_connections']) > 0:
                 knowledge['forward-connections'] = path_kn['forward_connections']
-            knowledge['nodes'] = [node for node in nodes.values() if node not in knowledge['axons'] + knowledge['dendrites'] + knowledge['somas']]
+            if len(unspecified_nodes := [node for node in nodes.values() if node not in knowledge['axons'] + knowledge['dendrites'] + knowledge['somas']]) > 0:
+                knowledge['nodes'] = unspecified_nodes
         return knowledge
 
 #===============================================================================
