@@ -97,6 +97,20 @@ def setup_anatomical_types(cursor):
 
 #===============================================================================
 
+def delete_source_from_tables(cursor, source: str):
+#==================================================
+    cursor.execute('DELETE FROM path_taxons WHERE source_id=%s', (source, ))
+    cursor.execute('DELETE FROM feature_evidence WHERE source_id=%s', (source, ))
+    cursor.execute('DELETE FROM path_edges WHERE source_id=%s', (source, ))
+    cursor.execute('DELETE FROM path_features WHERE source_id=%s', (source, ))
+    cursor.execute('DELETE FROM path_node_features WHERE source_id=%s', (source,  ))
+    cursor.execute('DELETE FROM path_forward_connections WHERE source_id=%s', (source, ))
+    cursor.execute('DELETE FROM path_node_types WHERE source_id=%s', (source, ))
+    cursor.execute('DELETE FROM path_phenotypes WHERE source_id=%s', (source, ))
+    cursor.execute('DELETE FROM path_properties WHERE source_id=%s', (source, ))
+    cursor.execute('DELETE FROM path_nodes WHERE source_id=%s', (source, ))
+    cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source, ))
+
 def update_connectivity(cursor, knowledge: KnowledgeList):
 #=========================================================
     source = knowledge.source
@@ -108,20 +122,22 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
             if (connectivity := record.get('connectivity')) is not None:
                 path_id = record['id']
 
-                # Path taxons
+                # Taxons
                 taxons = record.get('taxons', ['NCBITaxon:40674'])
                 cursor.executemany('INSERT INTO taxons (taxon_id) VALUES (%s) ON CONFLICT DO NOTHING',
                                    ((taxon,) for taxon in taxons))
-                cursor.execute('DELETE FROM path_taxons WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+
+                # Path taxons
                 with cursor.copy("COPY path_taxons (source_id, path_id, taxon_id) FROM STDIN") as copy:
                     for taxon in taxons:
                         copy.write_row((source, path_id, taxon))
 
-                # Path evidence
+                # Evidence
                 evidence = record.get('references', [])
                 cursor.executemany('INSERT INTO evidence (evidence_id) VALUES (%s) ON CONFLICT DO NOTHING',
                                    ((evidence,) for evidence in evidence))
-                cursor.execute('DELETE FROM feature_evidence WHERE source_id=%s AND term_id=%s', (source, path_id, ))
+
+                # Path evidence
                 with cursor.copy("COPY feature_evidence (source_id, term_id, evidence_id) FROM STDIN") as copy:
                     for evidence_id in evidence:
                         copy.write_row((source, path_id, evidence_id))
@@ -140,20 +156,17 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
 
                 # Path edges
                 path_nodes = [ (source, path_id, json.dumps(node_0), json.dumps(node_1)) for (node_0, node_1) in connectivity ]
-                cursor.execute('DELETE FROM path_edges WHERE source_id=%s AND path_id=%s', (source, path_id, ))
                 with cursor.copy("COPY path_edges (source_id, path_id, node_0, node_1) FROM STDIN") as copy:
                     for row in path_nodes:
                         copy.write_row(row)
 
                 # Path features
                 path_features = [(source, path_id, feature) for feature in set([nf[3] for nf in node_features])]
-                cursor.execute('DELETE FROM path_features WHERE source_id=%s AND path_id=%s', (source, path_id, ))
                 with cursor.copy("COPY path_features (source_id, path_id, feature_id) FROM STDIN") as copy:
                     for row in path_features:
                         copy.write_row(row)
 
                 # Forward connections
-                cursor.execute('DELETE FROM path_forward_connections WHERE source_id=%s AND path_id=%s', (source, path_id, ))
                 forward_connections = [(source, path_id, forward_path) for forward_path in record.get('forward-connections', [])]
                 with cursor.copy("COPY path_forward_connections (source_id, path_id, forward_path_id) FROM STDIN") as copy:
                     for row in forward_connections:
@@ -186,19 +199,16 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
                         unknown_node_type = False
                     if unknown_node_type:
                         node_types.append((*node_values, UNKNOWN_ID))
-                cursor.execute('DELETE FROM path_node_types WHERE source_id=%s AND path_id=%s', (source, path_id, ))
                 with cursor.copy("COPY path_node_types (source_id, path_id, node_id, type_id) FROM STDIN") as copy:
                     for row in node_types:
                         copy.write_row(row)
 
                 # Path phenotypes
-                cursor.execute('DELETE FROM path_phenotypes WHERE source_id=%s AND path_id=%s', (source, path_id, ))
                 with cursor.copy("COPY path_phenotypes (source_id, path_id, phenotype) FROM STDIN") as copy:
                     for phenotype in record.get('phenotypes', []):
                         copy.write_row((source, path_id, phenotype))
 
                 # General path properties
-                cursor.execute('DELETE FROM path_properties WHERE source_id=%s AND path_id=%s', (source, path_id, ))
                 cursor.execute('INSERT INTO path_properties (source_id, path_id, biological_sex, alert, disconnected) VALUES (%s, %s, %s, %s, %s)',
                                    (source, path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected')))
 
@@ -227,6 +237,7 @@ def pg_import(knowledge: KnowledgeList):
         with db.cursor() as cursor:
             setup_anatomical_types(cursor)
             update_knowledge_source(cursor, knowledge.source)
+            delete_source_from_tables(cursor, knowledge.source)
             update_features(cursor, knowledge)
             update_connectivity(cursor, knowledge)
             #if (paths := knowledge.get('paths')) is not None:
