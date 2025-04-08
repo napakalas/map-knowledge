@@ -22,7 +22,7 @@ from functools import reduce
 import json
 import logging
 import os
-from typing import Optional
+from typing import Any, Optional
 
 
 from pprint import pprint
@@ -46,6 +46,36 @@ KNOWLEDGE_HOST = os.environ.get('KNOWLEDGE_HOST', 'localhost:5432')
 
 #===============================================================================
 
+def clean_source(source: str) -> str:
+    if source.endswith('-npo'):
+        return source[:-4]
+    return source
+
+#===============================================================================
+
+type KnowledgeDict = dict[str, Any]
+
+class KnowledgeList:
+    def __init__(self, source: str, knowledge: Optional[list[KnowledgeDict]]=None):
+        self.__source = clean_source(source)
+        if knowledge is None:
+            self.__knowledge: list[KnowledgeDict] = []
+        else:
+            self.__knowledge = knowledge
+
+    @property
+    def source(self):
+        return self.__source
+
+    @property
+    def knowledge(self):
+        return self.__knowledge
+
+    def append(self, knowledge: KnowledgeDict):
+        self.__knowledge.append(knowledge)
+
+#===============================================================================
+
 AXON_ID = 'axon'
 DENDRITE_ID = 'dendrite'
 SOMA_ID = 'soma'
@@ -60,88 +90,89 @@ def setup_anatomical_types(cursor):
     cursor.executemany('INSERT INTO anatomical_types (type_id, label, description) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
                        anatomical_types)
 
-def update_connectivity(cursor, knowledge):
-#==========================================
-    source = knowledge['source']
-    for record in knowledge['knowledge']:
-        if record.get('source') == source:
+#===============================================================================
+
+def update_connectivity(cursor, knowledge: KnowledgeList):
+#=========================================================
+    source = knowledge.source
+    for record in knowledge.knowledge:
+        if source == clean_source(record.get('source', '')):
             if (connectivity := record.get('connectivity')) is not None:
                 path_id = record['id']
-
-                # Nodes
-                nodes = set(json.dumps(node) for (node, _) in connectivity) | set(json.dumps(node) for (_, node) in connectivity)
-                cursor.executemany('INSERT INTO connectivity_nodes (node_id) VALUES (%s) ON CONFLICT DO NOTHING',
-                                   ((node,) for node in nodes))
-
-                # Node features
-                node_features = [ (node, feature)
-                                        for (node, features) in [(node, json.loads(node)) for node in nodes]
-                                            for feature in [features[0]] + features[1] ]
-                cursor.executemany('INSERT INTO connectivity_node_features (node_id, feature_id) VALUES (%s, %s) ON CONFLICT DO NOTHING',
-                                    node_features)
-                path_nodes = [ (path_id, json.dumps(node_0), json.dumps(node_1)) for (node_0, node_1) in connectivity ]
-
-                # Path edges
-                cursor.execute('DELETE FROM connectivity_path_edges WHERE path_id=%s', (path_id, ))
-                with cursor.copy("COPY connectivity_path_edges (path_id, node_0, node_1) FROM STDIN") as copy:
-                    for row in path_nodes:
-                        copy.write_row(row)
-
-                # Path features
-                path_features = [(path_id, feature) for feature in set([nf[1] for nf in node_features])]
-                cursor.execute('DELETE FROM connectivity_path_features WHERE path_id=%s', (path_id, ))
-                with cursor.copy("COPY connectivity_path_features (path_id, feature_id) FROM STDIN") as copy:
-                    for row in path_features:
-                        copy.write_row(row)
-
-                # Path node types
-                node_types = []
-                node_types.extend([(path_id, json.dumps(node), AXON_ID) for node in record.get('axons', [])])
-                node_types.extend([(path_id, json.dumps(node), DENDRITE_ID) for node in record.get('dendrites', [])])
-                node_types.extend([(path_id, json.dumps(node), SOMA_ID) for node in record.get('somas', [])])
-                cursor.execute('DELETE FROM connectivity_node_types WHERE path_id=%s', (path_id, ))
-                with cursor.copy("COPY connectivity_node_types (path_id, node_id, type_id) FROM STDIN") as copy:
-                    for row in node_types:
-                        copy.write_row(row)
-
-                # Path phenotypes
-                cursor.execute('DELETE FROM connectivity_path_phenotypes WHERE path_id=%s', (path_id, ))
-                with cursor.copy("COPY connectivity_path_phenotypes (path_id, phenotype) FROM STDIN") as copy:
-                    for phenotype in record.get('phenotypes', []):
-                        copy.write_row((path_id, phenotype))
 
                 # Path taxons
                 taxons = record.get('taxons', ['NCBITaxon:40674'])
                 cursor.executemany('INSERT INTO taxons (taxon_id) VALUES (%s) ON CONFLICT DO NOTHING',
                                    ((taxon,) for taxon in taxons))
-                cursor.execute('DELETE FROM connectivity_path_taxons WHERE path_id=%s', (path_id, ))
-                with cursor.copy("COPY connectivity_path_taxons (path_id, taxon_id) FROM STDIN") as copy:
+                cursor.execute('DELETE FROM connectivity_path_taxons WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                with cursor.copy("COPY connectivity_path_taxons (source_id, path_id, taxon_id) FROM STDIN") as copy:
                     for taxon in taxons:
-                        copy.write_row((path_id, taxon))
+                        copy.write_row((source, path_id, taxon))
 
                 # Path evidence
                 evidence = record.get('references', [])
                 cursor.executemany('INSERT INTO evidence (evidence_id) VALUES (%s) ON CONFLICT DO NOTHING',
                                    ((evidence,) for evidence in evidence))
-                cursor.execute('DELETE FROM feature_evidence WHERE term_id=%s', (path_id, ))
-                with cursor.copy("COPY feature_evidence (term_id, evidence_id) FROM STDIN") as copy:
+                cursor.execute('DELETE FROM feature_evidence WHERE source_id=%s AND term_id=%s', (source, path_id, ))
+                with cursor.copy("COPY feature_evidence (source_id, term_id, evidence_id) FROM STDIN") as copy:
                     for evidence_id in evidence:
-                        copy.write_row((path_id, evidence_id))
+                        copy.write_row((source, path_id, evidence_id))
+
+                # Nodes
+                nodes = set(json.dumps(node) for (node, _) in connectivity) | set(json.dumps(node) for (_, node) in connectivity)
+                cursor.executemany('INSERT INTO connectivity_nodes (source_id, node_id) VALUES (%s, %s) ON CONFLICT DO NOTHING',
+                                   ((source, node,) for node in nodes))
+
+                # Node features
+                node_features = [ (source, node, feature)
+                                        for (node, features) in [(node, json.loads(node)) for node in nodes]
+                                            for feature in [features[0]] + features[1] ]
+                cursor.executemany('INSERT INTO connectivity_node_features (source_id, node_id, feature_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
+                                    node_features)
+
+                # Path edges
+                path_nodes = [ (source, path_id, json.dumps(node_0), json.dumps(node_1)) for (node_0, node_1) in connectivity ]
+                cursor.execute('DELETE FROM connectivity_path_edges WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                with cursor.copy("COPY connectivity_path_edges (source_id, path_id, node_0, node_1) FROM STDIN") as copy:
+                    for row in path_nodes:
+                        copy.write_row(row)
+
+                # Path features
+                path_features = [(source, path_id, feature) for feature in set([nf[2] for nf in node_features])]
+                cursor.execute('DELETE FROM connectivity_path_features WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                with cursor.copy("COPY connectivity_path_features (source_id, path_id, feature_id) FROM STDIN") as copy:
+                    for row in path_features:
+                        copy.write_row(row)
+
+                # Path node types
+                node_types = []
+                node_types.extend([(source, path_id, json.dumps(node), AXON_ID) for node in record.get('axons', [])])
+                node_types.extend([(source, path_id, json.dumps(node), DENDRITE_ID) for node in record.get('dendrites', [])])
+                node_types.extend([(source, path_id, json.dumps(node), SOMA_ID) for node in record.get('somas', [])])
+                cursor.execute('DELETE FROM connectivity_node_types WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                with cursor.copy("COPY connectivity_node_types (source_id, path_id, node_id, type_id) FROM STDIN") as copy:
+                    for row in node_types:
+                        copy.write_row(row)
+
+                # Path phenotypes
+                cursor.execute('DELETE FROM connectivity_path_phenotypes WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                with cursor.copy("COPY connectivity_path_phenotypes (source_id, path_id, phenotype) FROM STDIN") as copy:
+                    for phenotype in record.get('phenotypes', []):
+                        copy.write_row((source, path_id, phenotype))
 
                 # General path properties
-                cursor.execute('DELETE FROM connectivity_path_properties WHERE path_id=%s', (path_id, ))
-                cursor.execute('INSERT INTO connectivity_path_properties (path_id, biological_sex, alert, disconnected) VALUES (%s, %s, %s, %s)',
-                                   (path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected')))
+                cursor.execute('DELETE FROM connectivity_path_properties WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                cursor.execute('INSERT INTO connectivity_path_properties (source_id, path_id, biological_sex, alert, disconnected) VALUES (%s, %s, %s, %s, %s)',
+                                   (source, path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected')))
 
-def update_features(cursor, knowledge):
-#======================================
-    source = knowledge['source']
+def update_features(cursor, knowledge: KnowledgeList):
+#=====================================================
+    source = knowledge.source
     cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source, ))
     with cursor.copy("COPY feature_terms (source_id, term_id, label, description) FROM STDIN") as copy:
-        for record in knowledge['knowledge']:
-            if record.get('source') == source:
+        for record in knowledge.knowledge:
+            if source == clean_source(record.get('source', '')):
                 copy.write_row([source, record['id'], record.get('label'), record.get('long-label')])
-    # Need to separately add/update entities with no source
 
 def update_knowledge_source(cursor, source):
 #===========================================
@@ -149,54 +180,33 @@ def update_knowledge_source(cursor, source):
 
 #===============================================================================
 
-def pg_import(knowledge):
-#========================
+def pg_import(knowledge: KnowledgeList):
+#=======================================
     user = f'{KNOWLEDGE_USER}@' if KNOWLEDGE_USER else ''
     with pg.connect(f'postgresql://{user}{KNOWLEDGE_HOST}/{PG_DATABASE}') as db:
         with db.cursor() as cursor:
-            # This disables constraints for the session
-            cursor.execute('SET session_replication_role = replica')
             setup_anatomical_types(cursor)
-            update_knowledge_source(cursor, knowledge['source'])
+            update_knowledge_source(cursor, knowledge.source)
             update_features(cursor, knowledge)
             update_connectivity(cursor, knowledge)
-
-            if (paths := knowledge.get('paths')) is not None:
-                pass
-
-
-
-
-
+            #if (paths := knowledge.get('paths')) is not None:
+            #    pass
         db.commit()
 
-
 """
-
         knowledge = {
             'id': entity
         }
-            knowledge['label'] = self.__npo_terms[entity]
+        knowledge['label'] = self.__npo_terms[entity]
 
         # check if entity is a connectivity model
 
-
         if entity in self.connectivity_models():
-
-
             knowledge['paths'] = [{'id': v['id'], 'models': v['id']} for v in self.__npo_knowledge.values() if v['class'] == entity]
             knowledge['references'] = []
 
-
         # check if entity is a connecitvity path
         if (path_kn:=self.__npo_knowledge.get(entity)) is not None:
-
-
-
-
-
-
-
 
 {'id': 'ilxtr:NeuronAacar',
  'label': 'ilxtr:NeuronAacar',
@@ -206,8 +216,6 @@ def pg_import(knowledge):
                         'models': 'ilxtr:neuron-type-aacar-7a'},
                      {'id': 'ilxtr:neuron-type-aacar-8a',
                         'models': 'ilxtr:neuron-type-aacar-8a'},
-
-
 
 """
 
