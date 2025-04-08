@@ -152,6 +152,13 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
                     for row in path_features:
                         copy.write_row(row)
 
+                # Forward connections
+                cursor.execute('DELETE FROM path_forward_connections WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                forward_connections = [(source, path_id, forward_path) for forward_path in record.get('forward-connections', [])]
+                with cursor.copy("COPY path_forward_connections (source_id, path_id, forward_path_id) FROM STDIN") as copy:
+                    for row in forward_connections:
+                        copy.write_row(row)
+
                 # Path node types
                 afferent_terminal_nodes = [json.dumps(node) for node in record.get('afferent-terminals', [])]
                 axon_location_nodes = [json.dumps(node) for node in record.get('axon-locations', [])]
@@ -194,6 +201,7 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
                 cursor.execute('DELETE FROM path_properties WHERE source_id=%s AND path_id=%s', (source, path_id, ))
                 cursor.execute('INSERT INTO path_properties (source_id, path_id, biological_sex, alert, disconnected) VALUES (%s, %s, %s, %s, %s)',
                                    (source, path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected')))
+
         progress_bar.update(1)
     progress_bar.close()
 

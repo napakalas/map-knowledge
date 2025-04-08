@@ -77,6 +77,13 @@ CREATE TABLE public.path_features (
 );
 ALTER TABLE public.path_features OWNER TO abi;
 
+CREATE TABLE public.path_forward_connections (
+    source_id character varying NOT NULL,
+    path_id character varying NOT NULL,
+    forward_path_id character varying NOT NULL
+);
+ALTER TABLE public.path_forward_connections OWNER TO abi;
+
 CREATE TABLE public.path_phenotypes (
     source_id character varying NOT NULL,
     path_id character varying NOT NULL,
@@ -114,7 +121,7 @@ CREATE TABLE public.feature_evidence (
 );
 ALTER TABLE public.feature_evidence OWNER TO abi;
 
-CREATE TABLE public.feature_relationship (
+CREATE TABLE public.feature_relationship (  -- this could be used for forward connections
     source_id character varying NOT NULL,
     feature_0 character varying NOT NULL,
     feature_1 character varying NOT NULL,
@@ -230,6 +237,13 @@ ALTER TABLE ONLY public.path_features
     ADD CONSTRAINT path_constraint FOREIGN KEY (source_id, path_id) REFERENCES public.feature_terms(source_id, term_id);
 ALTER TABLE ONLY public.path_features
     ADD CONSTRAINT feature_constraint FOREIGN KEY (source_id, feature_id) REFERENCES public.feature_terms(source_id, term_id);
+
+ALTER TABLE ONLY public.path_forward_connections
+    ADD CONSTRAINT source_constraint FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(source_id);
+ALTER TABLE ONLY public.path_forward_connections
+    ADD CONSTRAINT path_constraint FOREIGN KEY (source_id, path_id) REFERENCES public.feature_terms(source_id, term_id);
+ALTER TABLE ONLY public.path_forward_connections
+    ADD CONSTRAINT forward_path_constraint FOREIGN KEY (source_id, forward_path_id) REFERENCES public.feature_terms(source_id, term_id);
 
 ALTER TABLE ONLY public.path_phenotypes
     ADD CONSTRAINT source_constraint FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(source_id);
