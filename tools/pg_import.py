@@ -24,8 +24,7 @@ import logging
 import os
 from typing import Any, Optional
 
-
-from pprint import pprint
+from tqdm import tqdm
 
 #===============================================================================
 
@@ -95,6 +94,9 @@ def setup_anatomical_types(cursor):
 def update_connectivity(cursor, knowledge: KnowledgeList):
 #=========================================================
     source = knowledge.source
+    progress_bar = tqdm(total=len(knowledge.knowledge),
+        unit='records', ncols=80,
+        bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
     for record in knowledge.knowledge:
         if source == clean_source(record.get('source', '')):
             if (connectivity := record.get('connectivity')) is not None:
@@ -164,6 +166,8 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
                 cursor.execute('DELETE FROM connectivity_path_properties WHERE source_id=%s AND path_id=%s', (source, path_id, ))
                 cursor.execute('INSERT INTO connectivity_path_properties (source_id, path_id, biological_sex, alert, disconnected) VALUES (%s, %s, %s, %s, %s)',
                                    (source, path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected')))
+        progress_bar.update(1)
+    progress_bar.close()
 
 def update_features(cursor, knowledge: KnowledgeList):
 #=====================================================
