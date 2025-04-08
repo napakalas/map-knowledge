@@ -169,64 +169,67 @@ CREATE INDEX fki_path_node_constraint ON public.connectivity_node_types USING bt
 --------------------------------------------------------------
 
 ALTER TABLE ONLY public.alternative_terms
-    ADD CONSTRAINT alternative_term_constraint FOREIGN KEY (term_id) REFERENCES public.feature_terms(term_id) NOT VALID;
+    ADD CONSTRAINT alternative_term_constraint FOREIGN KEY (term_id) REFERENCES public.feature_terms(term_id);
 
 ALTER TABLE ONLY public.feature_evidence
-    ADD CONSTRAINT evidence_constraint FOREIGN KEY (evidence_id) REFERENCES public.evidence(evidence_id) NOT VALID;
+    ADD CONSTRAINT evidence_constraint FOREIGN KEY (evidence_id) REFERENCES public.evidence(evidence_id);
 
 ALTER TABLE ONLY public.feature_relationship
-    ADD CONSTRAINT feature_0_constraint FOREIGN KEY (feature_0) REFERENCES public.feature_terms(term_id) NOT VALID;
+    ADD CONSTRAINT feature_0_constraint FOREIGN KEY (feature_0) REFERENCES public.feature_terms(term_id);
 
 ALTER TABLE ONLY public.feature_relationship
-    ADD CONSTRAINT feature_1_constraint FOREIGN KEY (feature_1) REFERENCES public.feature_terms(term_id) NOT VALID;
+    ADD CONSTRAINT feature_1_constraint FOREIGN KEY (feature_1) REFERENCES public.feature_terms(term_id);
 
 ALTER TABLE ONLY public.connectivity_path_features
-    ADD CONSTRAINT feature_constraint FOREIGN KEY (feature_id) REFERENCES public.feature_terms(term_id) NOT VALID;
+    ADD CONSTRAINT feature_constraint FOREIGN KEY (feature_id) REFERENCES public.feature_terms(term_id);
 
 ALTER TABLE ONLY public.feature_types
-    ADD CONSTRAINT feature_constraint FOREIGN KEY (term_id) REFERENCES public.feature_terms(term_id) NOT VALID;
+    ADD CONSTRAINT feature_constraint FOREIGN KEY (term_id) REFERENCES public.feature_terms(term_id);
 
 ALTER TABLE ONLY public.feature_evidence
-    ADD CONSTRAINT feature_constraint FOREIGN KEY (term_id) REFERENCES public.feature_terms(term_id) NOT VALID;
+    ADD CONSTRAINT feature_constraint FOREIGN KEY (term_id) REFERENCES public.feature_terms(term_id);
 
 ALTER TABLE ONLY public.connectivity_node_features
     ADD CONSTRAINT feature_constraint FOREIGN KEY (feature_id) REFERENCES public.feature_terms(term_id);
-ALTER TABLE ONLY public.connectivity_path_edges
-    ADD CONSTRAINT node_0_constraint FOREIGN KEY (node_0) REFERENCES public.connectivity_nodes(node_id) NOT VALID;
 
 ALTER TABLE ONLY public.connectivity_path_edges
-    ADD CONSTRAINT node_1_constraint FOREIGN KEY (node_1) REFERENCES public.connectivity_nodes(node_id) NOT VALID;
+    ADD CONSTRAINT node_0_constraint FOREIGN KEY (node_0) REFERENCES public.connectivity_nodes(node_id);
+
+ALTER TABLE ONLY public.connectivity_path_edges
+    ADD CONSTRAINT node_1_constraint FOREIGN KEY (node_1) REFERENCES public.connectivity_nodes(node_id);
 
 ALTER TABLE ONLY public.connectivity_node_types
-    ADD CONSTRAINT node_constraint FOREIGN KEY (node_id) REFERENCES public.connectivity_nodes(node_id) NOT VALID;
+    ADD CONSTRAINT node_constraint FOREIGN KEY (node_id) REFERENCES public.connectivity_nodes(node_id);
 
 ALTER TABLE ONLY public.connectivity_node_features
-    ADD CONSTRAINT node_constraint FOREIGN KEY (node_id) REFERENCES public.connectivity_nodes(node_id) NOT VALID;
+    ADD CONSTRAINT node_constraint FOREIGN KEY (node_id) REFERENCES public.connectivity_nodes(node_id);
 
 ALTER TABLE ONLY public.connectivity_path_edges
-    ADD CONSTRAINT path_constraint FOREIGN KEY (path_id) REFERENCES public.feature_terms(term_id) NOT VALID;
+    ADD CONSTRAINT path_constraint FOREIGN KEY (path_id) REFERENCES public.feature_terms(term_id);
 
 ALTER TABLE ONLY public.connectivity_path_features
-    ADD CONSTRAINT path_constraint FOREIGN KEY (path_id) REFERENCES public.feature_terms(term_id) NOT VALID;
+    ADD CONSTRAINT path_constraint FOREIGN KEY (path_id) REFERENCES public.feature_terms(term_id);
 
 ALTER TABLE ONLY public.connectivity_node_types
     ADD CONSTRAINT path_constraint FOREIGN KEY (path_id) REFERENCES public.feature_terms(term_id);
+
 ALTER TABLE ONLY public.connectivity_path_taxons
     ADD CONSTRAINT path_constraint FOREIGN KEY (path_id) REFERENCES public.feature_terms(term_id);
+
 ALTER TABLE ONLY public.connectivity_path_properties
-    ADD CONSTRAINT path_constraint FOREIGN KEY (path_id) REFERENCES public.feature_terms(term_id) NOT VALID;
+    ADD CONSTRAINT path_constraint FOREIGN KEY (path_id) REFERENCES public.feature_terms(term_id);
 
 ALTER TABLE ONLY public.connectivity_path_phenotypes
     ADD CONSTRAINT path_constraint FOREIGN KEY (path_id) REFERENCES public.feature_terms(term_id);
 
 ALTER TABLE ONLY public.feature_terms
-    ADD CONSTRAINT source_constraint FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(source_id) NOT VALID;
+    ADD CONSTRAINT source_constraint FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(source_id);
 
 ALTER TABLE ONLY public.connectivity_path_taxons
     ADD CONSTRAINT taxon_constraint FOREIGN KEY (taxon_id) REFERENCES public.taxons(taxon_id);
 
 ALTER TABLE ONLY public.feature_types
-    ADD CONSTRAINT type_constraint FOREIGN KEY (type_id) REFERENCES public.anatomical_types(type_id) NOT VALID;
+    ADD CONSTRAINT type_constraint FOREIGN KEY (type_id) REFERENCES public.anatomical_types(type_id);
 
 ALTER TABLE ONLY public.connectivity_node_types
     ADD CONSTRAINT type_constraint FOREIGN KEY (type_id) REFERENCES public.anatomical_types(type_id);
