@@ -9,7 +9,6 @@
 -- Started on 2025-04-08 12:12:29 NZST
 --------------------------------------------------------------
 
-SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET transaction_timeout = 0;
