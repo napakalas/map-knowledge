@@ -106,8 +106,8 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
                 taxons = record.get('taxons', ['NCBITaxon:40674'])
                 cursor.executemany('INSERT INTO taxons (taxon_id) VALUES (%s) ON CONFLICT DO NOTHING',
                                    ((taxon,) for taxon in taxons))
-                cursor.execute('DELETE FROM connectivity_path_taxons WHERE source_id=%s AND path_id=%s', (source, path_id, ))
-                with cursor.copy("COPY connectivity_path_taxons (source_id, path_id, taxon_id) FROM STDIN") as copy:
+                cursor.execute('DELETE FROM path_taxons WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                with cursor.copy("COPY path_taxons (source_id, path_id, taxon_id) FROM STDIN") as copy:
                     for taxon in taxons:
                         copy.write_row((source, path_id, taxon))
 
@@ -122,27 +122,27 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
 
                 # Nodes
                 nodes = set(json.dumps(node) for (node, _) in connectivity) | set(json.dumps(node) for (_, node) in connectivity)
-                cursor.executemany('INSERT INTO connectivity_nodes (source_id, node_id) VALUES (%s, %s) ON CONFLICT DO NOTHING',
-                                   ((source, node,) for node in nodes))
+                cursor.executemany('INSERT INTO path_nodes (source_id, path_id, node_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
+                                   ((source, path_id, node,) for node in nodes))
 
                 # Node features
-                node_features = [ (source, node, feature)
+                node_features = [ (source, path_id, node, feature)
                                         for (node, features) in [(node, json.loads(node)) for node in nodes]
                                             for feature in [features[0]] + features[1] ]
-                cursor.executemany('INSERT INTO connectivity_node_features (source_id, node_id, feature_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
+                cursor.executemany('INSERT INTO path_node_features (source_id, path_id, node_id, feature_id) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING',
                                     node_features)
 
                 # Path edges
                 path_nodes = [ (source, path_id, json.dumps(node_0), json.dumps(node_1)) for (node_0, node_1) in connectivity ]
-                cursor.execute('DELETE FROM connectivity_path_edges WHERE source_id=%s AND path_id=%s', (source, path_id, ))
-                with cursor.copy("COPY connectivity_path_edges (source_id, path_id, node_0, node_1) FROM STDIN") as copy:
+                cursor.execute('DELETE FROM path_edges WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                with cursor.copy("COPY path_edges (source_id, path_id, node_0, node_1) FROM STDIN") as copy:
                     for row in path_nodes:
                         copy.write_row(row)
 
                 # Path features
-                path_features = [(source, path_id, feature) for feature in set([nf[2] for nf in node_features])]
-                cursor.execute('DELETE FROM connectivity_path_features WHERE source_id=%s AND path_id=%s', (source, path_id, ))
-                with cursor.copy("COPY connectivity_path_features (source_id, path_id, feature_id) FROM STDIN") as copy:
+                path_features = [(source, path_id, feature) for feature in set([nf[3] for nf in node_features])]
+                cursor.execute('DELETE FROM path_features WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                with cursor.copy("COPY path_features (source_id, path_id, feature_id) FROM STDIN") as copy:
                     for row in path_features:
                         copy.write_row(row)
 
@@ -151,20 +151,20 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
                 node_types.extend([(source, path_id, json.dumps(node), AXON_ID) for node in record.get('axons', [])])
                 node_types.extend([(source, path_id, json.dumps(node), DENDRITE_ID) for node in record.get('dendrites', [])])
                 node_types.extend([(source, path_id, json.dumps(node), SOMA_ID) for node in record.get('somas', [])])
-                cursor.execute('DELETE FROM connectivity_node_types WHERE source_id=%s AND path_id=%s', (source, path_id, ))
-                with cursor.copy("COPY connectivity_node_types (source_id, path_id, node_id, type_id) FROM STDIN") as copy:
+                cursor.execute('DELETE FROM path_node_types WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                with cursor.copy("COPY path_node_types (source_id, path_id, node_id, type_id) FROM STDIN") as copy:
                     for row in node_types:
                         copy.write_row(row)
 
                 # Path phenotypes
-                cursor.execute('DELETE FROM connectivity_path_phenotypes WHERE source_id=%s AND path_id=%s', (source, path_id, ))
-                with cursor.copy("COPY connectivity_path_phenotypes (source_id, path_id, phenotype) FROM STDIN") as copy:
+                cursor.execute('DELETE FROM path_phenotypes WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                with cursor.copy("COPY path_phenotypes (source_id, path_id, phenotype) FROM STDIN") as copy:
                     for phenotype in record.get('phenotypes', []):
                         copy.write_row((source, path_id, phenotype))
 
                 # General path properties
-                cursor.execute('DELETE FROM connectivity_path_properties WHERE source_id=%s AND path_id=%s', (source, path_id, ))
-                cursor.execute('INSERT INTO connectivity_path_properties (source_id, path_id, biological_sex, alert, disconnected) VALUES (%s, %s, %s, %s, %s)',
+                cursor.execute('DELETE FROM path_properties WHERE source_id=%s AND path_id=%s', (source, path_id, ))
+                cursor.execute('INSERT INTO path_properties (source_id, path_id, biological_sex, alert, disconnected) VALUES (%s, %s, %s, %s, %s)',
                                    (source, path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected')))
         progress_bar.update(1)
     progress_bar.close()
