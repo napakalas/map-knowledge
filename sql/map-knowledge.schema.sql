@@ -33,7 +33,6 @@ CREATE TABLE public.alternative_terms (
 ALTER TABLE public.alternative_terms OWNER TO abi;
 
 CREATE TABLE public.anatomical_types (
-    source_id character varying NOT NULL,
     type_id character varying NOT NULL,
     label text NOT NULL,
     description text
@@ -186,9 +185,6 @@ ALTER TABLE ONLY public.alternative_terms
 ALTER TABLE ONLY public.alternative_terms
     ADD CONSTRAINT alternative_constraint FOREIGN KEY (alternative_id) REFERENCES public.feature_terms(term_id);
 ALTER TABLE ONLY public.alternative_terms
-    ADD CONSTRAINT source_constraint FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(source_id);
-
-ALTER TABLE ONLY public.anatomical_types
     ADD CONSTRAINT source_constraint FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(source_id);
 
 ALTER TABLE ONLY public.connectivity_node_features
