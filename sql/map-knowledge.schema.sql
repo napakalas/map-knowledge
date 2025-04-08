@@ -255,8 +255,6 @@ ALTER TABLE ONLY public.feature_relationship
 
 ALTER TABLE ONLY public.feature_terms
     ADD CONSTRAINT source_constraint FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(source_id);
-ALTER TABLE ONLY public.feature_terms
-    ADD CONSTRAINT source_constraint FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(source_id);
 
 ALTER TABLE ONLY public.feature_types
     ADD CONSTRAINT type_constraint FOREIGN KEY (type_id) REFERENCES public.anatomical_types(type_id);
