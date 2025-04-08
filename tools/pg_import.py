@@ -37,7 +37,7 @@ from mapknowledge import KnowledgeStore
 
 #===============================================================================
 
-PG_DATABASE = 'map_knowledge'
+PG_DATABASE = 'map-knowledge'
 
 DEFAULT_STORE = 'knowledgebase.db'
 
