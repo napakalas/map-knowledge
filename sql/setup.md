@@ -3,8 +3,13 @@
 ```
 $ psql -d postgres
 
-create database "map-knowledge";
 create user abi with encrypted password 'XXX';
+
+
+drop database "map-knowledge";
+
+create database "map-knowledge";
+grant all privileges on database "map-knowledge" to abi;
 ```
 
 ```
