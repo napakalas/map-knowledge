@@ -5,18 +5,19 @@ $ psql -d postgres
 
 create user abi with encrypted password 'XXX';
 
-
 drop database "map-knowledge";
 
-create database "map-knowledge";
-grant all privileges on database "map-knowledge" to abi;
+create database "map-knowledge" owner abi;
 ```
 
 ```
 $ cd knowledge
-$ export KNOWLEDGE_USER=abi:XXX
-$ psql -d "map-knowledge" -f sql/map-knowledge.schema.sql
+
+$ psql -d "map-knowledge" -f sql/map-knowledge.schema.sql -U abi
+
+$ poetry install --with tools
 
 $ poetry shell
+$ export KNOWLEDGE_USER=abi:XXX
 $ python tools/pg_import.py json sckan/sckan-2024-09-21-npo.json
 ```
