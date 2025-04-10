@@ -84,13 +84,6 @@ NODE_PHENOTYPES = [
     'ilxtr:hasDendriteLocatedIn',
 ]
 
-AFFERENT_TERMINAL_ID = 'afferent-terminal'
-AXON_LOCATION_ID = 'axon-location'
-AXON_TERMINAL_ID = 'axon-terminal'
-DENDRITE_ID = 'dendrite'
-SOMA_ID = 'soma'
-UNKNOWN_ID = 'unknown'
-
 def setup_anatomical_types(cursor):
 #==================================
     cursor.execute('DELETE FROM anatomical_types')
