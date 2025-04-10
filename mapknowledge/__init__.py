@@ -237,7 +237,7 @@ class KnowledgeStore(KnowledgeBase):
                     }
                     if verbose:
                         log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
-            self.__source = f'{self.__npo_db.release}-npo'
+            self.__source = self.__npo_db.release
         else:
             self.__npo_db = None
 
