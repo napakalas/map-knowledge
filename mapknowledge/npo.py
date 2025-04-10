@@ -24,6 +24,7 @@ import tempfile
 from typing import Any, Optional
 import networkx as nx
 import urllib.parse
+from collections import defaultdict
 
 #===============================================================================
 
@@ -160,6 +161,14 @@ def for_composer(n, cull=False) -> dict[str, Any]:
                            + lpes(n, ilxtr.hasMolecularPhenotype)
                            + lpes(n, ilxtr.hasProjectionPhenotype)),
         forward_connections = lpes(n, ilxtr.hasForwardConnectionPhenotype),
+        node_phenotypes = {
+            str(ilxtr.hasSomaLocatedIn):                            lpes(n, ilxtr.hasSomaLocatedIn),
+            str(ilxtr.hasAxonPresynapticElementIn):                 lpes(n, ilxtr.hasAxonPresynapticElementIn),
+            str(ilxtr.hasAxonSensorySubcellularElementIn):          lpes(n, ilxtr.hasAxonSensorySubcellularElementIn),
+            str(ilxtr.hasAxonLeadingToSensorySubcellularElementIn): lpes(n, ilxtr.hasAxonLeadingToSensorySubcellularElementIn),
+            str(ilxtr.hasAxonLocatedIn):                            lpes(n, ilxtr.hasAxonLocatedIn),
+            str(ilxtr.hasDendriteLocatedIn):                        lpes(n, ilxtr.hasDendriteLocatedIn)
+        },
 
         # direct references from individual individual neurons
         provenance =      lrdf(n, ilxtr.literatureCitation),
@@ -395,6 +404,10 @@ class Npo:
             c_axon_location = [[c for c in nodes if a['loc'] in c] for a in path_kn['path'] if a['type'] == 'AXON']
             knowledge['axon-locations'] = [nodes[c] for cd_list in c_axon_location for c in cd_list]
             knowledge['forward-connections'] = path_kn['forward_connections']
+            knowledge['node-phenotypes'] = defaultdict(list)
+            for pn, locs in path_kn['node_phenotypes'].items():
+                c_phenotypes = [[c for c in nodes for loc in locs if loc in c]]
+                knowledge['node-phenotypes'][NAMESPACES.curie(str(pn))] += [nodes[c] for cd_list in c_phenotypes for c in cd_list]
         return knowledge
 
 #===============================================================================
