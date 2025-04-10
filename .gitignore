@@ -2,3 +2,4 @@ dist/
 *.pyc
 .DS_Store
 knowledgebase.db
+NIF-Ontology/
