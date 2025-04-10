@@ -75,6 +75,15 @@ class KnowledgeList:
 
 #===============================================================================
 
+NODE_PHENOTYPES = [
+    'ilxtr:hasSomaLocatedIn',
+    'ilxtr:hasAxonPresynapticElementIn',
+    'ilxtr:hasAxonSensorySubcellularElementIn',
+    'ilxtr:hasAxonLeadingToSensorySubcellularElementIn',
+    'ilxtr:hasAxonLocatedIn',
+    'ilxtr:hasDendriteLocatedIn',
+]
+
 AFFERENT_TERMINAL_ID = 'afferent-terminal'
 AXON_LOCATION_ID = 'axon-location'
 AXON_TERMINAL_ID = 'axon-terminal'
@@ -84,16 +93,9 @@ UNKNOWN_ID = 'unknown'
 
 def setup_anatomical_types(cursor):
 #==================================
-    anatomical_types = [
-        (AFFERENT_TERMINAL_ID, 'Afferent terminal', 'The node is located in an afferent terminal'),
-        (AXON_LOCATION_ID, 'Axon location', 'The node is located in an axon'),
-        (AXON_TERMINAL_ID, 'Axon terminal', 'The node is located in an axon terminal'),
-        (DENDRITE_ID, 'Dendrite', 'The node is located in a dendrite'),
-        (SOMA_ID, 'Soma', 'The node is located in a soma'),
-        (UNKNOWN_ID, 'Unknown', "The node's phenotype is unknown"),
-    ]
-    cursor.executemany('INSERT INTO anatomical_types (type_id, label, description) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
-                       anatomical_types)
+    cursor.execute('DELETE FROM anatomical_types')
+    cursor.executemany('INSERT INTO anatomical_types (type_id, label) VALUES (%s, %s) ON CONFLICT DO NOTHING',
+                       [(type, type) for type in NODE_PHENOTYPES])
 
 #===============================================================================
 
@@ -173,32 +175,11 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
                         copy.write_row(row)
 
                 # Path node types
-                afferent_terminal_nodes = [json.dumps(node) for node in record.get('afferent-terminals', [])]
-                axon_location_nodes = [json.dumps(node) for node in record.get('axon-locations', [])]
-                axon_terminal_nodes = [json.dumps(node) for node in record.get('axon-terminals', [])]
-                dendrite_nodes = [json.dumps(node) for node in record.get('dendrites', [])]
-                soma_nodes = [json.dumps(node) for node in record.get('somas', [])]
                 node_types = []
-                for node in nodes:
-                    unknown_node_type = True
-                    node_values = (source, path_id, node)
-                    if node in afferent_terminal_nodes:
-                        node_types.append((*node_values, AFFERENT_TERMINAL_ID))
-                        unknown_node_type = False
-                    if node in axon_location_nodes:
-                        node_types.append((*node_values, AXON_LOCATION_ID))
-                        unknown_node_type = False
-                    if node in axon_terminal_nodes:
-                        node_types.append((*node_values, AXON_TERMINAL_ID))
-                        unknown_node_type = False
-                    if node in dendrite_nodes:
-                        node_types.append((*node_values, DENDRITE_ID))
-                        unknown_node_type = False
-                    if node in soma_nodes:
-                        node_types.append((*node_values, SOMA_ID))
-                        unknown_node_type = False
-                    if unknown_node_type:
-                        node_types.append((*node_values, UNKNOWN_ID))
+                node_phenotypes = record.get('node-phenotypes', {})
+                for type, nodes in node_phenotypes.items():
+                    node_types.extend([(source, path_id, json.dumps(node), type)
+                                            for node in nodes])
                 with cursor.copy("COPY path_node_types (source_id, path_id, node_id, type_id) FROM STDIN") as copy:
                     for row in node_types:
                         copy.write_row(row)
@@ -235,9 +216,9 @@ def pg_import(knowledge: KnowledgeList):
     user = f'{KNOWLEDGE_USER}@' if KNOWLEDGE_USER else ''
     with pg.connect(f'postgresql://{user}{KNOWLEDGE_HOST}/{PG_DATABASE}') as db:
         with db.cursor() as cursor:
+            delete_source_from_tables(cursor, knowledge.source)
             setup_anatomical_types(cursor)
             update_knowledge_source(cursor, knowledge.source)
-            delete_source_from_tables(cursor, knowledge.source)
             update_features(cursor, knowledge)
             update_connectivity(cursor, knowledge)
             #if (paths := knowledge.get('paths')) is not None:
