@@ -242,8 +242,8 @@ def main():
     parser_restore.add_argument('json_file', metavar='JSON_FILE', help='File to load connectivity knowledge from.')
     parser_restore.set_defaults(func=restore)
 
-    parser_restore = subparsers.add_parser('upgrade', help='Upgrade local knowledge store to latest database schema.')
-    parser_restore.set_defaults(func=upgrade)
+    parser_upgrade = subparsers.add_parser('upgrade', help='Upgrade local knowledge store to latest database schema.')
+    parser_upgrade.set_defaults(func=upgrade)
 
     args = parser.parse_args()
     if not args.quiet:
