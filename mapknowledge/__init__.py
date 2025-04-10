@@ -340,14 +340,17 @@ class KnowledgeStore(KnowledgeBase):
         and (source is None or source == self.__source)):
             # We don't have knowledge or a valid label for the entity so check SCKAN
             ontology = entity.split(':')[0]
-            if entity in self.__npo_entities or ontology in CONNECTIVITY_ONTOLOGIES:
-                # Always consult NPO for connectivity or if we know it has the term
-                if self.__verbose:
-                    log.info(f'Consulting NPO for knowledge about {entity}')
-                if self.__npo_db:
-                    knowledge = self.__npo_db.get_knowledge(entity)
-            elif self.__scicrunch is not None:
-                # Otherwise consult Scicrunch
+
+            # Always first consult NPO
+            if self.__verbose:
+                log.info(f'Consulting NPO for knowledge about {entity}')
+            if self.__npo_db:
+                knowledge = self.__npo_db.get_knowledge(entity)
+
+            # If NPO doesn't know about the entity and its not connectivity
+            # related we consult SciCrunch
+            if (len(knowledge) == 1 and self.__scicrunch is not None
+            and not (entity in self.__npo_entities or ontology in CONNECTIVITY_ONTOLOGIES)):
                 if self.__verbose:
                     log.info(f'Consulting SciCrunch for knowledge about {entity}')
                 knowledge = self.__scicrunch.get_knowledge(entity)
