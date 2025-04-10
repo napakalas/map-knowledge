@@ -86,7 +86,7 @@ NODE_PHENOTYPES = [
     ilxtr.hasAxonSensorySubcellularElementIn,
     ilxtr.hasAxonLeadingToSensorySubcellularElementIn,
     ilxtr.hasAxonLocatedIn,
-    ilxtr.hasDendriteLocatedI,
+    ilxtr.hasDendriteLocatedIn,
 ]
 
 #===============================================================================
