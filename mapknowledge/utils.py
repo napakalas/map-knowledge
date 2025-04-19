@@ -40,7 +40,7 @@ def request_json(endpoint, **kwds):
                                 headers={'Accept': 'application/json'},
                                 timeout=LOOKUP_TIMEOUT,
                                 **kwds)
-        if response.status_code == requests.codes.ok:
+        if response.ok:
             try:
                 return response.json()
             except JSONDecodeError:
