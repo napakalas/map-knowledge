@@ -28,6 +28,7 @@ class NAMESPACES:
         'ilxtr': 'http://uri.interlex.org/tgbugs/uris/readable/',
         'ilx': 'http://uri.interlex.org/',   # More general need to be ordered later
         'CL': 'http://purl.obolibrary.org/obo/CL_',
+        'FMA': 'http://purl.org/sig/ont/fma/fma',
     }
 
     @staticmethod

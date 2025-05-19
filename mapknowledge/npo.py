@@ -91,6 +91,13 @@ NODE_PHENOTYPES = [
 
 #===============================================================================
 
+NERVE_REFS = [
+    'UBERON:0001021',
+    'FMA:65132'
+]
+
+#===============================================================================
+
 class NPOException(Exception):
     pass
 
@@ -257,11 +264,23 @@ def get_connectivity_edges(partial_order) -> list:
         filtered_connectivities += [tuple(new_edge)]
     return list(set(filtered_connectivities))
 
+def get_nerve_refs(g:rdflib.Graph, neuron_term):
+    query = f"""
+        SELECT ?superClass WHERE {{
+            VALUES ?superClass {{ {' '.join(NERVE_REFS)} }}
+            <{NAMESPACES.uri(neuron_term)}> rdfs:subClassOf* ?superClass .
+        }}
+    """
+    result = g.query(query, initNs={**{"rdfs": rdflib.RDFS}, **NAMESPACES.namespaces})
+    matched = [str(row["superClass"]) for row in result]
+    return NAMESPACES.curie(matched[0]) if matched else None
+
 def load_knowledge_from_ttl(npo_release: str) -> tuple:
 #======================================================
     g = OntGraph()  # load and query graph
     neuron_knowledge = {}
     neuron_terms = {}
+    nerves = defaultdict(list)
 
     # remove scigraph and interlex calls
     graphBase._sgv = None
@@ -281,6 +300,8 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
         p = urllib.parse.quote(GEN_NEURONS_PATH + f)
         ori = OntResIri(f'{NPO_RAW}/{npo_release}/{p}{TURTLE_SUFFIX}')
         [g.add((s, rdfs.label, o)) for s, o in ori.graph[:rdfs.label:]]
+        if f != 'apinatomy-neuron-populations':
+            [g.add((s, rdfs.subClassOf, o)) for s, o in ori.graph[:rdfs.subClassOf:]]
 
     config = Config('npo-connectivity')
     config.load_existing(g)
@@ -298,15 +319,16 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
             neuron['connected'] = False
         neuron_terms = {**neuron_terms, **neuron['terms-dict']}
         neuron_knowledge[neuron['id']] = neuron
+        [nerves[nerve_ref].append(term) for term in neuron['terms-dict'] if (nerve_ref := get_nerve_refs(g, term)) and term not in nerves[nerve_ref]]
 
-    return neuron_knowledge, neuron_terms, g
+    return neuron_knowledge, neuron_terms, nerves, g
 
 #===============================================================================
 
 class Npo:
     def __init__(self, npo_release: Optional[str]):
         self.__npo_release = self.__check_npo_release(npo_release)
-        self.__npo_knowledge, self.__npo_terms, self.__rdf_graph = load_knowledge_from_ttl(self.__npo_release)
+        self.__npo_knowledge, self.__npo_terms, self.__nerves, self.__rdf_graph = load_knowledge_from_ttl(self.__npo_release)
 
     @property
     def release(self) -> str:
@@ -413,6 +435,10 @@ class Npo:
                 c_phenotypes = [[c for c in nodes for loc in locs if loc in c]]
                 node_phenotypes[pn] += [nodes[c] for cd_list in c_phenotypes for c in cd_list]
             knowledge['node-phenotypes'] = dict(node_phenotypes)
+            knowledge['nerves'] = {
+                nerve_ref: [node for node in nodes if set(node) & set(nerve)]
+                for nerve_ref, nerve in self.__nerves.items()
+            }
         return knowledge
 
 #===============================================================================
