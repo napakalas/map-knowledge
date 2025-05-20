@@ -91,10 +91,9 @@ NODE_PHENOTYPES = [
 
 #===============================================================================
 
-NERVE_REFS = [
-    'UBERON:0001021',
-    'FMA:65132'
-]
+ANATOMICAL_TYPES = {
+    'nerve': ['UBERON:0001021', 'FMA:65132']
+}
 
 #===============================================================================
 
@@ -264,23 +263,21 @@ def get_connectivity_edges(partial_order) -> list:
         filtered_connectivities += [tuple(new_edge)]
     return list(set(filtered_connectivities))
 
-def get_nerve_refs(g:rdflib.Graph, neuron_term):
+def is_type_of(g:rdflib.Graph, neuron_term, type_terms):
     query = f"""
-        SELECT ?superClass WHERE {{
-            VALUES ?superClass {{ {' '.join(NERVE_REFS)} }}
+        ASK WHERE {{
+            VALUES ?superClass {{ {' '.join(type_terms)} }}
             <{NAMESPACES.uri(neuron_term)}> rdfs:subClassOf* ?superClass .
         }}
     """
-    result = g.query(query, initNs={**{"rdfs": rdflib.RDFS}, **NAMESPACES.namespaces})
-    matched = [str(row["superClass"]) for row in result]
-    return NAMESPACES.curie(matched[0]) if matched else None
+    result = g.query(query, initNs={"rdfs": rdflib.RDFS, **NAMESPACES.namespaces})
+    return result.askAnswer
 
 def load_knowledge_from_ttl(npo_release: str) -> tuple:
 #======================================================
     g = OntGraph()  # load and query graph
     neuron_knowledge = {}
     neuron_terms = {}
-    nerves = defaultdict(list)
 
     # remove scigraph and interlex calls
     graphBase._sgv = None
@@ -311,24 +308,30 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
         neuron = for_composer(n)
         neuron['connectivity'] = get_connectivity_edges(neuron['order'])
         neuron['class'] = f'ilxtr:{type(n).__name__}'
-        neuron['terms-dict'] = {NAMESPACES.curie(str(p.p)):str(p.pLabel) for p in n}
-        neuron['terms-dict'][neuron['id']] = neuron['label']
+        neuron['terms-dict'] = {
+            (term := NAMESPACES.curie(str(p.p))): neuron_terms[term]
+            if term in neuron_terms else {
+                'label': str(p.pLabel),
+                **({'type': atype} if (atype := next((a for a, terms in ANATOMICAL_TYPES.items() if is_type_of(g, term, terms)),None)) else {})
+            }
+            for p in n
+        }
+        neuron['terms-dict'][neuron['id']] = {'label':neuron['label']}
         if neuron['connectivity']:
             neuron['connected'] = nx.is_connected(nx.Graph(neuron['connectivity']))
         else:
             neuron['connected'] = False
         neuron_terms = {**neuron_terms, **neuron['terms-dict']}
         neuron_knowledge[neuron['id']] = neuron
-        [nerves[nerve_ref].append(term) for term in neuron['terms-dict'] if (nerve_ref := get_nerve_refs(g, term)) and term not in nerves[nerve_ref]]
 
-    return neuron_knowledge, neuron_terms, nerves, g
+    return neuron_knowledge, neuron_terms, g
 
 #===============================================================================
 
 class Npo:
     def __init__(self, npo_release: Optional[str]):
         self.__npo_release = self.__check_npo_release(npo_release)
-        self.__npo_knowledge, self.__npo_terms, self.__nerves, self.__rdf_graph = load_knowledge_from_ttl(self.__npo_release)
+        self.__npo_knowledge, self.__npo_terms, self.__rdf_graph = load_knowledge_from_ttl(self.__npo_release)
 
     @property
     def release(self) -> str:
@@ -380,7 +383,7 @@ class Npo:
         }
         # get label from npo_terms or from rdflib's graph
         if entity in self.__npo_terms:
-            knowledge['label'] = self.__npo_terms[entity]
+            knowledge = {**knowledge, **self.__npo_terms[entity]}
         else:
             if len(labels:=[o for o in self.__rdf_graph.objects(subject=NAMESPACES.uri(entity), predicate=rdfs.label)]) > 0:
                 knowledge['label'] = labels[0]
@@ -435,10 +438,8 @@ class Npo:
                 c_phenotypes = [[c for c in nodes for loc in locs if loc in c]]
                 node_phenotypes[pn] += [nodes[c] for cd_list in c_phenotypes for c in cd_list]
             knowledge['node-phenotypes'] = dict(node_phenotypes)
-            knowledge['nerves'] = {
-                nerve_ref: [node for node in nodes if set(node) & set(nerve)]
-                for nerve_ref, nerve in self.__nerves.items()
-            }
+            knowledge['nerves'] = [nodes[node] for node in nodes if any(self.__npo_terms.get(term, {}).get('type') == 'nerve' for term in node)]
+
         return knowledge
 
 #===============================================================================
