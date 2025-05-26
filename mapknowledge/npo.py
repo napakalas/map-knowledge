@@ -91,6 +91,12 @@ NODE_PHENOTYPES = [
 
 #===============================================================================
 
+ANATOMICAL_TYPES = {
+    'nerve': ['UBERON:0001021', 'FMA:65132']
+}
+
+#===============================================================================
+
 class NPOException(Exception):
     pass
 
@@ -257,6 +263,16 @@ def get_connectivity_edges(partial_order) -> list:
         filtered_connectivities += [tuple(new_edge)]
     return list(set(filtered_connectivities))
 
+def is_type_of(g:rdflib.Graph, neuron_term, type_terms):
+    query = f"""
+        ASK WHERE {{
+            VALUES ?superClass {{ {' '.join(type_terms)} }}
+            <{NAMESPACES.uri(neuron_term)}> rdfs:subClassOf* ?superClass .
+        }}
+    """
+    result = g.query(query, initNs={"rdfs": rdflib.RDFS, **NAMESPACES.namespaces})
+    return result.askAnswer
+
 def load_knowledge_from_ttl(npo_release: str) -> tuple:
 #======================================================
     g = OntGraph()  # load and query graph
@@ -281,6 +297,8 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
         p = urllib.parse.quote(GEN_NEURONS_PATH + f)
         ori = OntResIri(f'{NPO_RAW}/{npo_release}/{p}{TURTLE_SUFFIX}')
         [g.add((s, rdfs.label, o)) for s, o in ori.graph[:rdfs.label:]]
+        if f != 'apinatomy-neuron-populations':
+            [g.add((s, rdfs.subClassOf, o)) for s, o in ori.graph[:rdfs.subClassOf:]]
 
     config = Config('npo-connectivity')
     config.load_existing(g)
@@ -290,8 +308,15 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
         neuron = for_composer(n)
         neuron['connectivity'] = get_connectivity_edges(neuron['order'])
         neuron['class'] = f'ilxtr:{type(n).__name__}'
-        neuron['terms-dict'] = {NAMESPACES.curie(str(p.p)):str(p.pLabel) for p in n}
-        neuron['terms-dict'][neuron['id']] = neuron['label']
+        neuron['terms-dict'] = {
+            (term := NAMESPACES.curie(str(p.p))): neuron_terms[term]
+            if term in neuron_terms else {
+                'label': str(p.pLabel),
+                **({'type': atype} if (atype := next((a for a, terms in ANATOMICAL_TYPES.items() if is_type_of(g, term, terms)),None)) else {})
+            }
+            for p in n
+        }
+        neuron['terms-dict'][neuron['id']] = {'label':neuron['label']}
         if neuron['connectivity']:
             neuron['connected'] = nx.is_connected(nx.Graph(neuron['connectivity']))
         else:
@@ -358,7 +383,7 @@ class Npo:
         }
         # get label from npo_terms or from rdflib's graph
         if entity in self.__npo_terms:
-            knowledge['label'] = self.__npo_terms[entity]
+            knowledge = {**knowledge, **self.__npo_terms[entity]}
         else:
             if len(labels:=[o for o in self.__rdf_graph.objects(subject=NAMESPACES.uri(entity), predicate=rdfs.label)]) > 0:
                 knowledge['label'] = labels[0]
@@ -413,6 +438,8 @@ class Npo:
                 c_phenotypes = [[c for c in nodes for loc in locs if loc in c]]
                 node_phenotypes[pn] += [nodes[c] for cd_list in c_phenotypes for c in cd_list]
             knowledge['node-phenotypes'] = dict(node_phenotypes)
+            knowledge['nerves'] = [nodes[node] for node in nodes if any(self.__npo_terms.get(term, {}).get('type') == 'nerve' for term in node)]
+
         return knowledge
 
 #===============================================================================
