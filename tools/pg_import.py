@@ -86,13 +86,7 @@ NODE_PHENOTYPES = [
 
 def setup_anatomical_types(cursor):
 #==================================
-    if (referenced := {row[0] for row in cursor.execute("SELECT DISTINCT type_id FROM path_node_types")}):
-        cursor.execute(
-            "DELETE FROM anatomical_types WHERE type_id <> ALL(%s)",
-            (list(referenced),)
-        )
-    else:
-        cursor.execute('DELETE FROM anatomical_types')
+    cursor.execute("DELETE FROM anatomical_types at WHERE NOT EXISTS (SELECT 1 FROM path_node_types pt WHERE at.type_id = pt.type_id)")
     cursor.executemany('INSERT INTO anatomical_types (type_id, label) VALUES (%s, %s) ON CONFLICT DO NOTHING',
                        [(type, type) for type in NODE_PHENOTYPES])
 
