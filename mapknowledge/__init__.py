@@ -337,7 +337,7 @@ class KnowledgeStore(KnowledgeBase):
             # Check our database
             if use_source is not None:
                 row = self.db.execute(
-                    'select source, knowledge from knowledge where (source=? or source is null) and entity=? order by source desc',
+                    'select source, knowledge from knowledge where source=? and entity=? order by source desc',
                                                                             (use_source, entity)).fetchone()
             else:
                 row = self.db.execute('select source, knowledge from knowledge where entity=? order by source desc',
