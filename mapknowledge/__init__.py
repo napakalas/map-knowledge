@@ -285,6 +285,15 @@ class KnowledgeStore(KnowledgeBase):
             condition = ' or '.join(len(namespaces)*['entity like ?'])
             params = [knowledge_source] + namespaces
             self.db.execute(f'delete from knowledge where (source=? or source is null) and ({condition})', tuple(params))
+            connectivity_terms = set()
+            for row in self.db.execute(
+                    f'select distinct node from connectivity_nodes where source=? or source is null', (knowledge_source,)).fetchall():
+                node = json.loads(row[0])
+                connectivity_terms.update([node[0]] + list(node[1]))
+            connectivity_entities = list(connectivity_terms)
+            condition = ', '.join(len(connectivity_entities)*'?')
+            self.db.execute(f'delete from knowledge where (source=? or source is null) and entity in ({condition})',
+                                                            tuple([knowledge_source] + connectivity_entities))
             self.db.execute(f'delete from connectivity_nodes where source=? or source is null', (knowledge_source,))
             self.db.commit()
 
