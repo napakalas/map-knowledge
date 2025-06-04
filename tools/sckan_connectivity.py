@@ -76,7 +76,8 @@ def load(args):
         knowledge_base=args.knowledge_store,
         sckan_version=args.sckan,
         scicrunch_key=scicrunch_key,
-        use_sckan=True
+        use_sckan=True,
+        verbose=False
         )
     if store.db is None:
         raise IOError(f'Unable to open knowledge store {args.store_directory}/{args.knowledge_store}')
