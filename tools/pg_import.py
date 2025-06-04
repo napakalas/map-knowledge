@@ -201,8 +201,8 @@ def update_features(cursor, knowledge: KnowledgeList):
     cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source, ))
 
     for record in knowledge.knowledge:
-        if source == clean_source(record.get('source', '')):    
-            
+        if source == clean_source(record.get('source', '')):
+
             # Feature terms
             with cursor.copy("COPY feature_terms (source_id, term_id, label, description) FROM STDIN") as copy:
                 copy.write_row([source, record['id'], record.get('label'), record.get('long-label')])
@@ -231,32 +231,6 @@ def pg_import(knowledge: KnowledgeList):
             #if (paths := knowledge.get('paths')) is not None:
             #    pass
         db.commit()
-
-"""
-        knowledge = {
-            'id': entity
-        }
-        knowledge['label'] = self.__npo_terms[entity]
-
-        # check if entity is a connectivity model
-
-        if entity in self.connectivity_models():
-            knowledge['paths'] = [{'id': v['id'], 'models': v['id']} for v in self.__npo_knowledge.values() if v['class'] == entity]
-            knowledge['references'] = []
-
-        # check if entity is a connecitvity path
-        if (path_kn:=self.__npo_knowledge.get(entity)) is not None:
-
-{'id': 'ilxtr:NeuronAacar',
- 'label': 'ilxtr:NeuronAacar',
- 'paths': [{'id': 'ilxtr:neuron-type-aacar-9a',
-                        'models': 'ilxtr:neuron-type-aacar-9a'},
-                     {'id': 'ilxtr:neuron-type-aacar-7a',
-                        'models': 'ilxtr:neuron-type-aacar-7a'},
-                     {'id': 'ilxtr:neuron-type-aacar-8a',
-                        'models': 'ilxtr:neuron-type-aacar-8a'},
-
-"""
 
 #===============================================================================
 
