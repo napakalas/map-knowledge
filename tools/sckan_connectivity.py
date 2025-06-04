@@ -85,6 +85,8 @@ def load(args):
     knowledge_source = store.source
     logging.info(f'Loading SCKAN NPO connectivity for source `{knowledge_source}`')
 
+    all_entities = [row[0] for row in store.db.execute(
+        'select distinct entity from knowledge where source=? order by entity', (knowledge_source, )).fetchall()]
     if args.purge:
         if store.db is not None and knowledge_source is not None:
             logging.info(f'Purging all knowledge for source `{knowledge_source}`')
@@ -96,7 +98,7 @@ def load(args):
         prior_knowledge = get_prior_knowledge(store, knowledge_source)
 
     paths = store.connectivity_paths()
-    progress_bar = tqdm(total=len(paths),
+    progress_bar = tqdm(total=len(all_entities),
         unit='path', ncols=80,
         bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
 
@@ -107,6 +109,13 @@ def load(args):
         path_count += 1
 
     save_prior_knowledge(store, knowledge_source, prior_knowledge)
+
+    missing_entities = set(all_entities).difference(set([row[0] for row in store.db.execute(
+        'select distinct entity from knowledge where source=?', (knowledge_source, )).fetchall()]))
+    progress_bar.update(len(all_entities) - len(missing_entities) - path_count)
+    for entity in missing_entities:
+        store.entity_knowledge(entity, source=knowledge_source)
+        progress_bar.update(1)
 
     store.close()
     progress_bar.close()
