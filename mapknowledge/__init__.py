@@ -30,6 +30,7 @@ from typing import Any, Optional
 
 #===============================================================================
 
+from .anatomical_types import *
 from .apinatomy import CONNECTIVITY_ONTOLOGIES, APINATOMY_MODEL_PREFIX
 # from .nposparql import NpoSparql, NPO_NLP_NEURONS
 from .npo import Npo

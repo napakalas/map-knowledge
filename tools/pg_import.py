@@ -32,7 +32,7 @@ import psycopg as pg
 
 #===============================================================================
 
-from mapknowledge import KnowledgeStore
+from mapknowledge import KnowledgeStore, NERVE_TYPE
 
 #===============================================================================
 
@@ -84,7 +84,7 @@ NODE_PHENOTYPES = [
     'ilxtr:hasDendriteLocatedIn',
 ]
 NODE_TYPES = [
-    'nerve',
+   NERVE_TYPE,
 ]
 
 def setup_anatomical_types(cursor):
@@ -177,7 +177,7 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
                 for type, nodes in node_phenotypes.items():
                     node_types.extend([(source, path_id, json.dumps(node), type)
                                             for node in nodes])
-                node_types.extend([(source, path_id, json.dumps(node), 'nerve')
+                node_types.extend([(source, path_id, json.dumps(node), NERVE_TYPE)
                                         for node in record.get('nerves', [])])
                 with cursor.copy("COPY path_node_types (source_id, path_id, node_id, type_id) FROM STDIN") as copy:
                     for row in node_types:

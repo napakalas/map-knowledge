@@ -58,6 +58,7 @@ import rdflib
 
 #===============================================================================
 
+from .anatomical_types import NERVE_TYPE
 from .apinatomy import EXCLUDED_LAYERS
 from .namespaces import NAMESPACES
 from .utils import request_json, log
@@ -92,7 +93,7 @@ NODE_PHENOTYPES = [
 #===============================================================================
 
 ANATOMICAL_TYPES = {
-    'nerve': ['UBERON:0001021', 'FMA:65132']
+    NERVE_TYPE: ['UBERON:0001021', 'FMA:65132']
 }
 
 #===============================================================================
@@ -438,7 +439,7 @@ class Npo:
                 c_phenotypes = [[c for c in nodes for loc in locs if loc in c]]
                 node_phenotypes[pn] += [nodes[c] for cd_list in c_phenotypes for c in cd_list]
             knowledge['node-phenotypes'] = dict(node_phenotypes)
-            knowledge['nerves'] = [nodes[node] for node in nodes if any(self.__npo_terms.get(term, {}).get('type') == 'nerve' for term in node)]
+            knowledge['nerves'] = [nodes[node] for node in nodes if any(self.__npo_terms.get(term, {}).get('type') == NERVE_TYPE for term in node)]
 
         return knowledge
 
