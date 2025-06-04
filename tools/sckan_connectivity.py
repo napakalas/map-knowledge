@@ -238,7 +238,7 @@ def main():
 
     parser_load = subparsers.add_parser('load', help='Load connectivity knowledge from SCKAN NPO into a local knowledge store.')
     parser_load.add_argument('--sckan', help='SCKAN release identifier; defaults to latest available version of SCKAN')
-    parser_load.add_argument('--purge', action='store_true', help='Optionally flush and reload all non-path enities.')
+    parser_load.add_argument('--purge', action='store_true', help='Optionally flush and reload all entities.')
     parser_load.add_argument('--save-json', action='store_true', help='Optionally save connectivity knowledge as JSON in the store directory.')
     parser_load.set_defaults(func=load)
 
@@ -250,7 +250,7 @@ def main():
     parser_info.set_defaults(func=info)
 
     parser_restore = subparsers.add_parser('restore', help='Restore connectivity knowledge to a local store from JSON.')
-    parser_restore.add_argument('--purge', action='store_true', help='Optionally flush and reload all non-path enities.')
+    parser_restore.add_argument('--purge', action='store_true', help='Optionally flush and reload all entities.')
     parser_restore.add_argument('json_file', metavar='JSON_FILE', help='File to load connectivity knowledge from.')
     parser_restore.set_defaults(func=restore)
 
