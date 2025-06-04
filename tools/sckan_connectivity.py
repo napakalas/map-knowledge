@@ -89,6 +89,7 @@ def load(args):
         if store.db is not None and knowledge_source is not None:
             logging.info(f'Purging all knowledge for source `{knowledge_source}`')
             store.db.execute('delete from knowledge where source=?', (knowledge_source, ))
+            store.db.execute('delete from connectivity_nodes where source=?', (knowledge_source, ))
             store.db.commit()
         prior_knowledge = []
     else:
