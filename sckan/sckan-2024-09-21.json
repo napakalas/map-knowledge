@@ -17,6 +17,56 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "Tooth",
+            "source": "sckan-2024-09-21",
+            "id": "FMA:12516"
+        },
+        {
+            "label": "White communicating ramus",
+            "source": "sckan-2024-09-21",
+            "id": "FMA:5875"
+        },
+        {
+            "label": "Meningeal branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "FMA:6231"
+        },
+        {
+            "label": "Auricular branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "FMA:6232"
+        },
+        {
+            "label": "Communicating branch of vagus nerve with glossopharyngeal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "FMA:6233"
+        },
+        {
+            "label": "Hippocampus proper",
+            "source": "sckan-2024-09-21",
+            "id": "FMA:62493"
+        },
+        {
+            "label": "Accessory nucleus",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0100216"
+        },
+        {
+            "label": "Acetylcholine (muscarinic) receptor",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0100241"
+        },
+        {
+            "label": "Beta2 receptor",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0101253"
+        },
+        {
+            "label": "Arytenoid Muscle",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0493861"
+        },
+        {
             "label": "right ureter",
             "source": "sckan-2024-09-21",
             "id": "ILX:0725425"
@@ -101,6 +151,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "Pharyngeal branch of the Hypoglossal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0738315"
+        },
+        {
             "id": "ILX:0738316",
             "label": "Aortic arch baroreceptors",
             "source": "sckan-2024-09-21"
@@ -162,6 +217,16 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "External branch of superior laryngeal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0738374"
+        },
+        {
+            "label": "rhabdosphincter of male",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0738408"
+        },
+        {
             "id": "ILX:0738432",
             "label": "L6 segment of lumbar spinal cord",
             "source": "sckan-2024-09-21"
@@ -215,6 +280,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "vestibular nuclei (TA98)",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0741477"
+        },
+        {
             "id": "ILX:0741757",
             "label": "superior lateral cutaneous nerve of arm",
             "source": "sckan-2024-09-21"
@@ -235,9 +305,39 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "laryngeal vestibule (TA98)",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0742928"
+        },
+        {
+            "label": "posterior cochlear nucleus (TA98)",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0743648"
+        },
+        {
+            "label": "anterior cochlear nucleus (TA98)",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0745017"
+        },
+        {
+            "label": "ceratocricoid ligament (TA98)",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0745204"
+        },
+        {
+            "label": "lateral geniculate body (TA98)",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0745900"
+        },
+        {
             "id": "ILX:0770759",
             "label": "Lamina propria mucosae of descending colon",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Oculomotor nucleus (mba)",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0770925"
         },
         {
             "id": "ILX:0771089",
@@ -248,6 +348,11 @@
             "id": "ILX:0771304",
             "label": "hepatic plexus",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "medial accessory oculomotor nucleus (paxrat)",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0772155"
         },
         {
             "id": "ILX:0773631",
@@ -265,6 +370,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "Branch of right vagus nerve to pancreas",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0774697"
+        },
+        {
             "label": "Wall of terminal bronchiole",
             "source": "sckan-2024-09-21",
             "id": "ILX:0775392"
@@ -272,6 +382,12 @@
         {
             "id": "ILX:0776070",
             "label": "Longitudinal muscle layer of descending colon",
+            "source": "sckan-2024-09-21"
+        },
+        {
+            "id": "ILX:0776616",
+            "label": "External carotid nerve",
+            "type": "UBERON:0001021",
             "source": "sckan-2024-09-21"
         },
         {
@@ -461,6 +577,11 @@
             "id": "ILX:0784772"
         },
         {
+            "label": "Nerve to thyroarytenoid",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0784775"
+        },
+        {
             "id": "ILX:0784804",
             "label": "ventral root of the third thoracic spinal cord segment",
             "source": "sckan-2024-09-21"
@@ -486,9 +607,19 @@
             "id": "ILX:0784840"
         },
         {
+            "label": "Branch of auricular branch of the vagus nerve to posterior wall of external acoustic meatus",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0784868"
+        },
+        {
             "label": "Right fifth sacral ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0784870"
+        },
+        {
+            "label": "Superior cervical cardiac branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0784874"
         },
         {
             "label": "Posterior root of left second sacral nerve",
@@ -536,6 +667,11 @@
             "id": "ILX:0785067"
         },
         {
+            "label": "External laryngeal branch to superior cervical sympathetic ganglion",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0785069"
+        },
+        {
             "id": "ILX:0785076",
             "label": "Tenth intercostal nerve",
             "source": "sckan-2024-09-21"
@@ -554,6 +690,11 @@
             "label": "Right first sacral spinal ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0785106"
+        },
+        {
+            "label": "gray communicating ramus of fifth lumbar nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0785119"
         },
         {
             "label": "Left eighth thoracic ganglion",
@@ -579,6 +720,11 @@
             "label": "Left third thoracic ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0785184"
+        },
+        {
+            "label": "Lower branch of internal laryngeal nerve to arytenoideus",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0785199"
         },
         {
             "label": "Left fourth thoracic ganglion",
@@ -619,6 +765,11 @@
             "id": "ILX:0785370",
             "label": "Medial pectoral nerve component of T1 nerve",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Cardiac branch of the thoracic vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0785405"
         },
         {
             "id": "ILX:0785409",
@@ -686,6 +837,11 @@
             "id": "ILX:0785542"
         },
         {
+            "label": "Lower branch of internal laryngeal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0785556"
+        },
+        {
             "label": "Anterior root of left third thoracic nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0785573"
@@ -749,9 +905,19 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "branch of auricular branch of vagus nerve to floor of external acoustic meatus and pinna",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0785937"
+        },
+        {
             "id": "ILX:0785947",
             "label": "Posterior root of right first lumbar nerve",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Lower branch of internal laryngeal nerve to mucosa of arytenoid cartilage",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0785951"
         },
         {
             "label": "Right seventh thoracic ganglion",
@@ -779,6 +945,16 @@
             "id": "ILX:0786023"
         },
         {
+            "label": "Inferior cervical cardiac branch of left vagus nerve to superficial cardiac plexus",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0786047"
+        },
+        {
+            "label": "Branch of vagus nerve to carotid body",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0786059"
+        },
+        {
             "label": "Left ninth thoracic ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0786124"
@@ -787,6 +963,11 @@
             "id": "ILX:0786141",
             "label": "Fifth thoracic ganglion",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Communicating branch of recurrent laryngeal nerve with internal laryngeal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0786150"
         },
         {
             "label": "Anterior root of right sixth thoracic nerve",
@@ -817,6 +998,11 @@
             "id": "ILX:0786228",
             "label": "Second thoracic ganglion",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Communicating branch of external laryngeal nerve with superior cardiac nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0786237"
         },
         {
             "label": "Left second sacral nerve",
@@ -897,6 +1083,11 @@
             "label": "Left seventh cervical nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0786583"
+        },
+        {
+            "label": "branch between auricular branch and facial nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0786624"
         },
         {
             "label": "Right fourth cervical nerve",
@@ -1050,6 +1241,21 @@
             "id": "ILX:0787298"
         },
         {
+            "label": "Communicating branch of internal laryngeal nerve with recurrent laryngeal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0787299"
+        },
+        {
+            "label": "Esophageal branch of recurrent laryngeal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0787303"
+        },
+        {
+            "label": "Lower branch of internal laryngeal nerve to aryepiglottic fold",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0787329"
+        },
+        {
             "label": "Right third thoracic nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0787393"
@@ -1101,6 +1307,16 @@
             "id": "ILX:0787573"
         },
         {
+            "label": "Nerve to lateral crico-arytenoid",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0787600"
+        },
+        {
+            "label": "Branch of recurrent laryngeal nerve to mucosa of larynx",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0787615"
+        },
+        {
             "id": "ILX:0787665",
             "label": "Posterior root of twelfth thoracic nerve",
             "source": "sckan-2024-09-21"
@@ -1109,6 +1325,11 @@
             "label": "Posterior root of left fifth cervical nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0787682"
+        },
+        {
+            "label": "Nerve to ceratocricoid",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0787701"
         },
         {
             "label": "Right fifth sacral nerve",
@@ -1149,6 +1370,11 @@
             "id": "ILX:0787810",
             "label": "Left twelfth thoracic spinal ganglion",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Nerve to vocalis",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0787830"
         },
         {
             "label": "Left first lumbar ganglion",
@@ -1212,6 +1438,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "Nerve to transverse arytenoid",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0788061"
+        },
+        {
             "label": "Left first thoracic nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0788064"
@@ -1242,9 +1473,19 @@
             "id": "ILX:0788182"
         },
         {
+            "label": "Branch of external laryngeal nerve to pharyngeal nerve plexus",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0788232"
+        },
+        {
             "label": "Left fourth sacral ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0788257"
+        },
+        {
+            "label": "Inferior cervical cardiac branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0788259"
         },
         {
             "id": "ILX:0788280",
@@ -1280,6 +1521,16 @@
             "label": "Anterior root of left ninth thoracic nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0788327"
+        },
+        {
+            "label": "Branch of external laryngeal nerve to cricothyroid muscle",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0788330"
+        },
+        {
+            "label": "Celiac branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0788419"
         },
         {
             "label": "Left eighth thoracic nerve",
@@ -1338,6 +1589,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "Nerve to oblique arytenoid",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0788680"
+        },
+        {
             "label": "Anterior root of right second sacral nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0788692"
@@ -1394,6 +1650,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "branch of auricular branch to tympanic membrane",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0788968"
+        },
+        {
             "id": "ILX:0788972",
             "label": "First lumbar nerve",
             "source": "sckan-2024-09-21"
@@ -1437,6 +1698,11 @@
             "label": "Right seventh cervical spinal ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0789091"
+        },
+        {
+            "label": "Pulmonary branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0789095"
         },
         {
             "id": "ILX:0789109",
@@ -1495,6 +1761,11 @@
             "id": "ILX:0789376"
         },
         {
+            "label": "Upper branch of internal laryngeal nerve to mucosa of pharynx",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0789391"
+        },
+        {
             "label": "Left first sacral ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0789402"
@@ -1508,6 +1779,11 @@
             "label": "Left fifth lumbar nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0789454"
+        },
+        {
+            "label": "Inferior cervical cardiac branch of right vagus nerve to deep cardiac plexus",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0789456"
         },
         {
             "label": "Left second lumbar nerve",
@@ -1528,6 +1804,11 @@
             "id": "ILX:0789580",
             "label": "Celiac branch of posterior vagal trunk",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Upper branch of internal laryngeal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0789613"
         },
         {
             "label": "Right fourth lumbar nerve",
@@ -1655,6 +1936,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "Branch of external laryngeal nerve to inferior pharyngeal constrictor",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0790205"
+        },
+        {
             "label": "Left sixth thoracic ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0790227"
@@ -1683,6 +1969,11 @@
             "label": "Posterior root of left first thoracic nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0790352"
+        },
+        {
+            "label": "Upper branch of internal laryngeal nerve to epiglottic vallecula",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0790363"
         },
         {
             "label": "Right fourth lumbar spinal ganglion",
@@ -1756,9 +2047,19 @@
             "id": "ILX:0790498"
         },
         {
+            "label": "Upper branch of internal laryngeal nerve to laryngeal vestibule",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0790501"
+        },
+        {
             "id": "ILX:0790504",
             "label": "First sacral nerve",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Pharyngeal branch of vagus nerve to pharyngeal nerve plexus",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0790524"
         },
         {
             "label": "Posterior root of right second sacral nerve",
@@ -1799,6 +2100,11 @@
             "label": "Posterior root of right first thoracic nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0790800"
+        },
+        {
+            "label": "branch of thoracic vagus nerve to esophagus",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0790803"
         },
         {
             "label": "Posterior root of right fourth cervical nerve",
@@ -1866,6 +2172,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "Renal branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0791071"
+        },
+        {
             "label": "Left third thoracic spinal ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0791100"
@@ -1880,6 +2191,11 @@
             "id": "ILX:0791148",
             "label": "ventral root of the fifth lumbar spinal cord segment",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Communicating branch of auricular branch of vagus nerve with facial nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0791151"
         },
         {
             "id": "ILX:0791153",
@@ -1907,6 +2223,11 @@
             "id": "ILX:0791242"
         },
         {
+            "label": "Branch of recurrent laryngeal nerve to inferior pharyngeal constrictor",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0791258"
+        },
+        {
             "label": "Posterior root of right second thoracic nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0791275"
@@ -1915,6 +2236,11 @@
             "label": "Anterior root of right seventh thoracic nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0791358"
+        },
+        {
+            "label": "Nerve to posterior crico-arytenoid",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0791372"
         },
         {
             "label": "Left third thoracic nerve",
@@ -1930,6 +2256,16 @@
             "label": "Left fifth thoracic ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0791421"
+        },
+        {
+            "label": "Lingual branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0791434"
+        },
+        {
+            "label": "Branch of recurrent laryngeal nerve to muscle of larynx",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0791463"
         },
         {
             "id": "ILX:0791512",
@@ -1950,6 +2286,11 @@
             "label": "Anterior root of left fifth lumbar nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0791601"
+        },
+        {
+            "label": "Gastric branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0791632"
         },
         {
             "label": "Right eleventh thoracic nerve",
@@ -1980,6 +2321,11 @@
             "label": "Posterior root of left third sacral nerve",
             "source": "sckan-2024-09-21",
             "id": "ILX:0791749"
+        },
+        {
+            "label": "Cardiac branch of right vagus to deep cardiac plexus",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0791784"
         },
         {
             "label": "Right middle cervical ganglion",
@@ -2035,6 +2381,11 @@
             "label": "Right fifth lumbar spinal ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0791988"
+        },
+        {
+            "label": "Upper branch of internal laryngeal nerve to epiglottis",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0792008"
         },
         {
             "label": "Left fourth cervical spinal ganglion",
@@ -2105,6 +2456,11 @@
             "id": "ILX:0792327",
             "label": "Fourth sacral nerve",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Extra-laryngeal branch of recurrent laryngeal nerve to larynx",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0792328"
         },
         {
             "label": "Anterior root of left fourth cervical nerve",
@@ -2247,6 +2603,16 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "Cervical cardiac branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0793041"
+        },
+        {
+            "label": "Tracheal branch of recurrent laryngeal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0793070"
+        },
+        {
             "label": "Left sixth thoracic spinal ganglion",
             "source": "sckan-2024-09-21",
             "id": "ILX:0793071"
@@ -2365,6 +2731,21 @@
             "label": "gray communicating ramus of first sacral nerve",
             "type": "UBERON:0001021",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "gray communicating ramus of second sacral nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0793229"
+        },
+        {
+            "label": "gray communicating ramus of third sacral nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0793230"
+        },
+        {
+            "label": "gray communicating ramus of fourth sacral nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0793231"
         },
         {
             "label": "gray communicating ramus of fifth sacral nerve",
@@ -2650,6 +3031,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "Tympanic plexus",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0793706"
+        },
+        {
             "id": "ILX:0793711",
             "label": "Communicating branch of zygomatic nerve",
             "type": "UBERON:0001021",
@@ -2839,6 +3225,21 @@
             "label": "posterior abdominal vagal trunk",
             "type": "UBERON:0001021",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Meningeal branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0793828"
+        },
+        {
+            "label": "Auricular branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0793829"
+        },
+        {
+            "label": "branch between vagus nerve and glossopharyngeal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "ILX:0793830"
         },
         {
             "id": "ILX:0793832",
@@ -3576,6 +3977,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "id": "NCBITaxon:9606",
+            "label": "Homo sapiens",
+            "source": "sckan-2024-09-21"
+        },
+        {
             "id": "UBERON:0000002",
             "label": "uterine cervix",
             "source": "sckan-2024-09-21"
@@ -3584,6 +3990,16 @@
             "id": "UBERON:0000006",
             "label": "islet of Langerhans",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "pituitary gland",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000007"
+        },
+        {
+            "label": "dorsal root ganglion",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000044"
         },
         {
             "label": "urethra",
@@ -3601,6 +4017,16 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "ophthalmic nerve",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000348"
+        },
+        {
+            "label": "pharyngeal mucosa",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000355"
+        },
+        {
             "id": "UBERON:0000368",
             "label": "adductor brevis",
             "source": "sckan-2024-09-21"
@@ -3616,6 +4042,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "maxillary nerve",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000377"
+        },
+        {
             "label": "tracheal mucosa",
             "source": "sckan-2024-09-21",
             "id": "UBERON:0000379"
@@ -3626,9 +4057,19 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "sympathetic trunk",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000407"
+        },
+        {
             "id": "UBERON:0000428",
             "label": "prostate epithelium",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "testis",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000473"
         },
         {
             "label": "epithelium",
@@ -3641,6 +4082,21 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "pharyngeal branch of vagus nerve",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000929"
+        },
+        {
+            "label": "stomach",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000945"
+        },
+        {
+            "id": "UBERON:0000947",
+            "label": "aorta",
+            "source": "sckan-2024-09-21"
+        },
+        {
             "label": "heart",
             "source": "sckan-2024-09-21",
             "id": "UBERON:0000948"
@@ -3649,6 +4105,16 @@
             "id": "UBERON:0000950",
             "label": "gracilis",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "brain",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000955"
+        },
+        {
+            "label": "cerebral cortex",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0000956"
         },
         {
             "id": "UBERON:0000988",
@@ -3676,10 +4142,35 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "vas deferens",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001000"
+        },
+        {
             "id": "UBERON:0001021",
             "label": "nerve",
             "type": "UBERON:0001021",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "esophagus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001043"
+        },
+        {
+            "label": "rectum",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001052"
+        },
+        {
+            "label": "posterior vena cava",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001072"
+        },
+        {
+            "label": "pericardial cavity",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001074"
         },
         {
             "id": "UBERON:0001100",
@@ -3713,14 +4204,54 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "ascending colon",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001156"
+        },
+        {
+            "label": "transverse colon",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001157"
+        },
+        {
             "id": "UBERON:0001158",
             "label": "descending colon",
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "sigmoid colon",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001159"
+        },
+        {
+            "label": "fundus of stomach",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001160"
+        },
+        {
+            "label": "body of stomach",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001161"
+        },
+        {
+            "label": "cardia of stomach",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001162"
+        },
+        {
+            "label": "pylorus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001166"
+        },
+        {
             "id": "UBERON:0001172",
             "label": "hepatic acinus",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "common hepatic duct",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001175"
         },
         {
             "label": "superior mesenteric artery",
@@ -3731,6 +4262,16 @@
             "id": "UBERON:0001184",
             "label": "renal artery",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "right renal artery",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001185"
+        },
+        {
+            "label": "left renal artery",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001186"
         },
         {
             "id": "UBERON:0001190",
@@ -3823,6 +4364,16 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "marginal zone of spleen",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001251"
+        },
+        {
+            "label": "urinary bladder",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001255"
+        },
+        {
             "id": "UBERON:0001258",
             "label": "neck of urinary bladder",
             "source": "sckan-2024-09-21"
@@ -3831,6 +4382,11 @@
             "label": "pancreatic acinus",
             "source": "sckan-2024-09-21",
             "id": "UBERON:0001263"
+        },
+        {
+            "label": "pancreas",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001264"
         },
         {
             "id": "UBERON:0001267",
@@ -3862,6 +4418,16 @@
             "id": "UBERON:0001298",
             "label": "psoas major muscle",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "glans penis",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001299"
+        },
+        {
+            "label": "epididymis",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001301"
         },
         {
             "id": "UBERON:0001305",
@@ -4174,6 +4740,21 @@
             "id": "UBERON:0001532"
         },
         {
+            "label": "cricothyroid muscle",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001566"
+        },
+        {
+            "label": "inferior pharyngeal constrictor",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001570"
+        },
+        {
+            "label": "anterior vena cava",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001585"
+        },
+        {
             "id": "UBERON:0001605",
             "label": "ciliary muscle",
             "source": "sckan-2024-09-21"
@@ -4195,10 +4776,20 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "trochlear nerve",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001644"
+        },
+        {
             "id": "UBERON:0001647",
             "label": "facial nerve",
             "type": "UBERON:0001021",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "vestibulocochlear nerve",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001648"
         },
         {
             "id": "UBERON:0001649",
@@ -4223,6 +4814,36 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "trigeminal ganglion",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001675"
+        },
+        {
+            "label": "mandible",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001684"
+        },
+        {
+            "label": "hyoid bone",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001685"
+        },
+        {
+            "label": "geniculate ganglion",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001700"
+        },
+        {
+            "label": "spinal nucleus of trigeminal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001717"
+        },
+        {
+            "label": "mesencephalic nucleus of trigeminal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001718"
+        },
+        {
             "id": "UBERON:0001719",
             "label": "nucleus ambiguus",
             "source": "sckan-2024-09-21"
@@ -4231,6 +4852,16 @@
             "id": "UBERON:0001723",
             "label": "tongue",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "sphenoidal sinus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001724"
+        },
+        {
+            "label": "soft palate",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001733"
         },
         {
             "id": "UBERON:0001736",
@@ -4243,10 +4874,25 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "thyroid cartilage",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001738"
+        },
+        {
             "id": "UBERON:0001759",
             "label": "vagus nerve",
             "type": "UBERON:0001021",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "frontal sinus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001760"
+        },
+        {
+            "label": "iris",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001769"
         },
         {
             "id": "UBERON:0001780",
@@ -4255,9 +4901,19 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "parasympathetic ganglion",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001808"
+        },
+        {
             "id": "UBERON:0001817",
             "label": "lacrimal gland",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "mucosa of larynx",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001824"
         },
         {
             "id": "UBERON:0001826",
@@ -4273,6 +4929,11 @@
             "id": "UBERON:0001832",
             "label": "sublingual gland",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "putamen",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001874"
         },
         {
             "id": "UBERON:0001880",
@@ -4306,9 +4967,19 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "dorsal plus ventral thalamus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001897"
+        },
+        {
             "label": "hypothalamus",
             "source": "sckan-2024-09-21",
             "id": "UBERON:0001898"
+        },
+        {
+            "label": "pineal body",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001905"
         },
         {
             "id": "UBERON:0001930",
@@ -4319,6 +4990,16 @@
             "id": "UBERON:0001931",
             "label": "lateral preoptic nucleus",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "superior colliculus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001945"
+        },
+        {
+            "label": "red nucleus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001947"
         },
         {
             "id": "UBERON:0001959",
@@ -4340,6 +5021,16 @@
             "id": "UBERON:0001975",
             "label": "serosa of esophagus",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "blood vessel",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001981"
+        },
+        {
+            "label": "endothelium",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0001986"
         },
         {
             "id": "UBERON:0001989",
@@ -4393,6 +5084,16 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "thyroid gland",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002046"
+        },
+        {
+            "label": "lung",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002048"
+        },
+        {
             "id": "UBERON:0002058",
             "label": "main ciliary ganglion",
             "source": "sckan-2024-09-21"
@@ -4428,9 +5129,34 @@
             "id": "UBERON:0002106"
         },
         {
+            "label": "liver",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002107"
+        },
+        {
+            "label": "gallbladder",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002110"
+        },
+        {
             "id": "UBERON:0002113",
             "label": "kidney",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "duodenum",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002114"
+        },
+        {
+            "label": "jejunum",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002115"
+        },
+        {
+            "label": "ileum",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002116"
         },
         {
             "id": "UBERON:0002118",
@@ -4478,6 +5204,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "spinal cord",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002240"
+        },
+        {
             "id": "UBERON:0002261",
             "label": "dorsal root of spinal cord",
             "source": "sckan-2024-09-21"
@@ -4488,9 +5219,24 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "brainstem",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002298"
+        },
+        {
             "id": "UBERON:0002303",
             "label": "juxtaglomerular apparatus",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "gray matter of spinal cord",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002315"
+        },
+        {
+            "label": "corpus callosum",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002336"
         },
         {
             "id": "UBERON:0002348",
@@ -4503,9 +5249,24 @@
             "id": "UBERON:0002349"
         },
         {
+            "label": "fibrous pericardium",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002359"
+        },
+        {
+            "label": "tympanic membrane",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002364"
+        },
+        {
             "id": "UBERON:0002366",
             "label": "bulbo-urethral gland",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "prostate gland",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002367"
         },
         {
             "label": "adrenal gland",
@@ -4516,6 +5277,11 @@
             "id": "UBERON:0002370",
             "label": "thymus",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "cricoid cartilage",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002375"
         },
         {
             "id": "UBERON:0002380",
@@ -4558,6 +5324,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "parietal serous pericardium",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002408"
+        },
+        {
             "id": "UBERON:0002411",
             "label": "clitoris",
             "source": "sckan-2024-09-21"
@@ -4583,6 +5354,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "principal sensory nucleus of trigeminal nerve",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002597"
+        },
+        {
             "id": "UBERON:0002625",
             "label": "median preoptic nucleus",
             "source": "sckan-2024-09-21"
@@ -4591,6 +5367,16 @@
             "label": "motor nucleus of trigeminal nerve",
             "source": "sckan-2024-09-21",
             "id": "UBERON:0002633"
+        },
+        {
+            "label": "abducens nucleus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002682"
+        },
+        {
+            "label": "trochlear nucleus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0002722"
         },
         {
             "id": "UBERON:0002842",
@@ -4718,6 +5504,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "facial motor nucleus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0003011"
+        },
+        {
             "label": "central gray substance of midbrain",
             "source": "sckan-2024-09-21",
             "id": "UBERON:0003040"
@@ -4726,6 +5517,16 @@
             "id": "UBERON:0003126",
             "label": "trachea",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "skull",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0003129"
+        },
+        {
+            "label": "hard palate",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0003216"
         },
         {
             "id": "UBERON:0003222",
@@ -4741,6 +5542,36 @@
             "id": "UBERON:0003234",
             "label": "extensor pollicis longus muscle",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "serosa of colon",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0003335"
+        },
+        {
+            "label": "cardiac muscle of right atrium",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0003379"
+        },
+        {
+            "label": "cardiac muscle of left atrium",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0003380"
+        },
+        {
+            "label": "cardiac muscle of right ventricle",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0003381"
+        },
+        {
+            "label": "cardiac muscle of left ventricle",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0003382"
+        },
+        {
+            "label": "smooth muscle of trachea",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0003387"
         },
         {
             "id": "UBERON:0003403",
@@ -4835,6 +5666,16 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "urinary bladder neck smooth muscle",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0004230"
+        },
+        {
+            "label": "bronchus smooth muscle",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0004242"
+        },
+        {
             "id": "UBERON:0004243",
             "label": "prostate gland smooth muscle",
             "source": "sckan-2024-09-21"
@@ -4853,6 +5694,16 @@
             "id": "UBERON:0004486",
             "label": "musculature of perineum",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "smooth muscle tissue of bronchiole",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0004515"
+        },
+        {
+            "label": "smooth muscle tissue of terminal bronchiole",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0004516"
         },
         {
             "id": "UBERON:0004538",
@@ -4963,6 +5814,11 @@
             "id": "UBERON:0005363",
             "label": "inferior vagus X ganglion",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "superior vagus X ganglion",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0005364"
         },
         {
             "id": "UBERON:0005441",
@@ -5196,6 +6052,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "pharynx",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0006562"
+        },
+        {
             "id": "UBERON:0006608",
             "label": "corpus cavernosum clitoridis",
             "source": "sckan-2024-09-21"
@@ -5224,6 +6085,16 @@
             "id": "UBERON:0006960",
             "label": "ovary stroma",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "lamina propria of mucosa of colon",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0007177"
+        },
+        {
+            "label": "tracheobronchial tree",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0007196"
         },
         {
             "label": "tunica adventitia of artery",
@@ -5336,6 +6207,36 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "posterior crico-arytenoid",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0008572"
+        },
+        {
+            "label": "lateral crico-arytenoid",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0008573"
+        },
+        {
+            "label": "transverse arytenoid",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0008574"
+        },
+        {
+            "label": "oblique arytenoid",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0008575"
+        },
+        {
+            "label": "thyro-arytenoid",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0008576"
+        },
+        {
+            "label": "vocalis muscle",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0008577"
+        },
+        {
             "id": "UBERON:0008617",
             "label": "innermost intercostal muscle",
             "source": "sckan-2024-09-21"
@@ -5397,6 +6298,16 @@
             "id": "UBERON:0009961",
             "label": "esophagus smooth muscle longitudinal layer",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "posterior part of tongue",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0010033"
+        },
+        {
+            "label": "lumen of nasopharynx",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0010061"
         },
         {
             "id": "UBERON:0010398",
@@ -5493,6 +6404,11 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "Dorsal commissural nucleus",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0011776"
+        },
+        {
             "id": "UBERON:0011905",
             "label": "plantaris",
             "source": "sckan-2024-09-21"
@@ -5518,9 +6434,19 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "epiglottic vallecula",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0013165"
+        },
+        {
             "id": "UBERON:0013473",
             "label": "lower esophagus",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "body proper",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0013702"
         },
         {
             "id": "UBERON:0013777",
@@ -5531,6 +6457,11 @@
             "id": "UBERON:0014379",
             "label": "adductor hallucis muscle",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "aryepiglottic fold",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0014385"
         },
         {
             "label": "ventral nerve root of cervical spinal cord",
@@ -5573,14 +6504,39 @@
             "source": "sckan-2024-09-21"
         },
         {
+            "label": "central nervous system white matter layer",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0016549"
+        },
+        {
+            "label": "lamina III of gray matter of spinal cord",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0016574"
+        },
+        {
+            "label": "lamina IV of gray matter of spinal cord",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0016575"
+        },
+        {
             "label": "lamina V of gray matter of spinal cord",
             "source": "sckan-2024-09-21",
             "id": "UBERON:0016576"
         },
         {
+            "label": "lamina VI of gray matter of spinal cord",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0016577"
+        },
+        {
             "label": "lamina VII of gray matter of spinal cord",
             "source": "sckan-2024-09-21",
             "id": "UBERON:0016578"
+        },
+        {
+            "label": "lamina VIII of gray matter of spinal cord",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:0016579"
         },
         {
             "label": "lamina IX of gray matter of spinal cord",
@@ -5765,6 +6721,16 @@
             "id": "UBERON:8410010",
             "label": "fimbria of fallopian tube",
             "source": "sckan-2024-09-21"
+        },
+        {
+            "label": "Colon smooth muscle circular layer",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:8410060"
+        },
+        {
+            "label": "colon smooth muscle longitudinal layer",
+            "source": "sckan-2024-09-21",
+            "id": "UBERON:8410061"
         },
         {
             "id": "ilxtr:NeuronAacar",
