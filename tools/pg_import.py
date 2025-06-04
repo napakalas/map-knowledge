@@ -83,12 +83,15 @@ NODE_PHENOTYPES = [
     'ilxtr:hasAxonLocatedIn',
     'ilxtr:hasDendriteLocatedIn',
 ]
+NODE_TYPES = [
+    'nerve',
+]
 
 def setup_anatomical_types(cursor):
 #==================================
     cursor.execute('DELETE FROM anatomical_types at WHERE NOT EXISTS (SELECT 1 FROM path_node_types pt WHERE at.type_id = pt.type_id)')
     cursor.executemany('INSERT INTO anatomical_types (type_id, label) VALUES (%s, %s) ON CONFLICT DO NOTHING',
-                       [(type, type) for type in NODE_PHENOTYPES])
+                       [(type, type) for type in NODE_PHENOTYPES + NODE_TYPES])
 
 #===============================================================================
 
@@ -104,6 +107,7 @@ def delete_source_from_tables(cursor, source: str):
     cursor.execute('DELETE FROM path_phenotypes WHERE source_id=%s', (source, ))
     cursor.execute('DELETE FROM path_properties WHERE source_id=%s', (source, ))
     cursor.execute('DELETE FROM path_nodes WHERE source_id=%s', (source, ))
+    cursor.execute('DELETE FROM feature_types WHERE source_id=%s', (source, ))
     cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source, ))
 
 def update_connectivity(cursor, knowledge: KnowledgeList):
@@ -173,6 +177,8 @@ def update_connectivity(cursor, knowledge: KnowledgeList):
                 for type, nodes in node_phenotypes.items():
                     node_types.extend([(source, path_id, json.dumps(node), type)
                                             for node in nodes])
+                node_types.extend([(source, path_id, json.dumps(node), 'nerve')
+                                        for node in record.get('nerves', [])])
                 with cursor.copy("COPY path_node_types (source_id, path_id, node_id, type_id) FROM STDIN") as copy:
                     for row in node_types:
                         copy.write_row(row)
@@ -193,10 +199,18 @@ def update_features(cursor, knowledge: KnowledgeList):
 #=====================================================
     source = knowledge.source
     cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source, ))
-    with cursor.copy("COPY feature_terms (source_id, term_id, label, description) FROM STDIN") as copy:
-        for record in knowledge.knowledge:
-            if source == clean_source(record.get('source', '')):
+
+    for record in knowledge.knowledge:
+        if source == clean_source(record.get('source', '')):    
+            
+            # Feature terms
+            with cursor.copy("COPY feature_terms (source_id, term_id, label, description) FROM STDIN") as copy:
                 copy.write_row([source, record['id'], record.get('label'), record.get('long-label')])
+
+            # Feature types
+            with cursor.copy("COPY feature_types (source_id, term_id, type_id) FROM STDIN") as copy:
+                if (term_type:=record.get('type')) is not None:
+                    copy.write_row([source, record['id'], term_type])
 
 def update_knowledge_source(cursor, source):
 #===========================================
