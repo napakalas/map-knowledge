@@ -224,6 +224,84 @@ def upgrade(args):
 
 #===============================================================================
 
+def extract_map(args):
+    flatmap_dir = Path(args.flatmap_directory)
+
+    # Load uuid and sckan_release
+    if not (index_file := flatmap_dir / 'index.json').is_file():
+        raise IOError(f'Unable to open {index_file}')
+    with open(index_file, 'r') as fp:
+        index_data = json.load(fp)
+        if not (uuid := index_data.get('uuid')):
+            raise IOError("Flatmap source doesn't have uuid.")
+        sckan_release = index_data.get('connectivity', {}).get('npo', {}).get('release')
+
+    store = KnowledgeStore(
+        store_directory=args.store_directory,
+        knowledge_base=args.knowledge_store,
+        read_only=False,
+        use_sckan=False)
+
+    # Load pathways.json
+    if not (pathways_file := flatmap_dir / 'pathways.json').is_file():
+        raise IOError(f'Unable to open {pathways_file}')
+    with open(pathways_file, 'r') as fp:
+        pathways = json.load(fp).get('paths', {})
+
+    # Load *_features.json
+    if not (feature_files := list(flatmap_dir.glob('*_features.json'))):
+        raise IOError(f'No *_features.json file found in {args.flatmap_directory!r}')
+    with open(feature_files[0], 'r') as fp:
+        features = json.load(fp).get('features', [])
+
+    # Load *_pathways.json excluding neural-routes
+    if not (feature_pathways_files := [p for p in flatmap_dir.glob('*_pathways.json') if not p.name.startswith('neural-routes')]):
+        raise IOError(f'No *_pathways.json file found in {args.flatmap_directory!r}')
+    with feature_pathways_files[0].open() as fp:
+        feature_pathways = json.load(fp).get('features', [])
+
+    knowledge_terms = {}
+    for path_id, path in pathways.items():
+        if 'connectivity' in path:
+            db_knowledge = store.entity_knowledge(path_id, sckan_release)
+            knowledge_terms[path_id] = {
+                'id': path_id,
+                'label': db_knowledge['label'],
+                'long-label': db_knowledge['long-label'],
+                'connectivity': path['connectivity'],
+                'taxons': [index_data.get('taxon', '')],
+                'forward-connections': path['forward-connections'],
+                'node-phenotypes': path['node-phenotypes'],
+                'nerves': path.get('node-nerves', []),
+                'pathDisconnected': db_knowledge['pathDisconnected'],
+                'phenotypes': db_knowledge.get('phenotypes', []),
+                'source': uuid
+            }
+
+    for feature in features + feature_pathways:
+        if (property := feature.get('properties')) and (model := property.get('models')) and model not in knowledge_terms:
+            db_knowledge = store.entity_knowledge(model, sckan_release)
+            knowledge_terms[model] = {
+                'id': model,
+                'label': db_knowledge['label'],
+                'source': uuid,
+                **({'type': type} if (type := db_knowledge.get('type')) else {})
+            }
+
+    saved_knowledge = {
+        'source': uuid,
+        'knowledge': list(knowledge_terms.values())
+    }
+
+    json_file = Path(args.flatmap_directory) / f'{uuid}.json'
+    with open(json_file, 'w') as fp:
+        json.dump(saved_knowledge, fp, indent=4)
+    logging.info(f"Saved {len(saved_knowledge['knowledge'])} records for `{uuid}` to `{json_file}`")
+
+    store.close()
+
+#===============================================================================
+
 DEFAULT_STORE = 'knowledgebase.db'
 
 def main():
@@ -245,6 +323,10 @@ def main():
     parser_extract = subparsers.add_parser('extract', help='Save connectivity knowledge from a local store as JSON in the store directory.')
     parser_extract.add_argument('--source', help='Knowledge source to extract; defaults to the most recent source in the store.')
     parser_extract.set_defaults(func=extract)
+
+    parser_extract_map = subparsers.add_parser('extract-map', help='Save connectivity knowledge from a flatmap as JSON in the flatmap directory.')
+    parser_extract_map.add_argument('--flatmap-directory', required=True, help='Directory containing flatmap knowledge.')
+    parser_extract_map.set_defaults(func=extract_map)
 
     parser_info = subparsers.add_parser('info', help='List knowledge sources in a local store.')
     parser_info.set_defaults(func=info)

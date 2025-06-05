@@ -417,7 +417,7 @@ class Npo:
         elif (tk:=term_knowledge(self.__rdf_graph, rdflib.URIRef(NAMESPACES.uri(entity)))):
             knowledge = {**knowledge, **tk}
             self.__npo_terms[entity] = tk
-        
+
         # check if entity is a connectivity model
         if entity in self.connectivity_models():
             if 'label' not in knowledge: knowledge['label'] = entity
