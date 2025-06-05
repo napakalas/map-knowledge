@@ -265,10 +265,26 @@ def get_connectivity_edges(partial_order) -> list:
     return list(set(filtered_connectivities))
 
 def is_type_of(g:rdflib.Graph, neuron_term, type_terms):
+    uri = NAMESPACES.uri(neuron_term)
+    
+    # subclass check
     query = f"""
         ASK WHERE {{
             VALUES ?superClass {{ {' '.join(type_terms)} }}
-            <{NAMESPACES.uri(neuron_term)}> rdfs:subClassOf* ?superClass .
+            <{uri}> rdfs:subClassOf* ?superClass .
+        }}
+    """
+    if g.query(query, initNs={"rdfs": rdflib.RDFS, **NAMESPACES.namespaces}).askAnswer:
+        return True
+    
+    # label check
+    query = f"""
+        ASK WHERE {{
+            VALUES ?superClass {{ {' '.join(type_terms)} }}
+            <{uri}> rdfs:label ?lbl1 .
+            ?syn_term rdfs:label ?lbl2 .
+            FILTER(LCASE(STR(?lbl1)) = LCASE(STR(?lbl2)))
+            ?syn_term rdfs:subClassOf* ?superClass .
         }}
     """
     if g.query(query, initNs={"rdfs": rdflib.RDFS, **NAMESPACES.namespaces}).askAnswer:
