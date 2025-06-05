@@ -13,10 +13,25 @@ def test_path_contains_expected_nerves():
 
 def test_known_nerve_type():
     knowledge = store.entity_knowledge('ILX:0793221')
-    assert knowledge.get('type') == 'nerve'
+    assert knowledge.get('type') == 'UBERON:0001021'
 
 def test_non_nerve_type():
     knowledge = store.entity_knowledge('UBERON:0006448')
-    assert knowledge.get('type') != 'nerve'
+    assert knowledge.get('type') != 'UBERON:0001021'
+
+def test_known_nerve_without_phenotype():
+    for term in ['UBERON:0003715', 'ILX:0731969']:
+        knowledge = store.entity_knowledge(term)
+        assert knowledge.get('type') == 'UBERON:0001021'
+
+def test_path_having_nerve_without_phenotype():
+    test_cases = [
+        ('ilxtr:neuron-type-bromo-1', {('UBERON:0003715', ())}),
+        ('ilxtr:sparc-nlp/kidney/140', {('ILX:0731969', ())})
+    ]
+    for path, expected_nerves in test_cases:
+        knowledge = store.entity_knowledge(path)
+        nerves = set(knowledge.get('nerves', []))
+        assert expected_nerves.issubset(nerves)
 
 store.close()
