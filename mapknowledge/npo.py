@@ -294,12 +294,13 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
         ori = OntResIri(f'{NPO_RAW}/{npo_release}/{GEN_NEURONS_PATH}{f}{TURTLE_SUFFIX}')
         [g.add(t) for t in ori.graph]
 
-    for f in ('apinatomy-neuron-populations', '../../npo'):
+    for f in ('apinatomy-neuron-populations', '../../npo', '../../sparc-community-terms'):
         p = urllib.parse.quote(GEN_NEURONS_PATH + f)
         ori = OntResIri(f'{NPO_RAW}/{npo_release}/{p}{TURTLE_SUFFIX}')
         [g.add((s, rdfs.label, o)) for s, o in ori.graph[:rdfs.label:]]
         if f != 'apinatomy-neuron-populations':
             [g.add((s, rdfs.subClassOf, o)) for s, o in ori.graph[:rdfs.subClassOf:]]
+            [g.add((s, ilxtr.hasExistingId, o)) for s, o in ori.graph[:ilxtr.hasExistingId:]]
 
     config = Config('npo-connectivity')
     config.load_existing(g)
