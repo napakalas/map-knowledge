@@ -271,8 +271,22 @@ def is_type_of(g:rdflib.Graph, neuron_term, type_terms):
             <{NAMESPACES.uri(neuron_term)}> rdfs:subClassOf* ?superClass .
         }}
     """
-    result = g.query(query, initNs={"rdfs": rdflib.RDFS, **NAMESPACES.namespaces})
-    return result.askAnswer
+    if g.query(query, initNs={"rdfs": rdflib.RDFS, **NAMESPACES.namespaces}).askAnswer:
+        return True
+        
+    return False
+
+def term_knowledge(g:rdflib.Graph, neuron_term):
+    uri = rdflib.URIRef(NAMESPACES.uri(neuron_term))
+    if not (labels:=list(g.objects(uri, rdfs.label))):
+        for x in g.subjects(ilxtr.hasExistingId, uri):
+            if (labels:=list(g.objects(subject=x, predicate=rdfs.label))):
+                neuron_term = x
+                break
+    if not labels:
+        return
+    atype = next((a for a, terms in ANATOMICAL_TYPES.items() if is_type_of(g, neuron_term, terms)), None)    
+    return {'label': str(labels[0]), **({'type': atype} if atype else {})}
 
 def load_knowledge_from_ttl(npo_release: str) -> tuple:
 #======================================================
@@ -311,12 +325,10 @@ def load_knowledge_from_ttl(npo_release: str) -> tuple:
         neuron['connectivity'] = get_connectivity_edges(neuron['order'])
         neuron['class'] = f'ilxtr:{type(n).__name__}'
         neuron['terms-dict'] = {
-            (term := NAMESPACES.curie(str(p.p))): neuron_terms[term]
-            if term in neuron_terms else {
-                'label': str(p.pLabel),
-                **({'type': atype} if (atype := next((a for a, terms in ANATOMICAL_TYPES.items() if is_type_of(g, term, terms)),None)) else {})
-            }
-            for p in n
+            term: neuron_terms.get(term) or term_knowledge(g, term)
+            for conn in neuron['connectivity']
+            for term in [conn[0][0], *conn[0][1], conn[1][0], *conn[1][1]]
+            if neuron_terms.get(term) or term_knowledge(g, term)
         }
         neuron['terms-dict'][neuron['id']] = {'label':neuron['label']}
         if neuron['connectivity']:
@@ -386,10 +398,10 @@ class Npo:
         # get label from npo_terms or from rdflib's graph
         if entity in self.__npo_terms:
             knowledge = {**knowledge, **self.__npo_terms[entity]}
-        else:
-            if len(labels:=[o for o in self.__rdf_graph.objects(subject=NAMESPACES.uri(entity), predicate=rdfs.label)]) > 0:
-                knowledge['label'] = labels[0]
-
+        elif (tk:=term_knowledge(self.__rdf_graph, rdflib.URIRef(NAMESPACES.uri(entity)))):
+            knowledge = {**knowledge, **tk}
+            self.__npo_terms[entity] = tk
+        
         # check if entity is a connectivity model
         if entity in self.connectivity_models():
             if 'label' not in knowledge: knowledge['label'] = entity
