@@ -2,7 +2,7 @@
 #
 #  Flatmap viewer and annotation tools
 #
-#  Copyright (c) 2019-21  David Brooks
+#  Copyright (c) 2019-25  David Brooks
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ NODE_TYPES = [
 #===============================================================================
 #===============================================================================
 
-def clean_source(source: str) -> str:
+def clean_knowledge_source(source: str) -> str:
     if source.endswith('-npo'):
         return source[:-4]
     return source
@@ -59,7 +59,7 @@ type KnowledgeDict = dict[str, Any]
 
 class KnowledgeList:
     def __init__(self, source: str, knowledge: Optional[list[KnowledgeDict]]=None):
-        self.__source = clean_source(source)
+        self.__source = clean_knowledge_source(source)
         if knowledge is None:
             self.__knowledge: list[KnowledgeDict] = []
         else:
@@ -127,7 +127,7 @@ class CompetencyDatabase:
             unit='records', ncols=80,
             bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
         for record in knowledge.knowledge:
-            if source == clean_source(record.get('source', '')):
+            if source == clean_knowledge_source(record.get('source', '')):
                 if (connectivity := record.get('connectivity')) is not None:
                     path_id = record['id']
 
@@ -211,7 +211,7 @@ class CompetencyDatabase:
         cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source, ))
 
         for record in knowledge.knowledge:
-            if source == clean_source(record.get('source', '')):
+            if source == clean_knowledge_source(record.get('source', '')):
 
                 # Feature terms
                 with cursor.copy("COPY feature_terms (source_id, term_id, label, description) FROM STDIN") as copy:
