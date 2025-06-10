@@ -44,7 +44,7 @@ KNOWLEDGE_HOST = os.environ.get('KNOWLEDGE_HOST', 'localhost:5432')
 def pg_import(knowledge: KnowledgeList):
 #=======================================
     competency_db = CompetencyDatabase(KNOWLEDGE_USER, KNOWLEDGE_HOST, PG_DATABASE)
-    competency_db.import_knowledge(knowledge)
+    competency_db.import_knowledge(knowledge, True)
 
 #===============================================================================
 #===============================================================================
