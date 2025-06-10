@@ -81,14 +81,17 @@ class KnowledgeList:
 
 class CompetencyDatabase:
     def __init__(self, user: Optional[str], host: str, database: str):
-        self.__user = f'{user}@' if user else ''
-        self.__host = host
-        self.__database = database
+        pg_user = f'{user}@' if user else ''
+        self.__db = pg.connect(f'postgresql://{pg_user}{host}/{database}')
+
+    def execute(self, sql, *params):
+    #===============================
+        return self.__db.execute(sql, *params)
 
     def import_knowledge(self, knowledge: KnowledgeList, update_types: bool=False):
     #==============================================================================
-        with pg.connect(f'postgresql://{self.__user}{self.__host}/{self.__database}') as db:
-            with db.cursor() as cursor:
+        with self.__db as db:
+            with self.__db.cursor() as cursor:
                 self.__delete_source_from_tables(cursor, knowledge.source)
                 if update_types:
                     self.__setup_anatomical_types(cursor)
