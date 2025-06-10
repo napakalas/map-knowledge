@@ -1,6 +1,6 @@
 [project]
 name = "mapknowledge"
-version = "1.1.0"
+version = "1.2.0"
 description = "A sanitised and simplified view of SCKAN knowledge"
 authors = [
     { name = "David Brooks", email = "d.brooks@auckland.ac.nz"},
