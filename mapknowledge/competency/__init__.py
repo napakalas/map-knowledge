@@ -245,7 +245,11 @@ class CompetencyDatabase:
 
     def __update_knowledge_source(self, cursor, source: KnowledgeSource):
     #====================================================================
-        cursor.execute('INSERT INTO knowledge_sources (source_id, sckan_id, description) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
+        cursor.execute('''INSERT INTO knowledge_sources (source_id, sckan_id, description)
+                            VALUES (%s, %s, %s)
+                            ON CONFLICT (source_id) DO UPDATE
+                                SET sckan_id = excluded.sckan_id,
+                                    description = excluded.description''',
             (source.source_id, source.sckan_id, source.description))
 
 #===============================================================================
