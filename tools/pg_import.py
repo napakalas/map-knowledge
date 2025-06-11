@@ -25,7 +25,7 @@ import os
 #===============================================================================
 
 from mapknowledge import KnowledgeStore
-from mapknowledge.competency import CompetencyDatabase, KnowledgeList
+from mapknowledge.competency import CompetencyDatabase, KnowledgeList, KnowledgeSource
 
 #===============================================================================
 #===============================================================================
@@ -53,7 +53,8 @@ def json_knowledge(args) -> KnowledgeList:
 #=========================================
     with open(args.json_file) as fp:
         knowledge = json.load(fp)
-    knowledge = KnowledgeList(knowledge['source'], knowledge['knowledge'])
+    source_id = knowledge['source']
+    knowledge = KnowledgeList(KnowledgeSource(source_id=source_id, sckan_id=source_id), knowledge['knowledge'])
     return knowledge
 
 def store_knowledge(args) -> KnowledgeList:
@@ -68,7 +69,7 @@ def store_knowledge(args) -> KnowledgeList:
         raise IOError(f'Unable to open knowledge store {args.store_directory}/{args.knowledge_store}')
     if store.source is None:
         raise ValueError(f'No valid knowledge sources in {args.store_directory}/{args.knowledge_store}')
-    knowledge = KnowledgeList(store.source)
+    knowledge = KnowledgeList(KnowledgeSource(source_id=store.source, sckan_id=store.source))
     for row in store.db.execute('select entity, knowledge from knowledge where source=?', (store.source,)).fetchall():
         entity_knowledge = json.loads(row[1])
         entity_knowledge['id'] = row[0]

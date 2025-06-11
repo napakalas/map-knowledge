@@ -18,6 +18,7 @@
 #
 #===============================================================================
 
+from dataclasses import dataclass
 import json
 from typing import Any, LiteralString, Optional
 
@@ -55,22 +56,36 @@ def clean_knowledge_source(source: str) -> str:
 
 #===============================================================================
 
+@dataclass
+class KnowledgeSource:
+    source_id: str
+    sckan_id: str
+    description: Optional[str] = None
+
+    def __post_init__(self):
+        self.source_id = clean_knowledge_source(self.source_id)
+        self.sckan_id = clean_knowledge_source(self.sckan_id)
+
+#===============================================================================
+
 type KnowledgeDict = dict[str, Any]
 
+#===============================================================================
+
 class KnowledgeList:
-    def __init__(self, source: str, knowledge: Optional[list[KnowledgeDict]]=None):
-        self.__source = clean_knowledge_source(source)
+    def __init__(self, source: KnowledgeSource, knowledge: Optional[list[KnowledgeDict]]=None):
+        self.__source = source
         if knowledge is None:
             self.__knowledge: list[KnowledgeDict] = []
         else:
             self.__knowledge = knowledge
 
     @property
-    def source(self):
+    def source(self) -> KnowledgeSource:
         return self.__source
 
     @property
-    def knowledge(self):
+    def knowledge(self) -> list[KnowledgeDict]:
         return self.__knowledge
 
     def append(self, knowledge: KnowledgeDict):
@@ -102,20 +117,21 @@ class CompetencyDatabase:
                 #    pass
             db.commit()
 
-    def __delete_source_from_tables(self, cursor, source: str):
-    #==========================================================
-        cursor.execute('DELETE FROM path_taxons WHERE source_id=%s', (source, ))
-        cursor.execute('DELETE FROM feature_evidence WHERE source_id=%s', (source, ))
-        cursor.execute('DELETE FROM path_edges WHERE source_id=%s', (source, ))
-        cursor.execute('DELETE FROM path_features WHERE source_id=%s', (source, ))
-        cursor.execute('DELETE FROM path_node_features WHERE source_id=%s', (source,  ))
-        cursor.execute('DELETE FROM path_forward_connections WHERE source_id=%s', (source, ))
-        cursor.execute('DELETE FROM path_node_types WHERE source_id=%s', (source, ))
-        cursor.execute('DELETE FROM path_phenotypes WHERE source_id=%s', (source, ))
-        cursor.execute('DELETE FROM path_properties WHERE source_id=%s', (source, ))
-        cursor.execute('DELETE FROM path_nodes WHERE source_id=%s', (source, ))
-        cursor.execute('DELETE FROM feature_types WHERE source_id=%s', (source, ))
-        cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source, ))
+    def __delete_source_from_tables(self, cursor, source: KnowledgeSource):
+    #======================================================================
+        source_id = source.source_id
+        cursor.execute('DELETE FROM path_taxons WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM feature_evidence WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM path_edges WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM path_features WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM path_node_features WHERE source_id=%s', (source_id,  ))
+        cursor.execute('DELETE FROM path_forward_connections WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM path_node_types WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM path_phenotypes WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM path_properties WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM path_nodes WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM feature_types WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source_id, ))
 
     def __setup_anatomical_types(self, cursor):
     #==========================================
@@ -125,12 +141,12 @@ class CompetencyDatabase:
 
     def __update_connectivity(self, cursor, knowledge: KnowledgeList):
     #=================================================================
-        source = knowledge.source
+        source_id = knowledge.source.source_id
         progress_bar = tqdm(total=len(knowledge.knowledge),
             unit='records', ncols=80,
             bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
         for record in knowledge.knowledge:
-            if source == clean_knowledge_source(record.get('source', '')):
+            if source_id == clean_knowledge_source(record.get('source', '')):
                 if (connectivity := record.get('connectivity')) is not None:
                     path_id = record['id']
 
@@ -142,7 +158,7 @@ class CompetencyDatabase:
                     # Path taxons
                     with cursor.copy("COPY path_taxons (source_id, path_id, taxon_id) FROM STDIN") as copy:
                         for taxon in taxons:
-                            copy.write_row((source, path_id, taxon))
+                            copy.write_row((source_id, path_id, taxon))
 
                     # Evidence
                     evidence = record.get('references', [])
@@ -152,34 +168,34 @@ class CompetencyDatabase:
                     # Path evidence
                     with cursor.copy("COPY feature_evidence (source_id, term_id, evidence_id) FROM STDIN") as copy:
                         for evidence_id in evidence:
-                            copy.write_row((source, path_id, evidence_id))
+                            copy.write_row((source_id, path_id, evidence_id))
 
                     # Nodes
                     nodes = set(json.dumps(node) for (node, _) in connectivity) | set(json.dumps(node) for (_, node) in connectivity)
                     cursor.executemany('INSERT INTO path_nodes (source_id, path_id, node_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
-                                       ((source, path_id, node,) for node in nodes))
+                                       ((source_id, path_id, node,) for node in nodes))
 
                     # Node features
-                    node_features = [ (source, path_id, node, feature)
+                    node_features = [ (source_id, path_id, node, feature)
                                             for (node, features) in [(node, json.loads(node)) for node in nodes]
                                                 for feature in [features[0]] + features[1] ]
                     cursor.executemany('INSERT INTO path_node_features (source_id, path_id, node_id, feature_id) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING',
                                         node_features)
 
                     # Path edges
-                    path_nodes = [ (source, path_id, json.dumps(node_0), json.dumps(node_1)) for (node_0, node_1) in connectivity ]
+                    path_nodes = [ (source_id, path_id, json.dumps(node_0), json.dumps(node_1)) for (node_0, node_1) in connectivity ]
                     with cursor.copy("COPY path_edges (source_id, path_id, node_0, node_1) FROM STDIN") as copy:
                         for row in path_nodes:
                             copy.write_row(row)
 
                     # Path features
-                    path_features = [(source, path_id, feature) for feature in set([nf[3] for nf in node_features])]
+                    path_features = [(source_id, path_id, feature) for feature in set([nf[3] for nf in node_features])]
                     with cursor.copy("COPY path_features (source_id, path_id, feature_id) FROM STDIN") as copy:
                         for row in path_features:
                             copy.write_row(row)
 
                     # Forward connections
-                    forward_connections = [(source, path_id, forward_path) for forward_path in record.get('forward-connections', [])]
+                    forward_connections = [(source_id, path_id, forward_path) for forward_path in record.get('forward-connections', [])]
                     with cursor.copy("COPY path_forward_connections (source_id, path_id, forward_path_id) FROM STDIN") as copy:
                         for row in forward_connections:
                             copy.write_row(row)
@@ -188,9 +204,9 @@ class CompetencyDatabase:
                     node_types = []
                     node_phenotypes = record.get('node-phenotypes', {})
                     for type, nodes in node_phenotypes.items():
-                        node_types.extend([(source, path_id, json.dumps(node), type)
+                        node_types.extend([(source_id, path_id, json.dumps(node), type)
                                                 for node in nodes])
-                    node_types.extend([(source, path_id, json.dumps(node), NERVE_TYPE)
+                    node_types.extend([(source_id, path_id, json.dumps(node), NERVE_TYPE)
                                             for node in record.get('nerves', [])])
                     with cursor.copy("COPY path_node_types (source_id, path_id, node_id, type_id) FROM STDIN") as copy:
                         for row in node_types:
@@ -199,35 +215,36 @@ class CompetencyDatabase:
                     # Path phenotypes
                     with cursor.copy("COPY path_phenotypes (source_id, path_id, phenotype) FROM STDIN") as copy:
                         for phenotype in record.get('phenotypes', []):
-                            copy.write_row((source, path_id, phenotype))
+                            copy.write_row((source_id, path_id, phenotype))
 
                     # General path properties
                     cursor.execute('INSERT INTO path_properties (source_id, path_id, biological_sex, alert, disconnected) VALUES (%s, %s, %s, %s, %s)',
-                                       (source, path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected')))
+                                       (source_id, path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected')))
 
             progress_bar.update(1)
         progress_bar.close()
 
     def __update_features(self, cursor, knowledge: KnowledgeList):
     #=============================================================
-        source = knowledge.source
-        cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source, ))
+        source_id = knowledge.source.source_id
+        cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source_id, ))
 
         for record in knowledge.knowledge:
-            if source == clean_knowledge_source(record.get('source', '')):
+            if source_id == clean_knowledge_source(record.get('source', '')):
 
                 # Feature terms
                 with cursor.copy("COPY feature_terms (source_id, term_id, label, description) FROM STDIN") as copy:
-                    copy.write_row([source, record['id'], record.get('label'), record.get('long-label')])
+                    copy.write_row([source_id, record['id'], record.get('label'), record.get('long-label')])
 
                 # Feature types
                 with cursor.copy("COPY feature_types (source_id, term_id, type_id) FROM STDIN") as copy:
                     if (term_type:=record.get('type')) is not None:
-                        copy.write_row([source, record['id'], term_type])
+                        copy.write_row([source_id, record['id'], term_type])
 
-    def __update_knowledge_source(self, cursor, source):
-    #===================================================
-        cursor.execute('INSERT INTO knowledge_sources (source_id) VALUES (%s) ON CONFLICT DO NOTHING', (source,))
+    def __update_knowledge_source(self, cursor, source: KnowledgeSource):
+    #====================================================================
+        cursor.execute('INSERT INTO knowledge_sources (source_id, sckan_id, description) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
+            (source.source_id, source.sckan_id, source.description))
 
 #===============================================================================
 #===============================================================================

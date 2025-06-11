@@ -146,6 +146,7 @@ ALTER TABLE public.feature_types OWNER TO abi;
 
 CREATE TABLE public.knowledge_sources (
     source_id character varying NOT NULL,
+    sckan_id character varying NOT NULL,
     description text
 );
 ALTER TABLE public.knowledge_sources OWNER TO abi;
