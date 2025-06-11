@@ -391,12 +391,14 @@ dependencies = [
     { name = "structlog" },
 ]
 
+[package.optional-dependencies]
+tools = [
+    { name = "tqdm" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
-]
-tools = [
-    { name = "tqdm" },
 ]
 
 [package.metadata]
@@ -409,11 +411,12 @@ requires-dist = [
     { name = "requests", specifier = ">=2.28.1" },
     { name = "sparqlwrapper", specifier = ">=2.0.0" },
     { name = "structlog", specifier = ">=24.4.0" },
+    { name = "tqdm", marker = "extra == 'tools'", specifier = ">=4.66.5" },
 ]
+provides-extras = ["tools"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8.4.0" }]
-tools = [{ name = "tqdm", specifier = ">=4.66.5" }]
 
 [[package]]
 name = "nest-asyncio"
