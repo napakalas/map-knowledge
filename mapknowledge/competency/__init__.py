@@ -109,7 +109,7 @@ class CompetencyDatabase:
             with self.__db.cursor() as cursor:
                 self.__delete_source_from_tables(cursor, knowledge.source)
                 if update_types:
-                    self.__setup_anatomical_types(cursor)
+                    self.__update_anatomical_types(cursor)
                 self.__update_knowledge_source(cursor, knowledge.source)
                 self.__update_features(cursor, knowledge)
                 self.__update_connectivity(cursor, knowledge)
@@ -133,9 +133,11 @@ class CompetencyDatabase:
         cursor.execute('DELETE FROM feature_types WHERE source_id=%s', (source_id, ))
         cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source_id, ))
 
-    def __setup_anatomical_types(self, cursor):
-    #==========================================
-        cursor.execute('DELETE FROM anatomical_types at WHERE NOT EXISTS (SELECT 1 FROM path_node_types pt WHERE at.type_id = pt.type_id)')
+    def __update_anatomical_types(self, cursor):
+    #===========================================
+        cursor.execute('''DELETE FROM anatomical_types at
+                            WHERE (NOT EXISTS (SELECT 1 FROM feature_types ft WHERE at.type_id = ft.type_id))
+                              AND (NOT EXISTS (SELECT 1 FROM path_node_types pnt WHERE at.type_id = pnt.type_id))''')
         cursor.executemany('INSERT INTO anatomical_types (type_id, label) VALUES (%s, %s) ON CONFLICT DO NOTHING',
                            [(type, type) for type in NODE_PHENOTYPES + NODE_TYPES])
 
