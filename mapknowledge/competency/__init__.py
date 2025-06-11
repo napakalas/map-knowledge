@@ -19,7 +19,7 @@
 #===============================================================================
 
 import json
-from typing import Any, Optional
+from typing import Any, LiteralString, Optional
 
 #===============================================================================
 
@@ -84,9 +84,9 @@ class CompetencyDatabase:
         pg_user = f'{user}@' if user else ''
         self.__db = pg.connect(f'postgresql://{pg_user}{host}/{database}')
 
-    def execute(self, sql, *params):
-    #===============================
-        return self.__db.execute(sql, *params)
+    def execute(self, sql: LiteralString, params: Optional[tuple|list]):
+    #===================================================================
+        return self.__db.execute(sql, params)
 
     def import_knowledge(self, knowledge: KnowledgeList, update_types: bool=False):
     #==============================================================================
