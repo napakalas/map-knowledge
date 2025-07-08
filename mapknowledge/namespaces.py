@@ -18,8 +18,13 @@
 #
 #===============================================================================
 
+import rdflib
+
+#===============================================================================
+
 class NAMESPACES:
     namespaces = {
+        'rdfs': str(rdflib.RDFS),
         'ILX': 'http://uri.interlex.org/base/ilx_',
         'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_',
         'PATO': 'http://purl.obolibrary.org/obo/PATO_',
