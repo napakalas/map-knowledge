@@ -93,8 +93,34 @@ NODE_PHENOTYPES = [
 #===============================================================================
 
 ANATOMICAL_TYPES = {
-    NERVE_TYPE: ['UBERON:0001021', 'FMA:65132']
+    NERVE_TYPE: [
+        'UBERON:0001021',                       # Nerve
+        'FMA:5860',                             # Spinal nerve
+        'FMA:65132',                            # Nerve
+    ]
 }
+
+ANATOMICAL_TYPES_QUERY = """
+    SELECT ?term ?label WHERE {
+        values ?termClasses { %TYPE_CLASSES% }
+        ?term rdfs:subClassOf* ?termClasses .
+        optional { ?term rdfs:label ?label }
+    }
+"""
+
+#===============================================================================
+
+NPO_TERM_LABELS = f"""
+    SELECT ?term ?label WHERE {{
+        ?term rdfs:label ?label
+        filter(strStarts(str(?term), "{NAMESPACES.namespaces['UBERON']}")
+            || strStarts(str(?term), "{NAMESPACES.namespaces['ILX']}"))
+    }}
+"""
+
+#===============================================================================
+
+type KnowledgeDict = dict[str, Any]
 
 #===============================================================================
 
@@ -104,6 +130,7 @@ class NPOException(Exception):
 #===============================================================================
 
 #### Functions to load knowledge from SCKAN Github ###
+## https://github.com/tgbugs/pyontutils/blob/master/neurondm/docs/composer.py
 
 def makelpesrdf() -> tuple:
 #==========================
@@ -206,6 +233,10 @@ def for_composer(n, cull=False) -> dict[str, Any]:
                      for pos in unaccounted_pos]]))
     return {k:v for k, v in fc.items() if v} if cull else fc
 
+#### End of extract from https://github.com/tgbugs/pyontutils/blob/master/neurondm/docs/composer.py
+
+#===============================================================================
+
 def get_connectivity_edges(partial_order) -> list:
 #=================================================
     # functions to parse connectivities
@@ -264,109 +295,51 @@ def get_connectivity_edges(partial_order) -> list:
         filtered_connectivities += [tuple(new_edge)]
     return list(set(filtered_connectivities))
 
-def is_type_of(g:rdflib.Graph, neuron_term, type_terms):
-    uri = NAMESPACES.uri(neuron_term)
-    
-    # subclass check
-    query = f"""
-        ASK WHERE {{
-            VALUES ?superClass {{ {' '.join(type_terms)} }}
-            <{uri}> rdfs:subClassOf* ?superClass .
-        }}
-    """
-    if g.query(query, initNs={"rdfs": rdflib.RDFS, **NAMESPACES.namespaces}).askAnswer:
-        return True
-    
-    # label check
-    query = f"""
-        ASK WHERE {{
-            VALUES ?superClass {{ {' '.join(type_terms)} }}
-            <{uri}> rdfs:label ?lbl1 .
-            ?syn_term rdfs:label ?lbl2 .
-            FILTER(LCASE(STR(?lbl1)) = LCASE(STR(?lbl2)))
-            ?syn_term rdfs:subClassOf* ?superClass .
-        }}
-    """
-    if g.query(query, initNs={"rdfs": rdflib.RDFS, **NAMESPACES.namespaces}).askAnswer:
-        return True
-        
-    return False
-
-def term_knowledge(g:rdflib.Graph, neuron_term):
-    uri = rdflib.URIRef(NAMESPACES.uri(neuron_term))
-    if not (labels:=list(g.objects(uri, rdfs.label))):
-        for x in g.subjects(ilxtr.hasExistingId, uri):
-            if (labels:=list(g.objects(subject=x, predicate=rdfs.label))):
-                neuron_term = x
-                break
-    if not labels:
-        return
-    atype = next((a for a, terms in ANATOMICAL_TYPES.items() if is_type_of(g, neuron_term, terms)), None)    
-    return {'label': str(labels[0]), **({'type': atype} if atype else {})}
-
-def load_knowledge_from_ttl(npo_release: str) -> tuple:
-#======================================================
-    g = OntGraph()  # load and query graph
-    neuron_knowledge = {}
-    neuron_terms = {}
-
-    # remove scigraph and interlex calls
-    graphBase._sgv = None
-    del graphBase._sgv
-    if len(OntTerm.query._services) > 1:
-        # backup services and avoid issues on rerun
-        _old_query_services = OntTerm.query._services
-        _noloc_query_services = _old_query_services[1:]
-
-    OntTerm.query._services = (RDFL(g, OntId),)
-
-    for f in NPO_TTLS:
-        ori = OntResIri(f'{NPO_RAW}/{npo_release}/{GEN_NEURONS_PATH}{f}{TURTLE_SUFFIX}')
-        [g.add(t) for t in ori.graph]
-
-    for f in ('apinatomy-neuron-populations', '../../npo', '../../sparc-community-terms'):
-        p = urllib.parse.quote(GEN_NEURONS_PATH + f)
-        ori = OntResIri(f'{NPO_RAW}/{npo_release}/{p}{TURTLE_SUFFIX}')
-        [g.add((s, rdfs.label, o)) for s, o in ori.graph[:rdfs.label:]]
-        if f != 'apinatomy-neuron-populations':
-            [g.add((s, rdfs.subClassOf, o)) for s, o in ori.graph[:rdfs.subClassOf:]]
-            [g.add((s, ilxtr.hasExistingId, o)) for s, o in ori.graph[:ilxtr.hasExistingId:]]
-
-    config = Config('npo-connectivity')
-    config.load_existing(g)
-    neurons = config.neurons()  # scigraph required here if deps not removed above
-
-    for n in neurons:
-        neuron = for_composer(n)
-        neuron['connectivity'] = get_connectivity_edges(neuron['order'])
-        neuron['class'] = f'ilxtr:{type(n).__name__}'
-        neuron['terms-dict'] = {
-            term: neuron_terms.get(term) or term_knowledge(g, term)
-            for conn in neuron['connectivity']
-            for term in [conn[0][0], *conn[0][1], conn[1][0], *conn[1][1]]
-            if neuron_terms.get(term) or term_knowledge(g, term)
-        }
-        neuron['terms-dict'][neuron['id']] = {'label':neuron['label']}
-        if neuron['connectivity']:
-            neuron['connected'] = nx.is_connected(nx.Graph(neuron['connectivity']))
-        else:
-            neuron['connected'] = False
-        neuron_terms = {**neuron_terms, **neuron['terms-dict']}
-        neuron_knowledge[neuron['id']] = neuron
-
-    return neuron_knowledge, neuron_terms, g
-
 #===============================================================================
 
 class Npo:
     def __init__(self, npo_release: Optional[str]):
         self.__npo_release = self.__check_npo_release(npo_release)
-        self.__npo_knowledge, self.__npo_terms, self.__rdf_graph = load_knowledge_from_ttl(self.__npo_release)
+        self.__rdf_graph = OntGraph()
+        self.__composer_neurons = {}
+        self.__neuron_knowledge = {}
+        self.__npo_terms: dict[rdflib.URIRef, KnowledgeDict] = {}
+
+        self.__load_knowledge_from_ttl()
+        self.__load_anatomical_types()
+        self.__load_npo_terms()
+        for neuron_id in self.__composer_neurons.keys():
+            self.__get_term_knowledge(neuron_id)
+            self.__get_neuron_knowledge(neuron_id)
+
+    @property
+    def connectivity_models(self) -> list[str]:
+    #==========================================
+        return list({v.get('class') for v in self.__composer_neurons.values()})
+
+    @property
+    def connectivity_paths(self) -> list[str]:
+    #=========================================
+        return [path for path in self.__composer_neurons.keys()]
 
     @property
     def release(self) -> str:
     #========================
         return self.__npo_release
+
+    @property
+    def terms(self) -> list[str]:
+    #============================
+        return [NAMESPACES.curie(term) for term in self.__npo_terms.keys()]
+
+    def build(self) -> dict[str, str]:
+    #=================================
+        return self.__npo_build
+
+    def terms_of_type(self, anatomical_type: str) -> list[str]:
+    #==========================================================
+        return [NAMESPACES.curie(term)
+                    for term in self.__anatomical_terms_by_type.get(anatomical_type, [])]
 
     def __check_npo_release(self, npo_release) -> str:
     #=================================================
@@ -394,39 +367,134 @@ class Npo:
         else:
             raise NPOException(f'NPO at {NPO_API} is not available')
 
-    def connectivity_models(self) -> list[str]:
-    #==========================================
-        return list({v['class'] for v in self.__npo_knowledge.values()})
-    
-    def connectivity_paths(self) -> list[str]:
-    #=========================================
-        return list(path for path in self.__npo_knowledge.keys())
+    def __load_knowledge_from_ttl(self):
+    #===================================
+        ## Following is based on github.com/tgbugs/pyontutils/blob/master/neurondm/neurondm/models/composer.py
 
-    def build(self) -> dict[str, str]:
+        # remove scigraph and interlex calls
+        graphBase._sgv = None       # type: ignore
+        del graphBase._sgv
+
+        OntTerm.query._services = (RDFL(self.__rdf_graph, OntId),)
+        for f in NPO_TTLS:
+            ori = OntResIri(f'{NPO_RAW}/{self.__npo_release}/{GEN_NEURONS_PATH}{f}{TURTLE_SUFFIX}')
+            if ori.graph is not None:
+                [self.__rdf_graph.add(t) for t in ori.graph]
+
+        for f in ('apinatomy-neuron-populations', '../../npo', '../../sparc-community-terms'):
+            p = urllib.parse.quote(GEN_NEURONS_PATH + f)
+            ori = OntResIri(f'{NPO_RAW}/{self.__npo_release}/{p}{TURTLE_SUFFIX}')
+            if ori.graph is not None:
+                [self.__rdf_graph.add((s, rdfs.label, o))
+                    for s, o in ori.graph[:rdfs.label:]]                    # type: ignore
+                if f != 'apinatomy-neuron-populations':
+                    [self.__rdf_graph.add((s, rdfs.subClassOf, o))
+                        for s, o in ori.graph[:rdfs.subClassOf:]]           # type: ignore
+                    [self.__rdf_graph.add((s, ilxtr.hasExistingId, o))
+                        for s, o in ori.graph[:ilxtr.hasExistingId:]]       # type: ignore
+
+        config = Config('npo-connectivity')
+        config.load_existing(self.__rdf_graph)
+
+        for neuron in config.neurons():
+            composer_neuron = for_composer(neuron)
+            composer_neuron['class'] = type(neuron).__name__
+            self.__composer_neurons[composer_neuron['id']] = composer_neuron
+
+    def __load_anatomical_types(self):
     #=================================
-        return self.__npo_build
-    
-    def get_knowledge(self, entity) -> dict[str, Any]:
-    #=================================================
-        knowledge = {
+        self.__anatomical_terms_by_type = defaultdict(list)
+        self.__anatomical_types_by_label = defaultdict(list)
+        self.__anatomical_types_by_term = defaultdict(list)
+        for anatomical_type, classes in ANATOMICAL_TYPES.items():
+            for row in self.__rdf_graph.query(ANATOMICAL_TYPES_QUERY.replace('%TYPE_CLASSES%',
+                                                                             ' '.join(classes)),
+                                              initNs=NAMESPACES.namespaces):
+                term: rdflib.URIRef = row[0]                                    # type: ignore
+                self.__anatomical_terms_by_type[anatomical_type].append(term)
+                self.__anatomical_types_by_term[term].append(anatomical_type)
+                if (label := row[1]) is not None:                               # type: ignore
+                    self.__anatomical_types_by_label[str(label).lower()].append(anatomical_type)
+
+    def __load_npo_terms(self):
+    #==========================
+        self.__npo_terms: dict[rdflib.URIRef, KnowledgeDict] = {}
+        for row in self.__rdf_graph.query(NPO_TERM_LABELS, initNs=NAMESPACES.namespaces):
+            term: rdflib.URIRef = row[0]                                        # type: ignore
+            label = str(row[1])                                                 # type: ignore
+            if len(anatomical_types := self.__anatomical_types_by_term.get(term, [])):
+                self.__npo_terms[term] = { 'label': label, 'type': anatomical_types[0] }
+            elif len(anatomical_types := self.__anatomical_types_by_label.get(label.lower(), [])):
+                self.__npo_terms[term] = { 'label': label, 'type': anatomical_types[0] }
+                self.__anatomical_types_by_term[term] = anatomical_types
+                for anatomical_type in anatomical_types:
+                    self.__anatomical_terms_by_type[anatomical_type].append(term)
+            else:
+                self.__npo_terms[term] = { 'label': label }
+
+    def __get_neuron_knowledge(self, id: str):
+    #=========================================
+        if (neuron := self.__neuron_knowledge.get(id)) is None:
+            if (neuron := self.__composer_neurons.get(id)) is not None:
+                neuron['connectivity'] = get_connectivity_edges(neuron['order'])
+                neuron['terms-dict'] = {}
+                # This makes sure we have knowledge for each term of connectivity nodes
+                for conn in neuron['connectivity']:
+                    for term in [conn[0][0], *conn[0][1], conn[1][0], *conn[1][1]]:
+                        neuron_term = self.__get_term_knowledge(term)
+                        if len(neuron_term):
+                            neuron['terms-dict'][term] = neuron_term
+                neuron['terms-dict'][neuron['id']] = {'label': neuron['label']}
+                if neuron['connectivity']:
+                    neuron['connected'] = nx.is_connected(nx.Graph(neuron['connectivity']))
+                else:
+                    neuron['connected'] = False
+                self.__neuron_knowledge[id] = neuron
+        return neuron
+
+    def __get_term_knowledge(self, term: str|rdflib.URIRef) -> KnowledgeDict:
+    #========================================================================
+        if not isinstance(term, rdflib.URIRef):
+            term = rdflib.URIRef(NAMESPACES.uri(term))
+        npo_term = self.__npo_terms.get(term)
+        if npo_term is None:
+            npo_term = self.__term_knowledge(term)
+            if npo_term is not None:
+                self.__npo_terms[term] = npo_term
+        return npo_term if npo_term is not None else {}
+
+    def __term_knowledge(self, term: rdflib.URIRef) -> Optional[KnowledgeDict]:
+    #==========================================================================
+        if not (labels:=list(self.__rdf_graph.objects(term, rdfs.label))):
+            for x in self.__rdf_graph.subjects(ilxtr.hasExistingId, term):
+                if (labels:=list(self.__rdf_graph.objects(subject=x, predicate=rdfs.label))):
+                    term = x         # type: ignore
+                    break
+        if labels:
+            if len(anatomical_types := self.__anatomical_types_by_term.get(term, [])):
+                return { 'label': str(labels[0]), 'type': anatomical_types[0] }
+            else:
+                return { 'label': str(labels[0]) }
+
+    def get_knowledge(self, entity: str) -> KnowledgeDict:
+    #=====================================================
+        knowledge: KnowledgeDict = {
             'id': entity
         }
-        # get label from npo_terms or from rdflib's graph
-        if entity in self.__npo_terms:
-            knowledge = {**knowledge, **self.__npo_terms[entity]}
-        elif (tk:=term_knowledge(self.__rdf_graph, rdflib.URIRef(NAMESPACES.uri(entity)))):
-            knowledge = {**knowledge, **tk}
-            self.__npo_terms[entity] = tk
+        knowledge.update(self.__get_term_knowledge(entity))
 
         # check if entity is a connectivity model
-        if entity in self.connectivity_models():
+        if entity in self.connectivity_models:
             if 'label' not in knowledge: knowledge['label'] = entity
-            knowledge['paths'] = [{'id': v['id'], 'models': v['id']} for v in self.__npo_knowledge.values() if v['class'] == entity]
+            knowledge['paths'] = [{'id': v['id'], 'models': v['id']}
+                                    for v in self.__composer_neurons.values()
+                                        if v['class'] == entity]
             knowledge['references'] = []
 
-        # check if entity is a connecitvity path
-        if (path_kn:=self.__npo_knowledge.get(entity)) is not None:
-            if 'label' not in knowledge: knowledge['label'] = path_kn['label']
+        # check if entity is a connectivity path
+        if (path_kn:=self.__get_neuron_knowledge(entity)) is not None:
+            if 'label' not in knowledge:
+                knowledge['label'] = path_kn['label']
             knowledge['long-label'] = path_kn['label']
             knowledge['connectivity'] = path_kn['connectivity']
             if len(phenotype:=path_kn['phenotype']+path_kn['circuit_type']) > 0:
@@ -440,36 +508,62 @@ class Npo:
             if len(alert:=path_kn['note_alert']) > 0:
                 knowledge['alert'] = alert
             nodes = {}
-            for c in path_kn['connectivity']:
+            for c in path_kn['connectivity']:           ### What is this for ???
                 nodes[tuple([c[0][0]] + list(c[0][1]))] = c[0]
                 nodes[tuple([c[1][0]] + list(c[1][1]))] = c[1]
-            c_dendrites = {d['loc']:[c for c in nodes if d['loc'] in c] for d in path_kn['path'] if d['type'] == 'DENDRITE'}
-            dendrites = [nodes[c] for cd_list in c_dendrites.values() for c in cd_list]
+            c_dendrites = {d['loc']: [c for c in nodes if d['loc'] in c]
+                            for d in path_kn['path']
+                                if d['type'] == 'DENDRITE'}
+            dendrites = [nodes[c]
+                            for cd_list in c_dendrites.values()
+                                for c in cd_list]
             knowledge['dendrites'] = list(set(dendrites))
-            c_axons = {**{a['loc']:[c for c in nodes if a['loc'] in c] for a in path_kn['path'] if a['type'] == 'AXON'},
-                       **{a['loc']:[c for c in nodes if a['loc'] in c] for a in path_kn['dest']}}
-            axons = [nodes[c] for cd_list in c_axons.values() for c in cd_list]
+            c_axons = {**{a['loc']:[c for c in nodes if a['loc'] in c]
+                            for a in path_kn['path'] if a['type'] == 'AXON'},
+                       **{a['loc']:[c for c in nodes if a['loc'] in c]
+                            for a in path_kn['dest']}}
+            axons = [nodes[c]
+                        for cd_list in c_axons.values()
+                            for c in cd_list]
             knowledge['axons'] = list(set(axons))
-            c_somas = {s:[c for c in nodes if s in c] for s in path_kn['origin']}
-            somas = [nodes[c] for cd_list in c_somas.values() for c in cd_list]
+            c_somas = {s: [c for c in nodes if s in c]
+                        for s in path_kn['origin']}
+            somas = [nodes[c]
+                        for cd_list in c_somas.values()
+                            for c in cd_list]
             knowledge['somas'] = list(set(somas))
             if len(references:=path_kn['provenance']) > 0:
                 knowledge['references'] = references
             knowledge['pathDisconnected'] = not path_kn.get('connected', False)
-            c_axon_terminal = [[c for c in nodes if a['loc'] in c] for a in path_kn['dest'] if a['type'] == 'AXON-T']
-            knowledge['axon-terminals'] = [nodes[c] for cd_list in c_axon_terminal for c in cd_list]
-            c_afferent_terminal = [[c for c in nodes if a['loc'] in c] for a in path_kn['dest'] if a['type'] == 'AFFERENT-T']
-            knowledge['afferent-terminals'] = [nodes[c] for cd_list in c_afferent_terminal for c in cd_list]
-            c_axon_location = [[c for c in nodes if a['loc'] in c] for a in path_kn['path'] if a['type'] == 'AXON']
-            knowledge['axon-locations'] = [nodes[c] for cd_list in c_axon_location for c in cd_list]
+            c_axon_terminal = [[c for c in nodes if a['loc'] in c]
+                                for a in path_kn['dest']
+                                    if a['type'] == 'AXON-T']
+            knowledge['axon-terminals'] = [nodes[c]
+                                            for cd_list in c_axon_terminal
+                                                for c in cd_list]
+            c_afferent_terminal = [[c for c in nodes if a['loc'] in c]
+                                        for a in path_kn['dest']
+                                            if a['type'] == 'AFFERENT-T']
+            knowledge['afferent-terminals'] = [nodes[c]
+                                                for cd_list in c_afferent_terminal
+                                                    for c in cd_list]
+            c_axon_location = [[c for c in nodes if a['loc'] in c]
+                                    for a in path_kn['path']
+                                        if a['type'] == 'AXON']
+            knowledge['axon-locations'] = [nodes[c]
+                                            for cd_list in c_axon_location
+                                                for c in cd_list]
             knowledge['forward-connections'] = path_kn['forward_connections']
             node_phenotypes = defaultdict(list)
             for pn, locs in path_kn['node_phenotypes'].items():
-                c_phenotypes = [[c for c in nodes for loc in locs if loc in c]]
-                node_phenotypes[pn] += [nodes[c] for cd_list in c_phenotypes for c in cd_list]
+                c_phenotypes = [[c for c in nodes for loc in locs if loc in c]]   ## list inside list??
+                node_phenotypes[pn] += [nodes[c]
+                                            for cd_list in c_phenotypes
+                                                for c in cd_list]
             knowledge['node-phenotypes'] = dict(node_phenotypes)
-            knowledge['nerves'] = [nodes[node] for node in nodes if any(self.__npo_terms.get(term, {}).get('type') == NERVE_TYPE for term in node)]
-
+            knowledge['nerves'] = [nodes[node]
+                                    for node in nodes
+                                        if any(self.__npo_terms.get(term, {}).get('type') == NERVE_TYPE for term in node)]
         return knowledge
 
 #===============================================================================

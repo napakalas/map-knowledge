@@ -225,8 +225,7 @@ class KnowledgeStore(KnowledgeBase):
 
         if not read_only and use_sckan:
             self.__npo_db = Npo(sckan_version)
-            self.__npo_entities = set(self.__npo_db.connectivity_paths())
-            self.__npo_entities.update(self.__npo_db.connectivity_models())
+            self.__npo_entities = set(self.__npo_db.terms)
             if sckan_provenance:
                 npo_builds = self.__npo_db.build()
                 if len(npo_builds):
@@ -305,7 +304,7 @@ class KnowledgeStore(KnowledgeBase):
         :returns:   A list of model URIs
         """
         if self.__npo_db is not None:
-            return self.__npo_db.connectivity_models()
+            return self.__npo_db.connectivity_models
         else:
             log.warning('NPO connectivity models requested but no connection to NPO service')
         return []
@@ -318,9 +317,25 @@ class KnowledgeStore(KnowledgeBase):
         :returns:   A list of path URIs
         """
         if self.__npo_db is not None:
-            return self.__npo_db.connectivity_paths()
+            return self.__npo_db.connectivity_paths
         else:
             log.warning('NPO connectivity paths requested but no connection to NPO service')
+        return []
+
+    def entities(self) -> list[str]:
+    #===============================
+        if self.__npo_db is not None:
+            return self.__npo_db.terms
+        else:
+            log.warning('NPO terms requested but no connection to NPO service')
+        return []
+
+    def entities_of_type(self, anatomical_type: str) -> list[str]:
+    #=============================================================
+        if self.__npo_db is not None:
+            return self.__npo_db.terms_of_type(anatomical_type)
+        else:
+            log.warning('NPO terms requested but no connection to NPO service')
         return []
 
     def entity_knowledge(self, entity: str, source: Optional[str]=None) -> dict:

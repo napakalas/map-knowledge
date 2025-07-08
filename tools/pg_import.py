@@ -87,6 +87,7 @@ def main():
 ## And about KNOWLEDGE_USER (with check to see if it's set)
 ##
     parser = argparse.ArgumentParser(description='Import SCKAN knowledge into a PostgresQL knowledge store.')
+    parser.add_argument('-d', '--debug', action='store_true', help='Show DEBUG log messages')
     parser.add_argument('-q', '--quiet', action='store_true', help='Suppress INFO log messages')
     subparsers = parser.add_subparsers(title='commands', required=True)
 
@@ -101,7 +102,9 @@ def main():
     store_parser.set_defaults(func=store_knowledge)
 
     args = parser.parse_args()
-    if not args.quiet:
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    elif not args.quiet:
         logging.basicConfig(level=logging.INFO)
     pg_import(args.func(args))
 
