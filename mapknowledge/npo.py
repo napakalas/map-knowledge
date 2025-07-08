@@ -93,7 +93,11 @@ NODE_PHENOTYPES = [
 #===============================================================================
 
 ANATOMICAL_TYPES = {
-    NERVE_TYPE: ['UBERON:0001021', 'FMA:65132']
+    NERVE_TYPE: [
+        'UBERON:0001021',                       # Nerve
+        'FMA:5860',                             # Spinal nerve
+        'FMA:65132',                            # Nerve
+    ]
 }
 
 ANATOMICAL_TYPES_QUERY = """
