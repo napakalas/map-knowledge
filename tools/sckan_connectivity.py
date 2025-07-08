@@ -84,18 +84,13 @@ def load(args):
 
     knowledge_source = store.source
     logging.info(f'Loading SCKAN NPO knowledge for source `{knowledge_source}`')
+    all_entities = store.entities()
 
-    all_entities = [row[0] for row in store.db.execute(
-        'select distinct entity from knowledge where source=? order by entity', (knowledge_source, )).fetchall()]
-    if args.purge:
-        if store.db is not None and knowledge_source is not None:
-            logging.info(f'Purging all knowledge for source `{knowledge_source}`')
-            store.db.execute('delete from knowledge where source=?', (knowledge_source, ))
-            store.db.execute('delete from connectivity_nodes where source=?', (knowledge_source, ))
-            store.db.commit()
-        prior_knowledge = []
-    else:
-        prior_knowledge = get_prior_knowledge(store, knowledge_source)
+    if store.db is not None and knowledge_source is not None:
+        logging.info(f'Purging all knowledge for source `{knowledge_source}`')
+        store.db.execute('delete from knowledge where source=?', (knowledge_source, ))
+        store.db.execute('delete from connectivity_nodes where source=?', (knowledge_source, ))
+        store.db.commit()
 
     paths = store.connectivity_paths()
     progress_bar = tqdm(total=len(all_entities),
@@ -107,8 +102,6 @@ def load(args):
         store.entity_knowledge(path, source=knowledge_source)
         progress_bar.update(1)
         path_count += 1
-
-    save_prior_knowledge(store, knowledge_source, prior_knowledge)
 
     missing_entities = set(all_entities).difference(set([row[0] for row in store.db.execute(
         'select distinct entity from knowledge where source=?', (knowledge_source, )).fetchall()]))
@@ -239,7 +232,6 @@ def main():
 
     parser_load = subparsers.add_parser('load', help='Flush and load all knowledge from SCKAN NPO into a local knowledge store.')
     parser_load.add_argument('--sckan', help='SCKAN release identifier; defaults to latest available version of SCKAN')
-    parser_load.add_argument('--purge', action='store_true', help='Optionally flush and reload all entities.')
     parser_load.add_argument('--save-json', action='store_true', help='Optionally save knowledge as JSON in the store directory.')
     parser_load.set_defaults(func=load)
 
