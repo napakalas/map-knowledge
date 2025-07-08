@@ -232,6 +232,7 @@ def main():
     parser = argparse.ArgumentParser(description='Load, extract, and restore SCKAN NPO connectivity knowledge in a local knowledge store.')
     parser.add_argument('--store-directory', required=True, help='Directory containing a knowledge store')
     parser.add_argument('--knowledge-store', default=DEFAULT_STORE, help=f'Name of knowledge store file. Defaults to `{DEFAULT_STORE}`')
+    parser.add_argument('-d', '--debug', action='store_true', help='Show DEBUG log messages')
     parser.add_argument('-q', '--quiet', action='store_true', help='Suppress INFO log messages')
 
     subparsers = parser.add_subparsers(title='commands', required=True)
@@ -258,7 +259,9 @@ def main():
     parser_upgrade.set_defaults(func=upgrade)
 
     args = parser.parse_args()
-    if not args.quiet:
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    elif not args.quiet:
         logging.basicConfig(level=logging.INFO)
     args.func(args)
 
