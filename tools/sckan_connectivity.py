@@ -83,7 +83,7 @@ def load(args):
         raise IOError(f'Unable to open knowledge store {args.store_directory}/{args.knowledge_store}')
 
     knowledge_source = store.source
-    logging.info(f'Loading SCKAN NPO connectivity for source `{knowledge_source}`')
+    logging.info(f'Loading SCKAN NPO knowledge for source `{knowledge_source}`')
 
     all_entities = [row[0] for row in store.db.execute(
         'select distinct entity from knowledge where source=? order by entity', (knowledge_source, )).fetchall()]
@@ -119,7 +119,7 @@ def load(args):
 
     store.close()
     progress_bar.close()
-    logging.info(f'Loaded connectivity for {path_count} paths for `{knowledge_source}`')
+    logging.info(f'Loaded knowledge for `{knowledge_source}`: {len(all_entities)} terms, {path_count} paths')
 
     # Having loaded connectivity we can now save it to JSON
     if args.save_json:
@@ -229,7 +229,7 @@ DEFAULT_STORE = 'knowledgebase.db'
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description='Load, extract, and restore SCKAN NPO connectivity knowledge in a local knowledge store.')
+    parser = argparse.ArgumentParser(description='Load, extract, and restore SCKAN NPO knowledge in a local knowledge store.')
     parser.add_argument('--store-directory', required=True, help='Directory containing a knowledge store')
     parser.add_argument('--knowledge-store', default=DEFAULT_STORE, help=f'Name of knowledge store file. Defaults to `{DEFAULT_STORE}`')
     parser.add_argument('-d', '--debug', action='store_true', help='Show DEBUG log messages')
@@ -237,22 +237,22 @@ def main():
 
     subparsers = parser.add_subparsers(title='commands', required=True)
 
-    parser_load = subparsers.add_parser('load', help='Load connectivity knowledge from SCKAN NPO into a local knowledge store.')
+    parser_load = subparsers.add_parser('load', help='Flush and load all knowledge from SCKAN NPO into a local knowledge store.')
     parser_load.add_argument('--sckan', help='SCKAN release identifier; defaults to latest available version of SCKAN')
     parser_load.add_argument('--purge', action='store_true', help='Optionally flush and reload all entities.')
-    parser_load.add_argument('--save-json', action='store_true', help='Optionally save connectivity knowledge as JSON in the store directory.')
+    parser_load.add_argument('--save-json', action='store_true', help='Optionally save knowledge as JSON in the store directory.')
     parser_load.set_defaults(func=load)
 
-    parser_extract = subparsers.add_parser('extract', help='Save connectivity knowledge from a local store as JSON in the store directory.')
+    parser_extract = subparsers.add_parser('extract', help='Save knowledge from a local store as JSON in the store directory.')
     parser_extract.add_argument('--source', help='Knowledge source to extract; defaults to the most recent source in the store.')
     parser_extract.set_defaults(func=extract)
 
     parser_info = subparsers.add_parser('info', help='List knowledge sources in a local store.')
     parser_info.set_defaults(func=info)
 
-    parser_restore = subparsers.add_parser('restore', help='Restore connectivity knowledge to a local store from JSON.')
+    parser_restore = subparsers.add_parser('restore', help='Restore knowledge to a local store from JSON.')
     parser_restore.add_argument('--purge', action='store_true', help='Optionally flush and reload all entities.')
-    parser_restore.add_argument('json_file', metavar='JSON_FILE', help='File to load connectivity knowledge from.')
+    parser_restore.add_argument('json_file', metavar='JSON_FILE', help='File to load knowledge from.')
     parser_restore.set_defaults(func=restore)
 
     parser_upgrade = subparsers.add_parser('upgrade', help='Upgrade local knowledge store to latest database schema.')
