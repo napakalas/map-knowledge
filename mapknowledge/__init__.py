@@ -18,7 +18,7 @@
 #
 #===============================================================================
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 
 #===============================================================================
 
@@ -45,6 +45,20 @@ KNOWLEDGE_BASE = 'knowledgebase.db'
 #===============================================================================
 
 SCHEMA_VERSION = '1.4'
+
+## Have auto update to remove any ``-npo`` suffix on ``source`` column values.
+
+## select count(*) from knowledge where substr(source, -4, 4) = '-npo'
+
+
+## update knowledge set source=substr(source, 1, length(source)-4) where substr(source, -4, 4)='-npo';
+
+
+## Server needs to then trim any ``-npo`` from ``source`` sent by viewer
+
+## Better for viewer to trim ``source``.
+
+
 
 KNOWLEDGE_SCHEMA = f"""
     create table metadata (name text primary key, value text);
@@ -92,6 +106,27 @@ SCHEMA_UPGRADES = {
 }
 
 #===============================================================================
+
+## Add node "aliases" to knowledge store??
+##
+## This conflates anatomical terms and connectivity nodes...
+##
+alias_entry = {
+    "id": ["ILX:0738432", []],
+    "aliases": [
+        ["ILX:0793804", []],
+        ["ILX:0793877", []]
+    ]
+}
+## What is being stored? Why? How is it used??
+##
+## $ curl https://mapcore-demo.org/fccb/flatmap/knowledge/label/ILX:0738432
+## {"entity":"ILX:0738432","label":"Sixth lumbar spinal cord segment"}
+## $ curl https://mapcore-demo.org/fccb/flatmap/knowledge/label/ILX:0793804
+## {"entity":"ILX:0793804","label":"L6 parasympathetic nucleus"}
+## $ curl https://mapcore-demo.org/fccb/flatmap/knowledge/label/ILX:0793877
+## {"entity":"ILX:0793877","label":"Intermediolateral nucleus of sixth lumbar segment"}
+
 
 class KnowledgeBase(object):
     def __init__(self, store_directory, read_only=False, create=False, knowledge_base=KNOWLEDGE_BASE):
@@ -296,6 +331,7 @@ class KnowledgeStore(KnowledgeBase):
             self.db.execute(f'delete from connectivity_nodes where source=? or source is null', (knowledge_source,))
             self.db.commit()
 
+    ### Is this still relevanty???
     def connectivity_models(self) -> list[str]:
     #==========================================
         """
@@ -341,6 +377,8 @@ class KnowledgeStore(KnowledgeBase):
     def entity_knowledge(self, entity: str, source: Optional[str]=None) -> dict:
     #===========================================================================
         use_source = self.__source if source is None else source
+
+        ## Trim ``-npo`` from ``use_source``
 
         # Check local cache
         if (knowledge := self.__entity_knowledge.get((use_source, entity))) is not None:
@@ -424,6 +462,8 @@ class KnowledgeStore(KnowledgeBase):
 
     def knowledge_sources(self) -> list[str]:
     #========================================
+        ## Trim ``-npo`` ??
+        ## No, since auto update will have done so...
         return ([row[0]
                     for row in self.db.execute(
                         'select distinct source from knowledge order by source desc').fetchall()] if self.db
@@ -442,6 +482,7 @@ class KnowledgeStore(KnowledgeBase):
     #====================================================================
         stored_knowledge = []
         source = self.__source if source is None else source
+        ## Trim ``-npo``
         if self.db is not None:
             if source is not None:
                 rows = self.db.execute(
