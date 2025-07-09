@@ -563,7 +563,8 @@ class Npo:
             knowledge['node-phenotypes'] = dict(node_phenotypes)
             knowledge['nerves'] = [nodes[node]
                                     for node in nodes
-                                        if any(self.__npo_terms.get(rdflib.URIRef(NAMESPACES.uri(term)), {}).get('type') == NERVE_TYPE for term in node)]
+                                        if any(self.__npo_terms.get(rdflib.URIRef(NAMESPACES.uri(term)), {}).get('type') == NERVE_TYPE
+                                            for term in node)]
         return knowledge
 
 #===============================================================================
