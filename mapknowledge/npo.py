@@ -244,18 +244,18 @@ def get_connectivity_edges(partial_order) -> list:
         if len(partial_order) > 1:
             root = (
                         (
-                            partial_order[0].layer, 
+                            partial_order[0].layer,
                             tuple([partial_order[0].region]),
-                        ) 
+                        )
                         if isinstance(partial_order[0], orders.rl)
                         else (partial_order[0], ())
                     )
             for sub_partial_order in partial_order[1:]:
                 adj = (
                     (
-                        sub_partial_order[0].layer, 
+                        sub_partial_order[0].layer,
                         tuple([sub_partial_order[0].region]),
-                    ) 
+                    )
                     if isinstance(sub_partial_order[0], orders.rl)
                     else (sub_partial_order[0], ())
                 )
@@ -563,7 +563,7 @@ class Npo:
             knowledge['node-phenotypes'] = dict(node_phenotypes)
             knowledge['nerves'] = [nodes[node]
                                     for node in nodes
-                                        if any(self.__npo_terms.get(term, {}).get('type') == NERVE_TYPE for term in node)]
+                                        if any(self.__npo_terms.get(rdflib.URIRef(NAMESPACES.uri(term)), {}).get('type') == NERVE_TYPE for term in node)]
         return knowledge
 
 #===============================================================================
