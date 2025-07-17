@@ -24,10 +24,10 @@ def main(sckan_version):
                 nodes.update(edge)
                 terms.update([edge[0][0]] + list(edge[0][1]) + [edge[1][0]] + list(edge[1][1]))
 
-    print(f'# of neuron population having connectivity {len(np_with_connectivities)}')
-    print(f'# of edges {len(edges)}')
-    print(f'# of nodes {len(nodes)}')
-    print(f'# of terms {len(terms)}')
+    print(f'- The number of neuron populations having connectivity: {len(np_with_connectivities)}')
+    print(f'- The number of unique edges: {len(edges)}')
+    print(f'- The number of unique nodes: {len(nodes)}')
+    print(f'- The number of unique terms: {len(terms)}')
 
     store.close()
 
