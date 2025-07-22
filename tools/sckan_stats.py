@@ -2,40 +2,58 @@ from pprint import pprint
 from mapknowledge import KnowledgeStore
 from collections import defaultdict
 
-def print_knowledge(store, entity):
-    print(f'{entity}:')
-    pprint(store.entity_knowledge(entity))
-    print()
-
-def main(sckan_version):
+def sckan_stats(sckan_version):
     store = KnowledgeStore(sckan_version=sckan_version)
 
-    nps = defaultdict(dict)
-    np_with_connectivities = defaultdict(dict)
+    np_with_connectivities = set()
     edges = set()
     nodes = set()
     terms = set()
+    phenotypes = defaultdict(set)
+
     for path_id in store.connectivity_paths():
-        nps[path_id] = store.entity_knowledge(path_id)
-        if len(conn:=nps[path_id].get('connectivity', [])) > 0:
-            np_with_connectivities[path_id] = nps[path_id]
+        np = store.entity_knowledge(path_id)
+        if len(conn:=np.get('connectivity', [])) > 0:
+            np_with_connectivities.add(path_id)
             for edge in conn:
                 edges.add(edge)
                 nodes.update(edge)
                 terms.update([edge[0][0]] + list(edge[0][1]) + [edge[1][0]] + list(edge[1][1]))
+            for phenotype, pnodes in np.get('node-phenotypes', {}).items():
+                phenotypes[phenotype].update(pnodes)
 
-    print(f'- The number of neuron populations having connectivity: {len(np_with_connectivities)}')
-    print(f'- The number of unique edges: {len(edges)}')
-    print(f'- The number of unique nodes: {len(nodes)}')
-    print(f'- The number of unique terms: {len(terms)}')
+    result = {
+        'neuron-populations': len(np_with_connectivities),
+        'edges': len(edges),
+        'nodes': len(nodes),
+        'terms': len(terms),
+        'phenotypes': {
+            phenotype: len(pnodes)
+            for phenotype, pnodes in phenotypes.items()
+        }
+    }
 
     store.close()
 
-if __name__ == '__main__':
+    return result
+
+def main():
+    import logging
+    logging.basicConfig(level=logging.INFO)
 
     import argparse
-    parser = argparse.ArgumentParser(description='Print sckan_version stats.')
+    parser = argparse.ArgumentParser(description='Get sckan_version stats.')
     parser.add_argument('-v', '--sckan-version', dest='sckan_version', default='sckan-2024-09-21')
     args = parser.parse_args()
 
-    main(args.sckan_version)
+    stats = sckan_stats(args.sckan_version)
+
+    print(f'- The number of neuron populations having connectivity: {stats["neuron-populations"]}')
+    print(f'- The number of unique edges: {stats["edges"]}')
+    print(f'- The number of unique nodes: {stats["nodes"]}')
+    print(f'- The number of unique terms: {stats["terms"]}')
+    for phenotype, pnum in stats['phenotypes'].items():
+        print(f'- The number of unique {phenotype}: {pnum}')
+
+if __name__ == '__main__':
+    main()
