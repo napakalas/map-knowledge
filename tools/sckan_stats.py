@@ -1,4 +1,3 @@
-from pprint import pprint
 from mapknowledge import KnowledgeStore
 from collections import defaultdict
 
