@@ -103,8 +103,8 @@ class CompetencyDatabase:
     #===================================================================
         return self.__db.execute(sql, params)
 
-    def import_knowledge(self, knowledge: KnowledgeList, update_types: bool=False):
-    #==============================================================================
+    def import_knowledge(self, knowledge: KnowledgeList, update_types: bool=False, show_progress=False):
+    #===================================================================================================
         with self.__db.cursor() as cursor:
             try:
                 self.__delete_source_from_tables(cursor, knowledge.source)
@@ -143,12 +143,16 @@ class CompetencyDatabase:
         cursor.executemany('INSERT INTO anatomical_types (type_id, label) VALUES (%s, %s) ON CONFLICT DO NOTHING',
                            [(type, type) for type in NODE_PHENOTYPES + NODE_TYPES])
 
-    def __update_connectivity(self, cursor, knowledge: KnowledgeList):
-    #=================================================================
+    def __update_connectivity(self, cursor, knowledge: KnowledgeList, show_progress=False):
+    #======================================================================================
         source_id = knowledge.source.source_id
-        progress_bar = tqdm(total=len(knowledge.knowledge),
-            unit='records', ncols=80,
-            bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
+        if show_progress:
+            progress_bar = tqdm(total=len(knowledge.knowledge),
+                unit='records', ncols=80,
+                bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
+        else:
+            progress_bar = None
+
         for record in knowledge.knowledge:
             if source_id == clean_knowledge_source(record.get('source', '')):
                 if (connectivity := record.get('connectivity')) is not None:
@@ -225,8 +229,10 @@ class CompetencyDatabase:
                     cursor.execute('INSERT INTO path_properties (source_id, path_id, biological_sex, alert, disconnected) VALUES (%s, %s, %s, %s, %s)',
                                        (source_id, path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected', False)))
 
-            progress_bar.update(1)
-        progress_bar.close()
+            if progress_bar is not None:
+                progress_bar.update(1)
+        if progress_bar is not None:
+            progress_bar.close()
 
     def __update_features(self, cursor, knowledge: KnowledgeList):
     #=============================================================
