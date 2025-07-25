@@ -223,7 +223,7 @@ class CompetencyDatabase:
 
                     # General path properties
                     cursor.execute('INSERT INTO path_properties (source_id, path_id, biological_sex, alert, disconnected) VALUES (%s, %s, %s, %s, %s)',
-                                       (source_id, path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected')))
+                                       (source_id, path_id, record.get('biologicalSex'), record.get('alert'), record.get('pathDisconnected', False)))
 
             progress_bar.update(1)
         progress_bar.close()
