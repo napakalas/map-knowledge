@@ -105,17 +105,19 @@ class CompetencyDatabase:
 
     def import_knowledge(self, knowledge: KnowledgeList, update_types: bool=False):
     #==============================================================================
-        with self.__db as db:
-            with self.__db.cursor() as cursor:
+        with self.__db.cursor() as cursor:
+            try:
                 self.__delete_source_from_tables(cursor, knowledge.source)
                 if update_types:
                     self.__update_anatomical_types(cursor)
                 self.__update_knowledge_source(cursor, knowledge.source)
                 self.__update_features(cursor, knowledge)
-                self.__update_connectivity(cursor, knowledge)
-                #if (paths := knowledge.get('paths')) is not None:
-                #    pass
-            db.commit()
+                self.__update_connectivity(cursor, knowledge, show_progress)
+
+                self.__db.commit()
+            except:
+                self.__db.rollback()
+                raise
 
     def __delete_source_from_tables(self, cursor, source: KnowledgeSource):
     #======================================================================
