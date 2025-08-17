@@ -30,13 +30,22 @@ from typing import Any, Optional
 
 #===============================================================================
 
+import structlog
+
+#===============================================================================
+
 from .anatomical_types import *
 from .apinatomy import CONNECTIVITY_ONTOLOGIES, APINATOMY_MODEL_PREFIX
 # from .nposparql import NpoSparql, NPO_NLP_NEURONS
 from .npo import Npo
 from .scicrunch import SCICRUNCH_PRODUCTION, SCICRUNCH_STAGING
 from .scicrunch import SciCrunch
-from .utils import log
+
+try:
+    from mapmaker.utils import log as logger    # pyright: ignore[reportMissingImports]
+    logger_name = 'mapmaker'
+except:
+    logger_name = __name__
 
 #===============================================================================
 
@@ -130,6 +139,8 @@ alias_entry = {
 
 class KnowledgeBase(object):
     def __init__(self, store_directory, read_only=False, create=False, knowledge_base=KNOWLEDGE_BASE):
+        logger = structlog.get_logger(logger_name)
+        self.__logger = logger.bind(type='knowledge')
         self.__db = None
         self.__read_only = read_only
         if store_directory is None:
@@ -154,6 +165,11 @@ class KnowledgeBase(object):
     def db(self) -> Optional[sqlite3.Connection]:
     #============================================
         return self.__db
+
+    @property
+    def log(self) -> structlog.BoundLogger:
+    #======================================
+        return self.__logger
 
     @property
     def db_name(self) -> Optional[str]:
@@ -185,7 +201,7 @@ class KnowledgeBase(object):
                     while schema_version != SCHEMA_VERSION:
                         if (upgrade := SCHEMA_UPGRADES.get(schema_version)) is None:
                             raise ValueError(f'Unable to upgrade knowledge base schema from version {schema_version}')
-                        log.warning(f'Upgrading knowledge base schema from version {schema_version} to {upgrade[0]}')
+                        self.log.warning(f'Upgrading knowledge base schema from version {schema_version} to {upgrade[0]}')
                         schema_version = upgrade[0]
                         try:
                             self.__db.executescript(upgrade[1])
@@ -233,7 +249,7 @@ class KnowledgeStore(KnowledgeBase):
         else:
             cache_msg = f'with no cache'
         if verbose:
-            log.info(f'Map Knowledge version {__version__} {cache_msg}')
+            self.log.info(f'Map Knowledge version {__version__} {cache_msg}')
 
         if not read_only:
             if  knowledge_source is not None:
@@ -256,7 +272,7 @@ class KnowledgeStore(KnowledgeBase):
             if verbose and sckan_provenance:
                 scicrunch_build = (f" built at {sckan_build['released']}" if sckan_build is not None else '')
                 release_version = 'production' if scicrunch_version == SCICRUNCH_PRODUCTION else 'staging'
-                log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.api_endpoint}")
+                self.log.info(f"With {release_version} SCKAN{scicrunch_build} from {self.__scicrunch.api_endpoint}")
 
         if not read_only and use_sckan:
             self.__npo_db = Npo(sckan_version)
@@ -271,7 +287,7 @@ class KnowledgeStore(KnowledgeBase):
                             'sha': npo_builds['sha']
                     }
                     if verbose:
-                        log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
+                        self.log.info(f"With NPO built at {npo_builds['released']} from {npo_builds['path']}, SHA: {npo_builds['sha']}")
             self.__source = self.__npo_db.release
         else:
             self.__npo_db = None
@@ -289,7 +305,7 @@ class KnowledgeStore(KnowledgeBase):
             self.__sckan_provenance['knowledge-source'] = self.__source
 
         if verbose:
-            log.info(f'Using knowledge source: {self.__source}')
+            self.log.info(f'Using knowledge source: {self.__source}')
 
         # Optionally clear local connectivity knowledge
         if clean_connectivity:
@@ -307,13 +323,13 @@ class KnowledgeStore(KnowledgeBase):
     def __log_errors(entity: str, knowledge: dict):
     #==============================================
         for error in knowledge.get('errors', []):
-            log.error(f'SCKAN knowledge error: {entity}: {error}')
+            self.log.error(f'SCKAN knowledge error: {entity}: {error}')
 
     def clean_connectivity(self, knowledge_source: Optional[str]):
     #=============================================================
         if self.db is not None and knowledge_source is not None:
             if self.__verbose:
-                log.info(f'Clearing connectivity knowledge for `{knowledge_source}`...')
+                self.log.info(f'Clearing connectivity knowledge for `{knowledge_source}`...')
             namespaces = [f'{APINATOMY_MODEL_PREFIX}%']
             namespaces.extend([f'{ontology}:%' for ontology in CONNECTIVITY_ONTOLOGIES])
             condition = ' or '.join(len(namespaces)*['entity like ?'])
@@ -342,7 +358,7 @@ class KnowledgeStore(KnowledgeBase):
         if self.__npo_db is not None:
             return self.__npo_db.connectivity_models
         else:
-            log.warning('NPO connectivity models requested but no connection to NPO service')
+            self.log.warning('NPO connectivity models requested but no connection to NPO service')
         return []
 
     def connectivity_paths(self) -> list[str]:
@@ -355,7 +371,7 @@ class KnowledgeStore(KnowledgeBase):
         if self.__npo_db is not None:
             return self.__npo_db.connectivity_paths
         else:
-            log.warning('NPO connectivity paths requested but no connection to NPO service')
+            self.log.warning('NPO connectivity paths requested but no connection to NPO service')
         return []
 
     def entities(self) -> list[str]:
@@ -363,7 +379,7 @@ class KnowledgeStore(KnowledgeBase):
         if self.__npo_db is not None:
             return self.__npo_db.terms
         else:
-            log.warning('NPO terms requested but no connection to NPO service')
+            self.log.warning('NPO terms requested but no connection to NPO service')
         return []
 
     def entities_of_type(self, anatomical_type: str) -> list[str]:
@@ -371,7 +387,7 @@ class KnowledgeStore(KnowledgeBase):
         if self.__npo_db is not None:
             return self.__npo_db.terms_of_type(anatomical_type)
         else:
-            log.warning('NPO terms requested but no connection to NPO service')
+            self.log.warning('NPO terms requested but no connection to NPO service')
         return []
 
     def entity_knowledge(self, entity: str, source: Optional[str]=None) -> dict:
@@ -406,7 +422,7 @@ class KnowledgeStore(KnowledgeBase):
 
             # Always first consult NPO
             if self.__verbose:
-                log.info(f'Consulting NPO for knowledge about {entity}')
+                self.log.info(f'Consulting NPO for knowledge about {entity}')
             if self.__npo_db:
                 knowledge = self.__npo_db.get_knowledge(entity)
 
@@ -415,7 +431,7 @@ class KnowledgeStore(KnowledgeBase):
             if (len(knowledge) == 1 and self.__scicrunch is not None
             and not (entity in self.__npo_entities or ontology in CONNECTIVITY_ONTOLOGIES)):
                 if self.__verbose:
-                    log.info(f'Consulting SciCrunch for knowledge about {entity}')
+                    self.log.info(f'Consulting SciCrunch for knowledge about {entity}')
                 knowledge = self.__scicrunch.get_knowledge(entity)
                 if 'connectivity' in knowledge:
                     # Get phenotype, taxon, and other metadata
