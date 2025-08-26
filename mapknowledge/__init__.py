@@ -128,13 +128,13 @@ def clean_knowledge_source(source: str) -> str:
 ##
 ## This conflates anatomical terms and connectivity nodes...
 ##
-alias_entry = {
-    "id": ["ILX:0738432", []],
-    "aliases": [
-        ["ILX:0793804", []],
-        ["ILX:0793877", []]
-    ]
-}
+##alias_entry = {
+##    "id": ["ILX:0738432", []],
+##    "aliases": [
+##        ["ILX:0793804", []],
+##        ["ILX:0793877", []]
+##    ]
+##}
 ## What is being stored? Why? How is it used??
 ##
 ## $ curl https://mapcore-demo.org/fccb/flatmap/knowledge/label/ILX:0738432
