@@ -330,8 +330,7 @@ class KnowledgeStore(KnowledgeBase):
     def sckan_provenance(self):
         return self.__sckan_provenance
 
-    @staticmethod
-    def __log_errors(entity: str, knowledge: dict):
+    def __log_errors(self, entity: str, knowledge: dict):
     #==============================================
         for error in knowledge.get('errors', []):
             self.log.error(f'SCKAN knowledge error: {entity}: {error}')
@@ -407,7 +406,7 @@ class KnowledgeStore(KnowledgeBase):
 
         # Check local cache
         if (knowledge := self.__entity_knowledge.get((use_source, entity))) is not None:
-            KnowledgeStore.__log_errors(entity, knowledge)
+            self.__log_errors(entity, knowledge)
             return knowledge
 
         knowledge = {}
@@ -481,7 +480,7 @@ class KnowledgeStore(KnowledgeBase):
             self.__entity_knowledge[(knowledge['source'], entity)] = knowledge
 
         # Log any errors
-        KnowledgeStore.__log_errors(entity, knowledge)
+        self.__log_errors(entity, knowledge)
 
         return knowledge
 
