@@ -116,6 +116,14 @@ SCHEMA_UPGRADES = {
 
 #===============================================================================
 
+def clean_knowledge_source(source: str) -> str:
+    if source.endswith('-npo'):
+        return source[:-4]
+    return source
+
+#===============================================================================
+#===============================================================================
+
 ## Add node "aliases" to knowledge store??
 ##
 ## This conflates anatomical terms and connectivity nodes...
@@ -293,14 +301,14 @@ class KnowledgeStore(KnowledgeBase):
             self.__npo_db = None
 
         if self.__source is None and self.db:
+            known_sources= self.knowledge_sources()
             if knowledge_source is None:
-                row = self.db.execute('select distinct source from knowledge order by source desc').fetchone()
-                if row is not None:
-                    self.__source = row[0]
-            elif knowledge_source not in self.knowledge_sources():
+                if len(known_sources):
+                    self.__source = known_sources[0]
+            elif knowledge_source not in known_sources:
                 raise ValueError(f'Unknown knowledge source: `{knowledge_source}`')
             else:
-                self.__source = knowledge_source
+                self.__source = clean_knowledge_source(knowledge_source)
         if self.__source:
             self.__sckan_provenance['knowledge-source'] = self.__source
 
@@ -310,6 +318,9 @@ class KnowledgeStore(KnowledgeBase):
         # Optionally clear local connectivity knowledge
         if clean_connectivity:
             self.clean_connectivity(self.__source)
+
+        # Remove `-npo` suffixes used to identify knowledge sources in database tables
+        self.__clean_source_suffix()
 
     @property
     def source(self):
@@ -392,9 +403,7 @@ class KnowledgeStore(KnowledgeBase):
 
     def entity_knowledge(self, entity: str, source: Optional[str]=None) -> dict:
     #===========================================================================
-        use_source = self.__source if source is None else source
-
-        ## Trim ``-npo`` from ``use_source``
+        use_source = self.__source if source is None else clean_knowledge_source(source)
 
         # Check local cache
         if (knowledge := self.__entity_knowledge.get((use_source, entity))) is not None:
@@ -478,12 +487,12 @@ class KnowledgeStore(KnowledgeBase):
 
     def knowledge_sources(self) -> list[str]:
     #========================================
-        ## Trim ``-npo`` ??
-        ## No, since auto update will have done so...
-        return ([row[0]
-                    for row in self.db.execute(
-                        'select distinct source from knowledge order by source desc').fetchall()] if self.db
-                else [])
+        if self.db:
+            sources = [clean_knowledge_source(row[0])
+                        for row in self.db.execute('select distinct source from knowledge').fetchall()
+                            if row[0] is not None]
+            return sorted(set(sources), reverse=True)
+        return []
 
     def label(self, entity: str) -> str:
     #===================================
@@ -497,8 +506,7 @@ class KnowledgeStore(KnowledgeBase):
     def stored_knowledge(self, source: Optional[str]=None) -> list[dict]:
     #====================================================================
         stored_knowledge = []
-        source = self.__source if source is None else source
-        ## Trim ``-npo``
+        source = self.__source if source is None else clean_knowledge_source(source)
         if self.db is not None:
             if source is not None:
                 rows = self.db.execute(
@@ -514,6 +522,30 @@ class KnowledgeStore(KnowledgeBase):
                     stored_knowledge.append(knowledge)
                     last_entity = row[1]
         return stored_knowledge
+
+    def __clean_source_suffix(self):
+    #===============================
+        if self.metadata('clean-source-suffix') is None:
+            self.__clean_table('knowledge', ('source', 'entity',  'knowledge'))
+            self.__clean_table('connectivity_nodes', ('source', 'node',  'path'))
+            self.set_metadata('clean-source-suffix', '1')
+            assert self.db is not None
+            self.db.commit()
+
+    def __clean_table(self, table: str, columns: tuple[str, str, str]):
+    #==================================================================
+        assert self.db is not None
+        sources = [row[0]
+                    for row in self.db.execute(f'select distinct {columns[0]} from {table}').fetchall()
+                        if row[0] is not None]
+        for source in sources:
+            cleaned_source = clean_knowledge_source(source)
+            if source != cleaned_source:
+                self.db.execute(f"""insert into {table} {columns[0], columns[1], columns[2]}
+                    select ?, {columns[1]}, {columns[2]} from {table}
+                        where {columns[0]}=? and {columns[1]} not in (
+                            select {columns[1]} from {table} where {columns[0]}=?)""",
+                    (cleaned_source, source, cleaned_source))
 
 #===============================================================================
 
