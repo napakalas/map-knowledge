@@ -473,6 +473,7 @@ tools = [
 dev = [
     { name = "pytest" },
     { name = "rdflib-endpoint", extra = ["cli"] },
+    { name = "tqdm" },
 ]
 
 [package.metadata]
@@ -493,6 +494,7 @@ provides-extras = ["tools"]
 dev = [
     { name = "pytest", specifier = ">=8.4.0" },
     { name = "rdflib-endpoint", extras = ["cli"], specifier = ">=0.5.3" },
+    { name = "tqdm", specifier = ">=4.67.1" },
 ]
 
 [[package]]

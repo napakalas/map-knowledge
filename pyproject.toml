@@ -28,6 +28,7 @@ tools = [
 dev = [
     "pytest>=8.4.0",
     "rdflib-endpoint[cli]>=0.5.3",
+    "tqdm>=4.67.1",
 ]
 
 [project.scripts]
