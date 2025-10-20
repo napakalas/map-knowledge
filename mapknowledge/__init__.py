@@ -320,7 +320,8 @@ class KnowledgeStore(KnowledgeBase):
             self.clean_connectivity(self.__source)
 
         # Remove `-npo` suffixes used to identify knowledge sources in database tables
-        self.__clean_source_suffix()
+        if self.db is not None:
+            self.__clean_source_suffix()
 
     @property
     def source(self):
@@ -524,11 +525,11 @@ class KnowledgeStore(KnowledgeBase):
 
     def __clean_source_suffix(self):
     #===============================
+        assert self.db is not None
         if self.metadata('clean-source-suffix') is None:
             self.__clean_table('knowledge', ('source', 'entity',  'knowledge'))
             self.__clean_table('connectivity_nodes', ('source', 'node',  'path'))
             self.set_metadata('clean-source-suffix', '1')
-            assert self.db is not None
             self.db.commit()
 
     def __clean_table(self, table: str, columns: tuple[str, str, str]):
