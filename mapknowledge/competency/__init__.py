@@ -92,25 +92,34 @@ class CompetencyDatabase:
         pg_user = f'{user}@' if user else ''
         self.__db = pg.connect(f'postgresql://{pg_user}{host}/{database}')
 
+    def close(self):
+    #===============
+        if self.__db is not None:
+            self.__db.close()
+            self.__db = None
+
     def execute(self, sql: LiteralString, params: Optional[tuple|list]):
     #===================================================================
-        return self.__db.execute(sql, params)
+        if self.__db is not None:
+            return self.__db.execute(sql, params)
 
     def import_knowledge(self, knowledge: KnowledgeList, update_types: bool=False, show_progress=False):
     #===================================================================================================
-        with self.__db.cursor() as cursor:
-            try:
-                self.__delete_source_from_tables(cursor, knowledge.source)
-                if update_types:
-                    self.__update_anatomical_types(cursor)
-                self.__update_knowledge_source(cursor, knowledge.source)
-                self.__update_features(cursor, knowledge)
-                self.__update_connectivity(cursor, knowledge, show_progress)
+        if self.__db is not None:
+            with self.__db.cursor() as cursor:
+                try:
+                    self.__delete_source_from_tables(cursor, knowledge.source)
+                    if update_types:
+                        self.__update_anatomical_types(cursor)
+                    ## Use tqdm to show progress...
+                    self.__update_knowledge_source(cursor, knowledge.source)
+                    self.__update_features(cursor, knowledge)
+                    self.__update_connectivity(cursor, knowledge, show_progress)
 
-                self.__db.commit()
-            except:
-                self.__db.rollback()
-                raise
+                    self.__db.commit()
+                except:
+                    self.__db.rollback()
+                    raise
 
     def __delete_source_from_tables(self, cursor, source: KnowledgeSource):
     #======================================================================
