@@ -41,6 +41,7 @@ logging.disable(logging.CRITICAL+1)
 from neurondm.core import Config, graphBase, NegPhenotype
 from neurondm.core import OntTerm, OntId, RDFL
 from neurondm import orders
+from neurondm.core import IntersectionOf
 
 from pyontutils.core import OntGraph, OntResIri
 from pyontutils.namespaces import rdfs, ilxtr
@@ -145,8 +146,11 @@ def makelpesrdf() -> tuple:
     def lpes(neuron, predicate):
         """ get predicates from python bags """
         # TODO could add expected cardinality here if needed
-        return [NAMESPACES.curie(str(o)) for o in neuron.getObjects(predicate)
-                if not collect.append((predicate, o))]
+        return [
+            tuple(NAMESPACES.curie(str(m)) for m in o.members()) if isinstance(o, IntersectionOf) else tuple([NAMESPACES.curie(str(o))])
+            for o in neuron.getObjects(predicate)
+            if not collect.append((predicate, o))
+        ]
 
     def lrdf(neuron, predicate):
         """ get predicates from graph """
