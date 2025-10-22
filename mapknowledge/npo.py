@@ -25,6 +25,7 @@ from typing import Any, Optional
 import networkx as nx
 import urllib.parse
 from collections import defaultdict
+import itertools
 
 #===============================================================================
 
@@ -507,6 +508,14 @@ class Npo:
             knowledge['references'] = []
 
         # check if entity is a connectivity path
+        def get_nodes(target_nodes, nodes):
+            return list({
+                tuple(node)
+                for a in target_nodes
+                if (n_id:=frozenset(a)) in nodes
+                for node in nodes[n_id]
+            })
+
         if (path_kn:=self.__get_neuron_knowledge(entity)) is not None:
             if 'label' not in knowledge:
                 knowledge['label'] = path_kn['label']
@@ -522,64 +531,41 @@ class Npo:
                 knowledge['biologicalSex'] = sex[0]
             if len(alert:=path_kn['note_alert']) > 0:
                 knowledge['alert'] = alert
-            nodes = {}
-            for c in path_kn['connectivity']:           ### What is this for ???
-                nodes[tuple([c[0][0]] + list(c[0][1]))] = c[0]
-                nodes[tuple([c[1][0]] + list(c[1][1]))] = c[1]
-            c_dendrites = {d['loc']: [c for c in nodes if d['loc'] in c]
-                            for d in path_kn['path']
-                                if d['type'] == 'DENDRITE'}
-            dendrites = [nodes[c]
-                            for cd_list in c_dendrites.values()
-                                for c in cd_list]
-            knowledge['dendrites'] = list(set(dendrites))
-            c_axons = {**{a['loc']:[c for c in nodes if a['loc'] in c]
-                            for a in path_kn['path'] if a['type'] == 'AXON'},
-                       **{a['loc']:[c for c in nodes if a['loc'] in c]
-                            for a in path_kn['dest']}}
-            axons = [nodes[c]
-                        for cd_list in c_axons.values()
-                            for c in cd_list]
-            knowledge['axons'] = list(set(axons))
-            c_somas = {s: [c for c in nodes if s in c]
-                        for s in path_kn['origin']}
-            somas = [nodes[c]
-                        for cd_list in c_somas.values()
-                            for c in cd_list]
-            knowledge['somas'] = list(set(somas))
             if len(references:=path_kn['provenance']) > 0:
                 knowledge['references'] = references
             knowledge['pathDisconnected'] = not path_kn.get('connected', False)
-            c_axon_terminal = [[c for c in nodes if a['loc'] in c]
-                                for a in path_kn['dest']
-                                    if a['type'] == 'AXON-T']
-            knowledge['axon-terminals'] = [nodes[c]
-                                            for cd_list in c_axon_terminal
-                                                for c in cd_list]
-            c_afferent_terminal = [[c for c in nodes if a['loc'] in c]
-                                        for a in path_kn['dest']
-                                            if a['type'] == 'AFFERENT-T']
-            knowledge['afferent-terminals'] = [nodes[c]
-                                                for cd_list in c_afferent_terminal
-                                                    for c in cd_list]
-            c_axon_location = [[c for c in nodes if a['loc'] in c]
-                                    for a in path_kn['path']
-                                        if a['type'] == 'AXON']
-            knowledge['axon-locations'] = [nodes[c]
-                                            for cd_list in c_axon_location
-                                                for c in cd_list]
             knowledge['forward-connections'] = path_kn['forward_connections']
-            node_phenotypes = defaultdict(list)
-            for pn, locs in path_kn['node_phenotypes'].items():
-                c_phenotypes = [[c for c in nodes for loc in locs if loc in c]]   ## list inside list??
-                node_phenotypes[pn] += [nodes[c]
-                                            for cd_list in c_phenotypes
-                                                for c in cd_list]
-            knowledge['node-phenotypes'] = dict(node_phenotypes)
-            knowledge['nerves'] = [nodes[node]
-                                    for node in nodes
-                                        if any(self.__npo_terms.get(rdflib.URIRef(NAMESPACES.uri(term)), {}).get('type') == NERVE_TYPE
-                                            for term in node)]
+            all_nodes = {n for edge in path_kn['connectivity'] for n in edge}
+            node_coverage = defaultdict(list)       # (A, B) → [(A, (B)), (A, (B, C)), (A, (B, C, ...))]
+            for node in all_nodes:
+                n_id = [node[0], *node[1]]
+                for r in range(1, len(n_id) + 1):
+                    for comb in itertools.combinations(n_id, r):
+                        node_coverage[frozenset(comb)].append(node)
+            knowledge['dendrites'] = get_nodes([d['loc'] for d in path_kn['path']
+                                                if d['type'] == 'DENDRITE'], node_coverage)
+            knowledge['axons'] = get_nodes([a['loc'] for a in path_kn['path']
+                                            if a['type'] == 'AXON'] +
+                                            [a['loc'] for a in path_kn['dest']], node_coverage)
+            knowledge['somas'] = get_nodes(path_kn['origin'], node_coverage)
+            knowledge['axon-terminals'] = get_nodes([a['loc'] for a in path_kn['dest']
+                                                     if a['type'] == 'AXON-T'], node_coverage)
+            knowledge['afferent-terminals'] = get_nodes([a['loc'] for a in path_kn['dest']
+                                                         if a['type'] == 'AFFERENT-T'], node_coverage)
+            knowledge['axon-locations'] = get_nodes([a['loc'] for a in path_kn['path']
+                                                     if a['type'] == 'AXON'], node_coverage)
+            knowledge['node-phenotypes'] = {
+                pn: get_nodes(locs, node_coverage)
+                for pn, locs in path_kn['node_phenotypes'].items()
+            }
+            knowledge['nerves'] = [
+                node
+                for node in all_nodes
+                if any(
+                    self.__npo_terms.get(rdflib.URIRef(NAMESPACES.uri(t)), {}).get('type') == NERVE_TYPE
+                    for t in [node[0], *node[1]]
+                )
+            ]
         return knowledge
 
 #===============================================================================
