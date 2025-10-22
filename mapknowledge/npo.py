@@ -121,6 +121,12 @@ NPO_TERM_LABELS = f"""
 
 #===============================================================================
 
+EXCLUDED_PREFIXES = [
+    'http://uri.interlex.org/tgbugs/uris/readable/apinat-simple/'
+]
+
+#===============================================================================
+
 type KnowledgeDict = dict[str, Any]
 
 #===============================================================================
@@ -401,9 +407,10 @@ class Npo:
         config.load_existing(self.__rdf_graph)
 
         for neuron in config.neurons():
-            composer_neuron = for_composer(neuron)
-            composer_neuron['class'] = type(neuron).__name__
-            self.__composer_neurons[composer_neuron['id']] = composer_neuron
+            if not any(neuron.id_.startswith(prefix) for prefix in EXCLUDED_PREFIXES):
+                composer_neuron = for_composer(neuron)
+                composer_neuron['class'] = type(neuron).__name__
+                self.__composer_neurons[composer_neuron['id']] = composer_neuron
 
     def __load_anatomical_types(self):
     #=================================
