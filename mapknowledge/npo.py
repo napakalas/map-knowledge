@@ -186,7 +186,7 @@ def for_composer(n, cull=False) -> dict[str, Any]:
     fc = dict(
         id = NAMESPACES.curie(str(n.id_)),
         label = str(n.origLabel),
-        origin = [l for l in lpes(n, ilxtr.hasSomaLocatedIn)],
+        origin = lpes(n, ilxtr.hasSomaLocatedIn),
         dest = (
             # XXX looking at this there seems to be a fault assumption that
             # there is only a single destination type per statement, this is
@@ -205,18 +205,18 @@ def for_composer(n, cull=False) -> dict[str, Any]:
         ),
         #laterality = lpes(n, ilxtr.hasLaterality),  # left/rigth tricky ?
         #projection_laterality = lpes(n, ilxtr.???),  # axon located in contra ?
-        species =            [l for l in lpes(n, ilxtr.hasInstanceInTaxon)],
+        species =            [l[0] for l in lpes(n, ilxtr.hasInstanceInTaxon)],
         sex =                [NAMESPACES.curie(str(p.p)) for p in n if not isinstance(p, NegPhenotype) and p.e==ilxtr.hasBiologicalSex and not collect.append((ilxtr.hasBiologicalSex , p.p))],
         neg_sex =            [NAMESPACES.curie(str(p.p)) for p in n if isinstance(p, NegPhenotype) and p.e==ilxtr.hasBiologicalSex and not collect.append((ilxtr.hasBiologicalSex , p.p))],
-        circuit_type =       lpes(n, ilxtr.hasCircuitRolePhenotype),
-        phenotype =          [l for l in lpes(n, ilxtr.hasAnatomicalSystemPhenotype)],  # current meaning of composer phenotype
-        anatomical_system =  [l for l in lpes(n, ilxtr.hasAnatomicalSystemPhenotype)],
+        circuit_type =       [l[0] for l in lpes(n, ilxtr.hasCircuitRolePhenotype)],
+        phenotype =          [l[0] for l in lpes(n, ilxtr.hasAnatomicalSystemPhenotype)],  # current meaning of composer phenotype
+        anatomical_system =  [l[0] for l in lpes(n, ilxtr.hasAnatomicalSystemPhenotype)],
         # there are a number of dimensions that we aren't converting right now
         dont_know_fcrp =     lpes(n, ilxtr.hasFunctionalCircuitRolePhenotype),
-        other_phenotype = (  lpes(n, ilxtr.hasPhenotype)
-                           + lpes(n, ilxtr.hasMolecularPhenotype)
-                           + lpes(n, ilxtr.hasProjectionPhenotype)),
-        forward_connections = lpes(n, ilxtr.hasForwardConnectionPhenotype),
+        other_phenotype =    [l[0] for l in lpes(n, ilxtr.hasPhenotype)]
+                           + [l[0] for l in lpes(n, ilxtr.hasMolecularPhenotype)]
+                           + [l[0] for l in lpes(n, ilxtr.hasProjectionPhenotype)],
+        forward_connections = [fc[0] for fc in lpes(n, ilxtr.hasForwardConnectionPhenotype)],
         node_phenotypes = {NAMESPACES.curie(str(pn)): lpes(n, pn) for pn in NODE_PHENOTYPES},
 
         # direct references from individual individual neurons
@@ -233,7 +233,7 @@ def for_composer(n, cull=False) -> dict[str, Any]:
 
         # for _ignore, hasClassificationPhenotype is used for ApiNATOMY
         # unlikely to be encountered for real neurons any time soon
-        _ignore = [l for l in lpes(n, ilxtr.hasClassificationPhenotype)],  # used to ensure we account for all phenotypes
+        _ignore = [l[0] for l in lpes(n, ilxtr.hasClassificationPhenotype)],  # used to ensure we account for all phenotypes
     )
     npo = set((p.e, p.p) for p in n.pes)
     cpo = set(collect)
