@@ -74,7 +74,8 @@ NPO_GIT = f'https://github.com/{NPO_OWNER}/{NPO_REPO}'
 NPO_TTLS = ('apinat-partial-orders',
             'apinat-pops-more',
             'apinat-simple-sheet',
-            'sparc-nlp')
+            'sparc-nlp',
+            'apinat-complex')
 
 GEN_NEURONS_PATH = 'ttl/generated/neurons/'
 TURTLE_SUFFIX = '.ttl'
@@ -378,8 +379,11 @@ class Npo:
         OntTerm.query._services = (RDFL(self.__rdf_graph, OntId),)
         for f in NPO_TTLS:
             ori = OntResIri(f'{NPO_RAW}/{self.__npo_release}/{GEN_NEURONS_PATH}{f}{TURTLE_SUFFIX}')
-            if ori.graph is not None:
-                [self.__rdf_graph.add(t) for t in ori.graph]
+            try:
+                if ori.graph is not None:
+                    [self.__rdf_graph.add(t) for t in ori.graph]
+            except:
+                log.warning(f'Could not fetch {ori.iri} from {self.__npo_release}.')
 
         for f in ('apinatomy-neuron-populations', '../../npo', '../../sparc-community-terms'):
             p = urllib.parse.quote(GEN_NEURONS_PATH + f)
