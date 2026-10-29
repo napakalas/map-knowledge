@@ -32,7 +32,8 @@ from tqdm import tqdm
 from mapknowledge import clean_knowledge_source, NERVE_TYPE
 from mapknowledge.namespaces import NAMESPACES
 from mapknowledge.npo import (NODE_PHENOTYPES as NPO_NODE_PHENOTYPES,
-                               DESCRIPTIVE_PHENOTYPES as NPO_DESCRIPTIVE_PHENOTYPES)
+                               DESCRIPTIVE_PHENOTYPES as NPO_DESCRIPTIVE_PHENOTYPES,
+                               EXPRESSION_LEVELS as NPO_EXPRESSION_LEVELS)
 
 
 #===============================================================================
@@ -40,6 +41,7 @@ from mapknowledge.npo import (NODE_PHENOTYPES as NPO_NODE_PHENOTYPES,
 
 NODE_PHENOTYPES = [NAMESPACES.curie(str(p)) for p in NPO_NODE_PHENOTYPES]
 DESCRIPTIVE_PHENOTYPES = [NAMESPACES.curie(str(p)) for p in NPO_DESCRIPTIVE_PHENOTYPES]
+EXPRESSION_LEVELS = [NAMESPACES.curie(str(p)) for p in NPO_EXPRESSION_LEVELS]
 NODE_TYPES = [
    NERVE_TYPE,
 ]
@@ -276,6 +278,9 @@ class CompetencyDatabase:
                     with cursor.copy("COPY feature_desc_attributes (source_id, term_id, type_id, combination_id, feature_id) FROM STDIN") as copy:
                         for ph, vals in descriptive_phenotypes.items():
                             for val in vals:
+                                # Sort the combination, with any expression level last
+                                val = tuple(sorted(v for v in val if v not in EXPRESSION_LEVELS)
+                                          + sorted(v for v in val if v in EXPRESSION_LEVELS))
                                 for v in val:
                                     copy.write_row((source_id, path_id, ph, str(val), v))
 

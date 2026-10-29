@@ -145,6 +145,11 @@ DESCRIPTIVE_PHENOTYPES = [
     ilxtr.isMemberOfCircuit,
 ]
 
+EXPRESSION_LEVELS = [
+    ilxtr.HigherExpression,
+    ilxtr.LowerExpression,
+]
+
 #===============================================================================
 
 ANATOMICAL_TYPES = {

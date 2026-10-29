@@ -1,6 +1,8 @@
 #===============================================================================
 
 from mapknowledge import KnowledgeStore
+from mapknowledge.namespaces import NAMESPACES
+from mapknowledge.npo import EXPRESSION_LEVELS as NPO_EXPRESSION_LEVELS
 import json
 import os
 
@@ -8,6 +10,19 @@ import os
 
 class PathError(Exception):
     pass
+
+#===============================================================================
+
+EXPRESSION_LEVELS = [NAMESPACES.curie(str(p)) for p in NPO_EXPRESSION_LEVELS]
+
+def sort_descriptive_phenotypes(knowledge):
+    # Sort each combination, with any expression level last
+    for ph, vals in knowledge.get('descriptive-phenotypes', {}).items():
+        knowledge['descriptive-phenotypes'][ph] = [
+            sorted(v for v in val if v not in EXPRESSION_LEVELS)
+            + sorted(v for v in val if v in EXPRESSION_LEVELS)
+            for val in vals
+        ]
 
 #===============================================================================
 
@@ -27,6 +42,7 @@ def extracting_knowledge(args):
         print(path)
         knowledge[path] = (knowledge_path := store.entity_knowledge(path))
         knowledge_path['source'] = store.source
+        sort_descriptive_phenotypes(knowledge_path)
         # extracting connectivity
         terms = [term for edge in knowledge_path['connectivity'] for term in [edge[0][0]] + list(edge[0][1]) + [edge[0][0]] + list(edge[0][1])] \
                 + knowledge_path.get('phenotypes', []) + knowledge_path.get('taxons', []) \
@@ -44,6 +60,7 @@ def extracting_knowledge(args):
         print(cell)
         knowledge[cell] = (knowledge_cell := store.entity_knowledge(cell))
         knowledge_cell['source'] = store.source
+        sort_descriptive_phenotypes(knowledge_cell)
         terms = list(npv for np_vals in knowledge_cell.get('node-phenotypes', {}).values() for np_val in np_vals for npv in [np_val[0], *np_val[1]]) \
                 + list(t for values in knowledge_cell.get('descriptive-phenotypes', {}).values() for term in values for t in term) \
                 + knowledge_cell.get('phenotypes', []) + knowledge_cell.get('taxons', [])
