@@ -140,6 +140,7 @@ class CompetencyDatabase:
         cursor.execute('DELETE FROM feature_expert_consultants WHERE source_id=%s', (source_id, ))
         cursor.execute('DELETE FROM feature_curator_notes WHERE source_id=%s', (source_id, ))
         cursor.execute('DELETE FROM feature_data_citations WHERE source_id=%s', (source_id, ))
+        cursor.execute('DELETE FROM feature_synonyms WHERE source_id=%s', (source_id, ))
         cursor.execute('DELETE FROM feature_relationship WHERE source_id=%s', (source_id, ))
         cursor.execute('DELETE FROM feature_desc_attributes WHERE source_id=%s', (source_id, ))
         cursor.execute('DELETE FROM feature_terms WHERE source_id=%s', (source_id, ))
@@ -321,6 +322,11 @@ class CompetencyDatabase:
                 with cursor.copy("COPY feature_types (source_id, term_id, type_id) FROM STDIN") as copy:
                     if (term_type:=record.get('type')) is not None:
                         copy.write_row([source_id, record['id'], term_type])
+
+                # Feature synonyms (NIFRID:synonym)
+                with cursor.copy("COPY feature_synonyms (source_id, term_id, synonym) FROM STDIN") as copy:
+                    for synonym in dict.fromkeys(record.get('synonyms', [])):
+                        copy.write_row([source_id, record['id'], synonym])
 
         # Feature relationships
         term_ids = {record['id'] for record in knowledge.knowledge

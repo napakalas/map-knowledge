@@ -92,12 +92,19 @@ SCHEMA_1_2_TABLES = [
     'term_id character varying NOT NULL, '
     'evidence_id character varying NOT NULL'
     ')',
+    'CREATE TABLE IF NOT EXISTS feature_synonyms ('
+    'source_id character varying NOT NULL, '
+    'term_id character varying NOT NULL, '
+    'synonym text NOT NULL, '
+    'PRIMARY KEY (source_id, term_id, synonym)'
+    ')',
 ]
 
 SCHEMA_1_2_OWNERS = [] if not COMPETENCY_OWNER else [
     f'ALTER TABLE feature_desc_attributes OWNER TO {_quoted_identifier(COMPETENCY_OWNER)}',
     f'ALTER TABLE feature_curator_notes OWNER TO {_quoted_identifier(COMPETENCY_OWNER)}',
     f'ALTER TABLE feature_data_citations OWNER TO {_quoted_identifier(COMPETENCY_OWNER)}',
+    f'ALTER TABLE feature_synonyms OWNER TO {_quoted_identifier(COMPETENCY_OWNER)}',
 ]
 
 SCHEMA_1_2_FOREIGN_KEYS = [
@@ -111,6 +118,8 @@ SCHEMA_1_2_FOREIGN_KEYS = [
     ('feature_data_citations', 'fdc_source_fk', 'FOREIGN KEY (source_id) REFERENCES knowledge_sources(source_id)'),
     ('feature_data_citations', 'fdc_term_fk', 'FOREIGN KEY (source_id, term_id) REFERENCES feature_terms(source_id, term_id)'),
     ('feature_data_citations', 'fdc_evidence_fk', 'FOREIGN KEY (evidence_id) REFERENCES evidence(evidence_id)'),
+    ('feature_synonyms', 'fs_source_fk', 'FOREIGN KEY (source_id) REFERENCES knowledge_sources(source_id)'),
+    ('feature_synonyms', 'fs_term_fk', 'FOREIGN KEY (source_id, term_id) REFERENCES feature_terms(source_id, term_id)'),
 ]
 
 COMPETENCY_SCHEMA_UPGRADES: dict[str | None, tuple[str, list[str]]] = {
