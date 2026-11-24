@@ -74,4 +74,8 @@ class NAMESPACES:
                 return f'{prefix}:{uri[len(ns_uri):]}'
         return uri
 
+    @staticmethod
+    def normalize(curie: str) -> str:
+        return NAMESPACES.curie(NAMESPACES.uri(curie))
+
 #===============================================================================

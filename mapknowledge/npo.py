@@ -625,6 +625,7 @@ class Npo:
 
     def get_knowledge(self, entity: str) -> KnowledgeDict:
     #=====================================================
+        entity = NAMESPACES.normalize(entity)
         knowledge: KnowledgeDict = {
             'id': entity
         }

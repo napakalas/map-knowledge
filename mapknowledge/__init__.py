@@ -37,6 +37,7 @@ import structlog
 from .anatomical_types import *
 from .apinatomy import CONNECTIVITY_ONTOLOGIES, APINATOMY_MODEL_PREFIX
 # from .nposparql import NpoSparql, NPO_NLP_NEURONS
+from .namespaces import NAMESPACES
 from .npo import Npo
 from .scicrunch import SCICRUNCH_PRODUCTION, SCICRUNCH_STAGING
 from .scicrunch import SciCrunch
@@ -416,6 +417,7 @@ class KnowledgeStore(KnowledgeBase):
 
     def entity_knowledge(self, entity: str, source: Optional[str]=None) -> dict:
     #===========================================================================
+        entity = NAMESPACES.normalize(entity)
         use_source = self.__source if source is None else clean_knowledge_source(source)
 
         # Check local cache
