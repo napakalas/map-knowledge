@@ -102,7 +102,10 @@ LABEL_TTLS = [
     '../../npo',
     '../../sparc-community-terms',
     '../../phenotypes',
-    '../../phenotype-indicators'
+    '../../phenotype-indicators',
+    '../chebislim',
+    '../ncbigeneslim',
+    '../jaxslim'
 ]
 
 PRECISION_TTLS = [
@@ -524,13 +527,25 @@ class Npo:
         for f in LABEL_TTLS:
             p = urllib.parse.quote(GEN_NEURONS_PATH + f)
             ori = OntResIri(f'{NPO_RAW}/{self.__npo_release}/{p}{TURTLE_SUFFIX}')
-            if ori.graph is not None:
+
+            try:
+                graph = ori.graph
+            except Exception as e:
+                if getattr(getattr(e, 'response', None), 'status_code', None) == 404:
+                    log.warning(f'Label file not found in {self.__npo_release}: {ori.iri}')
+                else:
+                    log.warning(f'Could not fetch label file {ori.iri} from {self.__npo_release}: {e}')
+                continue
+
+            if graph is not None:
                 [self.__rdf_graph.add((s, rdfs.label, o))
-                    for s, o in ori.graph.subject_objects(rdfs.label)]
+                    for s, o in graph.subject_objects(rdfs.label)]
                 [self.__rdf_graph.add((s, rdfs.subClassOf, o))
-                    for s, o in ori.graph.subject_objects(rdfs.subClassOf)]
+                    for s, o in graph.subject_objects(rdfs.subClassOf)]
                 [self.__rdf_graph.add((s, ilxtr.hasExistingId, o))
-                    for s, o in ori.graph.subject_objects(ilxtr.hasExistingId)]
+                    for s, o in graph.subject_objects(ilxtr.hasExistingId)]
+                [self.__rdf_graph.add((s, NIFRID.synonym, o))
+                    for s, o in graph.subject_objects(NIFRID.synonym)]
 
         # Load types
         type_graph = load_path_knowledge_ttls(PRECISION_TTLS)
