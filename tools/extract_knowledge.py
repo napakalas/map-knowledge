@@ -26,6 +26,32 @@ def sort_descriptive_phenotypes(knowledge):
 
 #===============================================================================
 
+# Fields whose values are a term or a list of terms
+TERM_FIELDS = ['phenotypes', 'taxons', 'biologicalSex', 'projection-lateralities',
+               'forward-connections', 'subclass-of', 'maps-to']
+
+def referenced_terms(knowledge: dict) -> list[str]:
+    """All terms a neuron population or cell type refers to."""
+    terms = []
+    for edge in knowledge.get('connectivity', []):
+        for node in edge:
+            terms.extend([node[0], *node[1]])
+    for field in ('dendrites', 'axons'):
+        for node in knowledge.get(field, []):
+            terms.extend([node[0], *node[1]])
+    for nodes in knowledge.get('node-phenotypes', {}).values():
+        for node in nodes:
+            terms.extend([node[0], *node[1]])
+    for values in knowledge.get('descriptive-phenotypes', {}).values():
+        for combination in values:
+            terms.extend(combination)
+    for field in TERM_FIELDS:
+        values = knowledge.get(field) or []
+        terms.extend([values] if isinstance(values, str) else values)
+    return terms
+
+#===============================================================================
+
 """
 This script is used to extract knowledge from a particular SCKAN release.
 The results are stored as a JSON file in the specified directory.
@@ -43,13 +69,8 @@ def extracting_knowledge(args):
         knowledge[path] = (knowledge_path := store.entity_knowledge(path))
         knowledge_path['source'] = store.source
         sort_descriptive_phenotypes(knowledge_path)
-        # extracting connectivity
-        terms = [term for edge in knowledge_path['connectivity'] for term in [edge[0][0]] + list(edge[0][1]) + [edge[0][0]] + list(edge[0][1])] \
-                + knowledge_path.get('phenotypes', []) + knowledge_path.get('taxons', []) \
-                + [term for node in knowledge_path.get('dendrites', []) for term in [node[0]] + list(node[1])] \
-                + [term for node in knowledge_path.get('axons', []) for term in [node[0]] + list(node[1])] \
-                + list(t for values in knowledge_path.get('descriptive-phenotypes', {}).values() for term in values for t in term)
-        for term in terms:
+        # extracting connectivity and other referenced terms
+        for term in referenced_terms(knowledge_path):
             if term not in knowledge:
                 knowledge[term] = store.entity_knowledge(term)
                 knowledge[term]['id'] = term
@@ -61,10 +82,7 @@ def extracting_knowledge(args):
         knowledge[cell] = (knowledge_cell := store.entity_knowledge(cell))
         knowledge_cell['source'] = store.source
         sort_descriptive_phenotypes(knowledge_cell)
-        terms = list(npv for np_vals in knowledge_cell.get('node-phenotypes', {}).values() for np_val in np_vals for npv in [np_val[0], *np_val[1]]) \
-                + list(t for values in knowledge_cell.get('descriptive-phenotypes', {}).values() for term in values for t in term) \
-                + knowledge_cell.get('phenotypes', []) + knowledge_cell.get('taxons', [])
-        for term in terms:
+        for term in referenced_terms(knowledge_cell):
             if term not in knowledge:
                 knowledge[term] = store.entity_knowledge(term)
                 knowledge[term]['id'] = term
