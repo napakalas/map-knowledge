@@ -151,6 +151,7 @@ DESCRIPTIVE_PHENOTYPES = [
 EXPRESSION_LEVELS = [
     ilxtr.HigherExpression,
     ilxtr.LowerExpression,
+    ilxtr.ModerateExpression,
 ]
 
 #===============================================================================
