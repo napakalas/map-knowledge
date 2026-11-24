@@ -45,7 +45,7 @@ from neurondm import orders
 from neurondm.core import IntersectionOf
 
 from pyontutils.core import OntGraph, OntResIri
-from pyontutils.namespaces import rdfs, ilxtr, skos
+from pyontutils.namespaces import rdfs, ilxtr, skos, NIFRID
 
 # Renable general logging
 logging.disable(logging.NOTSET)
@@ -594,6 +594,13 @@ class Npo:
                     self.__anatomical_terms_by_type[anatomical_type].append(term)
             else:
                 self.__npo_terms[term] = { 'label': label }
+            if len(synonyms := self.__synonyms(term)):
+                self.__npo_terms[term]['synonyms'] = synonyms
+
+    def __synonyms(self, *terms: rdflib.URIRef) -> list[str]:
+    #=========================================================
+        return sorted({str(synonym) for term in terms
+                            for synonym in self.__rdf_graph.objects(term, NIFRID.synonym)})
 
     def __get_neuron_knowledge(self, id: str):
     #=========================================
@@ -628,16 +635,20 @@ class Npo:
 
     def __term_knowledge(self, term: rdflib.URIRef) -> Optional[KnowledgeDict]:
     #==========================================================================
+        terms = [term]
         if not (labels:=list(self.__rdf_graph.objects(term, rdfs.label))):
             for x in self.__rdf_graph.subjects(ilxtr.hasExistingId, term):
                 if (labels:=list(self.__rdf_graph.objects(subject=x, predicate=rdfs.label))):
                     term = x         # type: ignore
+                    terms.append(x)  # type: ignore
                     break
         if labels:
+            knowledge: KnowledgeDict = { 'label': str(labels[0]) }
             if len(anatomical_types := self.__anatomical_types_by_term.get(term, [])):
-                return { 'label': str(labels[0]), 'type': anatomical_types[0] }
-            else:
-                return { 'label': str(labels[0]) }
+                knowledge['type'] = anatomical_types[0]
+            if len(synonyms := self.__synonyms(*terms)):
+                knowledge['synonyms'] = synonyms
+            return knowledge
 
     def get_knowledge(self, entity: str) -> KnowledgeDict:
     #=====================================================
